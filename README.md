@@ -17,14 +17,14 @@ within JAccompaniment folder.
 
 I'm using it together with qsynth and have following channel settings (GM):
 
-Channel 1 Grand Piano (Bank 0, Prog 0)
-Channel 2 Nylon String Guitar (Bank 0, Prog 24)
-Channel 10 Room 1 (Bank 128 Prog 9)
+* Channel 1 Grand Piano (Bank 0, Prog 0)
+* Channel 2 Nylon String Guitar (Bank 0, Prog 24)
+* Channel 10 Room 1 (Bank 128 Prog 9)
 
 I have the alsa virtual midi device installed and following connections (Transmitter -> Receiver) configured:
 
-USB-Midi (Keyboard) -> Virtual Raw MIDI 1-0
-Virtual Raw Midi 1-0 -> QSynth
+* USB-Midi (Keyboard) -> Virtual Raw MIDI 1-0
+* Virtual Raw Midi 1-0 -> QSynth
 
 There is no need to connect the USB-Midi directly to the synthesizer. JAccompaniment has a midi through functionality that can filter the accompaniment area of the keyboard.
 
