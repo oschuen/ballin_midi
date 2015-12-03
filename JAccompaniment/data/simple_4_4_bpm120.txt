@@ -1,0 +1,27 @@
+#JAccompaniment
+#Thu Nov 26 18:30:06 CET 2015
+bpm=120
+G_STRING.pattern=\    X       X   
+LOW_FLOOR_TOM.pattern=\                
+LOW_FLOOR_TOM.velocity=127
+HIGH_WOOD_BLOCK.velocity=96
+HIGH_MID_TOM.velocity=127
+E_STRING.velocity=89
+HIGH_FLOOR_TOM.velocity=127
+BASS_STRING.pattern=X               
+B_STRING.velocity=88
+CLOSED_HIGH_HAT.pattern=\                
+ACOUSTIC_SNARE.pattern=\                
+OPEN_HIGH_HAT.velocity=127
+master=105
+HIGH_MID_TOM.pattern=\                
+BASS_STRING.velocity=127
+quarter=4
+CLOSED_HIGH_HAT.velocity=127
+HIGH_WOOD_BLOCK.pattern=\    X   X   X   
+ACOUSTIC_SNARE.velocity=127
+OPEN_HIGH_HAT.pattern=X               
+E_STRING.pattern=\        X       
+HIGH_FLOOR_TOM.pattern=\                
+B_STRING.pattern=\        X       
+G_STRING.velocity=88
