@@ -128,6 +128,27 @@ public class LoopPanel extends JPanel {
 		fireActionEvent(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "PATTERN CHANGED"));
 	}
 
+	public int getNumberOfQuarter() {
+		int quarterCount = 1;
+		boolean resetQuarterCount = false;
+		boolean first = true;
+
+		for (final Instrument instrument : patternMap.keySet()) {
+			final PatternPanel panel = patternMap.get(instrument);
+			final int panelQuarterCount = panel.getPattern().length() / 4;
+			if (first) {
+				first = false;
+			} else if (quarterCount != panelQuarterCount) {
+				resetQuarterCount = true;
+			}
+			quarterCount = Math.max(panelQuarterCount, quarterCount);
+		}
+		if (resetQuarterCount) {
+			setNumberOfQuarter(quarterCount);
+		}
+		return quarterCount;
+	}
+
 	public String getPattern(final Instrument instrument) {
 		final PatternPanel panel = patternMap.get(instrument);
 		if (panel == null) {

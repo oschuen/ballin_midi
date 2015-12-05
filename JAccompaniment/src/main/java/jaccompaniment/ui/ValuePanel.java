@@ -129,6 +129,7 @@ public class ValuePanel extends JPanel {
 		if (temp != this.value) {
 			this.value = temp;
 			fireNewValue(this.value);
+			repaint();
 		}
 	}
 

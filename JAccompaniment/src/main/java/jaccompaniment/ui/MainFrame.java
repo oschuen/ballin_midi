@@ -36,8 +36,12 @@ import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.KeyEventDispatcher;
+import java.awt.KeyboardFocusManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -54,7 +58,10 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
 import javax.swing.UIManager;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -69,6 +76,7 @@ public class MainFrame extends JFrame {
 
 	private static final Preferences prefs = Preferences.userNodeForPackage(ConfigDialog.class);
 
+	private static final int panelCount = 5;
 	private Guitar guitar = null;
 	private Percussion percussion = null;
 	private ChordRecognizer recognizer = null;
@@ -76,8 +84,8 @@ public class MainFrame extends JFrame {
 	private Transmitter recognizerTransmitter = null;
 	private Transmitter filterTransmitter = null;
 	private BeatListener beatListener = null;
-
-	private final LoopPanel loopPanel;
+	private final JTabbedPane tabbedPane;
+	private final LoopPanel loopPanel[] = new LoopPanel[panelCount];
 	private final ValuePanel masterVelocityPanel;
 	private final ValuePanel bpmPanel;
 	private final ValuePanel quarterPanel;
@@ -110,8 +118,22 @@ public class MainFrame extends JFrame {
 	 */
 	public MainFrame() throws MidiUnavailableException {
 		final JPanel contentPane;
+		final Font mainFont = new Font("Arial Black", Font.PLAIN, 20);
 		setTitle("JAccompaniment");
 		UIManager.put("Button.select", Color.BLACK);
+		UIManager.put("TabbedPane.foreground", Color.WHITE);
+		UIManager.put("TabbedPane.selected", Color.BLACK);
+		UIManager.put("TabbedPane.selectHighlight", Color.BLACK);
+		UIManager.put("TabbedPane.font", mainFont);
+		UIManager.put("TabbedPane.borderHightlightColor", Color.DARK_GRAY);
+		UIManager.put("TabbedPane.contentBorderInsets", new Insets(0, 0, 0, 0));
+		UIManager.put("TabbedPane.darkShadow", Color.DARK_GRAY);
+		UIManager.put("TabbedPane.focus", Color.DARK_GRAY);
+		UIManager.put("TabbedPane.light", Color.DARK_GRAY);
+		// UIManager.put("TabbedPane.highlight", Color.DARK_GRAY);
+
+		UIManager.put("", Color.DARK_GRAY);
+
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		contentPane = new JPanel();
 		setContentPane(contentPane);
@@ -159,18 +181,46 @@ public class MainFrame extends JFrame {
 			}
 		});
 
-		final JScrollPane scrollPane = new JScrollPane();
-		contentPane.add(scrollPane);
+		tabbedPane = new JTabbedPane();
+		contentPane.add(tabbedPane);
 
-		loopPanel = new LoopPanel(allInstruments);
-		scrollPane.setViewportView(loopPanel);
-		loopPanel.addActionListener(new ActionListener() {
+		for (int i = 0; i < loopPanel.length; ++i) {
+			final JScrollPane scrollPane = new JScrollPane();
+			tabbedPane.add("F" + (1 + i), scrollPane);
+			tabbedPane.setBackground(Color.DARK_GRAY);
+			tabbedPane.setBackgroundAt(0, Color.DARK_GRAY);
+
+			loopPanel[i] = new LoopPanel(allInstruments);
+			scrollPane.setViewportView(loopPanel[i]);
+			loopPanel[i].addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(final ActionEvent e) {
+					copyLoopPanelInfo();
+				}
+			});
+		}
+
+		tabbedPane.addChangeListener(new ChangeListener() {
 
 			@Override
-			public void actionPerformed(final ActionEvent e) {
+			public void stateChanged(final ChangeEvent e) {
 				copyLoopPanelInfo();
 			}
 		});
+
+		KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(
+				new KeyEventDispatcher() {
+
+					@Override
+					public boolean dispatchKeyEvent(final KeyEvent e) {
+						if (e.getKeyCode() >= KeyEvent.VK_F1
+								&& e.getKeyCode() < KeyEvent.VK_F1 + panelCount) {
+							tabbedPane.setSelectedIndex(e.getKeyCode() - KeyEvent.VK_F1);
+						}
+						return false;
+					}
+				});
 
 		final JPanel panel_1 = new JPanel();
 		contentPane.add(panel_1, BorderLayout.EAST);
@@ -308,10 +358,10 @@ public class MainFrame extends JFrame {
 
 			@Override
 			public void valueChanged(final int newValue) {
-				loopPanel.setNumberOfQuarter(newValue);
+				loopPanel[tabbedPane.getSelectedIndex()].setNumberOfQuarter(newValue);
 			}
 		});
-		loopPanel.setNumberOfQuarter(4);
+		loopPanel[tabbedPane.getSelectedIndex()].setNumberOfQuarter(4);
 
 		setupMidi();
 
@@ -474,13 +524,14 @@ public class MainFrame extends JFrame {
 
 	private void copyLoopPanelInfo() {
 		final int masterVelocity = masterVelocityPanel.getValue();
-
+		final LoopPanel selectedPanel = loopPanel[tabbedPane.getSelectedIndex()];
 		final String newPercussionPattern[] = new String[percussionInstruments.length];
 		final int newPercussionVelocity[] = new int[percussionInstruments.length];
+
 		for (int i = 0; i < newPercussionPattern.length; ++i) {
-			newPercussionPattern[i] = loopPanel.getPattern(percussionInstruments[i]);
+			newPercussionPattern[i] = selectedPanel.getPattern(percussionInstruments[i]);
 			newPercussionVelocity[i] = masterVelocity
-					* loopPanel.getVelocity(percussionInstruments[i]) / 127;
+					* selectedPanel.getVelocity(percussionInstruments[i]) / 127;
 		}
 		if (percussion != null) {
 			percussion.setPattern(newPercussionPattern);
@@ -490,18 +541,18 @@ public class MainFrame extends JFrame {
 		final String newGuitarPattern[] = new String[guitarInstruments.length];
 		final int newGuitarVelocity[] = new int[guitarInstruments.length];
 		for (int i = 0; i < newGuitarPattern.length; ++i) {
-			newGuitarPattern[i] = loopPanel.getPattern(guitarInstruments[i]);
-			newGuitarVelocity[i] = masterVelocity * loopPanel.getVelocity(guitarInstruments[i])
+			newGuitarPattern[i] = selectedPanel.getPattern(guitarInstruments[i]);
+			newGuitarVelocity[i] = masterVelocity * selectedPanel.getVelocity(guitarInstruments[i])
 					/ 127;
 		}
 		if (guitar != null) {
 			guitar.setPattern(newGuitarPattern);
 			guitar.setVelocity(newGuitarVelocity);
 		}
+		quarterPanel.setValue(selectedPanel.getNumberOfQuarter());
 	}
 
 	private final static String BPM_KEY = "bpm";
-	private final static String QUARTER_KEY = "quarter";
 	private final static String MASTER_KEY = "master";
 	private final static String VELOCITY_KEY = ".velocity";
 	private final static String PATTERN_KEY = ".pattern";
@@ -509,21 +560,24 @@ public class MainFrame extends JFrame {
 	private Properties getProperties() {
 		final Properties props = new Properties();
 		props.setProperty(BPM_KEY, Integer.toString(bpmPanel.getValue()));
-		props.setProperty(QUARTER_KEY, Integer.toString(quarterPanel.getValue()));
 		props.setProperty(MASTER_KEY, Integer.toString(masterVelocityPanel.getValue()));
 
-		for (final Instrument instrument : percussionInstruments) {
-			final int velocity = loopPanel.getVelocity(instrument);
-			final String pattern = loopPanel.getPattern(instrument);
-			props.setProperty(instrument.name() + VELOCITY_KEY, Integer.toString(velocity));
-			props.setProperty(instrument.name() + PATTERN_KEY, pattern);
-		}
+		for (int i = 0; i < loopPanel.length; i++) {
+			for (final Instrument instrument : percussionInstruments) {
+				final int velocity = loopPanel[i].getVelocity(instrument);
+				final String pattern = loopPanel[i].getPattern(instrument);
+				props.setProperty("P" + i + "_" + instrument.name() + VELOCITY_KEY,
+						Integer.toString(velocity));
+				props.setProperty("P" + i + "_" + instrument.name() + PATTERN_KEY, pattern);
+			}
 
-		for (final Instrument instrument : guitarInstruments) {
-			final int velocity = loopPanel.getVelocity(instrument);
-			final String pattern = loopPanel.getPattern(instrument);
-			props.setProperty(instrument.name() + VELOCITY_KEY, Integer.toString(velocity));
-			props.setProperty(instrument.name() + PATTERN_KEY, pattern);
+			for (final Instrument instrument : guitarInstruments) {
+				final int velocity = loopPanel[i].getVelocity(instrument);
+				final String pattern = loopPanel[i].getPattern(instrument);
+				props.setProperty("P" + i + "_" + instrument.name() + VELOCITY_KEY,
+						Integer.toString(velocity));
+				props.setProperty("P" + i + "_" + instrument.name() + PATTERN_KEY, pattern);
+			}
 		}
 
 		return props;
@@ -531,23 +585,26 @@ public class MainFrame extends JFrame {
 
 	private void setProperties(final Properties props) {
 		bpmPanel.setValue(Integer.parseInt(props.getProperty(BPM_KEY, "120")));
-		quarterPanel.setValue(Integer.parseInt(props.getProperty(QUARTER_KEY, "4")));
 		masterVelocityPanel.setValue(Integer.parseInt(props.getProperty(MASTER_KEY, "60")));
 
-		for (final Instrument instrument : percussionInstruments) {
-			final int velocity = Integer.parseInt(props.getProperty(instrument.name()
-					+ VELOCITY_KEY, "60"));
-			final String pattern = props.getProperty(instrument.name() + PATTERN_KEY, "");
-			loopPanel.setPattern(instrument, pattern);
-			loopPanel.setVelocity(instrument, velocity);
-		}
+		for (int i = 0; i < loopPanel.length; ++i) {
+			for (final Instrument instrument : percussionInstruments) {
+				final int velocity = Integer.parseInt(props.getProperty(
+						"P" + i + "_" + instrument.name() + VELOCITY_KEY, "60"));
+				final String pattern = props.getProperty("P" + i + "_" + instrument.name()
+						+ PATTERN_KEY, "    ");
+				loopPanel[i].setPattern(instrument, pattern);
+				loopPanel[i].setVelocity(instrument, velocity);
+			}
 
-		for (final Instrument instrument : guitarInstruments) {
-			final int velocity = Integer.parseInt(props.getProperty(instrument.name()
-					+ VELOCITY_KEY, "60"));
-			final String pattern = props.getProperty(instrument.name() + PATTERN_KEY, "");
-			loopPanel.setPattern(instrument, pattern);
-			loopPanel.setVelocity(instrument, velocity);
+			for (final Instrument instrument : guitarInstruments) {
+				final int velocity = Integer.parseInt(props.getProperty(
+						"P" + i + "_" + instrument.name() + VELOCITY_KEY, "60"));
+				final String pattern = props.getProperty("P" + i + "_" + instrument.name()
+						+ PATTERN_KEY, "    ");
+				loopPanel[i].setPattern(instrument, pattern);
+				loopPanel[i].setVelocity(instrument, velocity);
+			}
 		}
 		copyLoopPanelInfo();
 		repaint();
