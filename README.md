@@ -15,11 +15,13 @@ mvn clean install
 
 within JAccompaniment folder.
 
-I'm using it together with qsynth and have following channel settings (GM):
+I'm using it together with Qsynth and have following channel settings (GM):
 
 * Channel 1 Grand Piano (Bank 0, Prog 0)
 * Channel 2 Nylon String Guitar (Bank 0, Prog 24)
 * Channel 10 Room 1 (Bank 128 Prog 9)
+ 
+JAccompaniment uses these channels by default, but you can reconfigure it to use other channels.
 
 I have the alsa virtual midi device installed and following connections (Transmitter -> Receiver) configured:
 
@@ -28,10 +30,18 @@ I have the alsa virtual midi device installed and following connections (Transmi
 
 There is no need to connect the USB-Midi directly to the synthesizer. JAccompaniment has a midi through functionality that can filter the accompaniment area of the keyboard.
 
-JAccompaniment uses these channels by default, but you can reconfigure it to use other channels.
+In the Config Dialog of JAccompaniment following settings are active to connect to Virtual Midi Device
 
-I wrote this program because I started to learn keyboard a few weeks ago. I bought me a keyboard school and a master keyboard not
-regarding that it has no accompaniment, what my keyboard school requires. So I implemented an accompaniment on my own. Since I'm not 
-familiar with how keyboard accompaniment works, I implemented a guitar because I used to play guitar a few years ago and know how this works.
+* Chord Recognition (Input) = VirMIDI [hw:1,0,0]
+* Midi Through (Input) = VirMIDI [hw:1,0,0]
+* Midi Through (Output) = VirMIDI [hw:1,0,0]
+* Guitar (Output) = VirMIDI [hw:1,0,1]
+* Guitar (Channel) 1
+* Percussion (Output) = VirMIDI [hw:1,0,2]
+* Percussion (Channel) = 9
+* Midi Through = yes
+* Filter Chord = yes
+
+I wrote this program because I started to learn keyboard a few weeks ago. I bought me a keyboard school and a master keyboard not regarding that it has no accompaniment, what my keyboard school requires. So I implemented an accompaniment on my own. Since I'm notfamiliar with how keyboard accompaniment works, I implemented a guitar because I used to play guitar a few years ago and know how this works.
 
 
