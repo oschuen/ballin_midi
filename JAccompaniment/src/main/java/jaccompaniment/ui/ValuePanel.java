@@ -65,9 +65,16 @@ public class ValuePanel extends JPanel {
 		super();
 		value = 127;
 		super.setBackground(Color.DARK_GRAY);
-		this.addMouseListener(new MouseAdapter() {
+		final MouseAdapter adapter = new MouseAdapter() {
+			int pressX = 0;
+			int pressY = 0;
+			int pressValue = 0;
+
 			@Override
 			public void mousePressed(final MouseEvent e) {
+				pressX = e.getX();
+				pressY = e.getY();
+				pressValue = getValue();
 				if (e.getX() > labelWidth + valueWidth && e.getX() < width) {
 					if (e.getY() < height / 2) {
 						setValue(getValue() + 1);
@@ -105,6 +112,14 @@ public class ValuePanel extends JPanel {
 						repaint();
 					}
 				}
+			};
+
+			@Override
+			public void mouseDragged(final MouseEvent e) {
+				if (e.getX() < labelWidth + valueWidth || e.getX() > width) {
+					setValue(pressValue - pressX + e.getX() - pressY + e.getY());
+				}
+
 			}
 
 			@Override
@@ -113,7 +128,9 @@ public class ValuePanel extends JPanel {
 					stopIncrement.cancel(false);
 				}
 			}
-		});
+		};
+		this.addMouseListener(adapter);
+		this.addMouseMotionListener(adapter);
 	}
 
 	public void setLabel(final String label) {
