@@ -169,7 +169,7 @@ public class MainFrame extends JFrame {
 		masterVelocityPanel = new ValuePanel();
 		panel.add(masterVelocityPanel);
 		masterVelocityPanel.setLabel("Master");
-		masterVelocityPanel.setValue(60);
+		masterVelocityPanel.setValue(100);
 		masterVelocityPanel.setMinValue(1);
 		masterVelocityPanel.setMaxValue(127);
 

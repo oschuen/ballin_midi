@@ -43,7 +43,7 @@ import javax.swing.JPanel;
 @SuppressWarnings("serial")
 public class PatternPanel extends JPanel {
 	private String pattern = "                ";
-	public static final int patHeight = 40;
+	public static final int patHeight = 30;
 	public static final int patWidth = 25;
 	public static int taktDistance = 15;
 	public static int taktWidth = 4 * patWidth + taktDistance;

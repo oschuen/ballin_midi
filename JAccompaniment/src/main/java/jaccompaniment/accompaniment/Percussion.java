@@ -40,11 +40,10 @@ public class Percussion {
 	 * @author oliver
 	 */
 	public static enum PercussionInstrument implements Instrument {
-
-		CLOSED_HIGH_HAT("Closed High Hat", 42), OPEN_HIGH_HAT("Open High Hat", 46), ACOUSTIC_SNARE(
-				"Acoustic Snare", 38), HIGH_MID_TOM("High Mid Tom", 48), HIGH_FLOOR_TOM(
-				"High Floor Tom", 43), LOW_FLOOR_TOM("Low Floor Tom", 41), HIGH_WOOD_BLOCK(
-				"High Wood Block", 76);
+		ACCENT("Accent", 0), CYMBAL("Cymbal", 51), CLOSED_HIGH_HAT("Closed High Hat", 42), OPEN_HIGH_HAT(
+				"Open High Hat", 46), HIGH_TOM("High Tom", 50), HIGH_MID_TOM("High Mid Tom", 48), ACOUSTIC_SNARE(
+				"Acoustic Snare", 38), RIM_SHOT("Rim Shot", 37), LOW_FLOOR_TOM("Low Floor Tom", 41), CLAPS(
+				"Hand Clap", 39), COW_BELL("Cowbell", 56), BASS_DRUM("Bass Drum", 36);
 
 		private final String speekyName;
 		private final int tone;
@@ -147,8 +146,16 @@ public class Percussion {
 	 * @throws InvalidMidiDataException
 	 */
 	public void beat(final int beat) throws InvalidMidiDataException {
-		for (int i = 0; i < pattern.length; ++i) {
-			lastPlayed[i] = playTom(pattern[i], beat, instrument[i], lastPlayed[i], velocity[i]);
+		final char baseChar = pattern[0].charAt(beat % pattern[0].length());
+		final int factor;
+		if (baseChar == ' ') {
+			factor = velocity[0];
+		} else {
+			factor = 127;
+		}
+		for (int i = 1; i < pattern.length; ++i) {
+			lastPlayed[i] = playTom(pattern[i], beat, instrument[i], lastPlayed[i], factor
+					* velocity[i] / 127);
 		}
 	}
 

@@ -57,7 +57,7 @@ public class ValuePanel extends JPanel {
 	public static final int valueWidth = 80;
 	public static final int buttonWidth = 20;
 	public static final int width = labelWidth + valueWidth + buttonWidth;
-	private static final int height = 40;
+	private static final int height = 30;
 	private final Lock lock = new ReentrantLock();
 	private final List<ValueObserver> observers = new ArrayList<>();
 
