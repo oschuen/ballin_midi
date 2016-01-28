@@ -504,7 +504,7 @@ public class MainFrame extends JFrame {
 					if (guitar != null) {
 						guitar.beat(beat);
 					}
-
+					loopPanel[tabbedPane.getSelectedIndex()].nextBeat(beat);
 				} catch (final InvalidMidiDataException e) {
 					logger.error(e.getMessage(), e);
 				}

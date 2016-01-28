@@ -19,6 +19,8 @@
  */
 package jaccompaniment.ui;
 
+import jaccompaniment.resource.Beat.BeatListener;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -41,7 +43,7 @@ import javax.swing.JPanel;
  * @author oliver
  */
 @SuppressWarnings("serial")
-public class PatternPanel extends JPanel {
+public class PatternPanel extends JPanel implements BeatListener {
 	private String pattern = "                ";
 	public static final int patHeight = 30;
 	public static final int patWidth = 25;
@@ -50,6 +52,7 @@ public class PatternPanel extends JPanel {
 	private final List<ActionListener> listeners = new ArrayList<>();
 	private final Lock lock = new ReentrantLock();
 	private final Executor executor = Executors.newSingleThreadExecutor();
+	private int beat = -1;
 
 	public PatternPanel() {
 		super();
@@ -109,11 +112,14 @@ public class PatternPanel extends JPanel {
 		super.paint(g);
 		for (int i = 0; i < pattern.length(); i++) {
 			final int offset = taktDistance * (i / 4);
+			final boolean beatBox = beat >= 0 && beat % pattern.length() == i;
+			final Color inactiveColor = beatBox ? Color.LIGHT_GRAY : Color.GRAY;
+			final Color activeColor = beatBox ? Color.WHITE : Color.GREEN;
 			if (pattern.charAt(i) == ' ') {
-				g.setColor(Color.GRAY);
+				g.setColor(inactiveColor);
 				g.fill3DRect(offset + i * patWidth, 0, patWidth, getHeight(), false);
 			} else {
-				g.setColor(Color.GREEN);
+				g.setColor(activeColor);
 				g.fill3DRect(offset + i * patWidth, 0, patWidth, getHeight(), true);
 			}
 		}
@@ -164,5 +170,16 @@ public class PatternPanel extends JPanel {
 		} finally {
 			lock.unlock();
 		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see jaccompaniment.resource.Beat.BeatListener#nextBeat(int)
+	 */
+	@Override
+	public void nextBeat(final int beat) {
+		this.beat = beat;
+		repaint();
 	}
 }

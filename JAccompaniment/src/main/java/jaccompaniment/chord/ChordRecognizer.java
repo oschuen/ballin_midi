@@ -25,6 +25,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
@@ -47,6 +49,7 @@ public class ChordRecognizer implements Receiver {
 	private final ChordListener listener;
 	private ScheduledFuture<?> recogTimeoutFuture = null;
 	private final Recognizer recognizer = new Recognizer();
+	private final Lock lock = new ReentrantLock();
 
 	private static final Logger logger = LogManager.getLogger(ChordRecognizer.class);
 
@@ -57,7 +60,7 @@ public class ChordRecognizer implements Receiver {
 	 *            that is informed about the chords
 	 */
 	public ChordRecognizer(final ChordListener listener) {
-		service = Executors.newScheduledThreadPool(2);
+		service = Executors.newSingleThreadScheduledExecutor();
 		this.listener = listener;
 	}
 
@@ -67,19 +70,24 @@ public class ChordRecognizer implements Receiver {
 	 * @param shortMessage
 	 */
 	private void handleNoteOn(final ShortMessage shortMessage) {
-		final int onKey = shortMessage.getData1();
-		final int velocity = shortMessage.getData2();
-		if (onKey <= splitTone) {
-			if (velocity > 0) {
-				if (recogTimeoutFuture != null) {
-					recogTimeoutFuture.cancel(false);
+		lock.lock();
+		try {
+			final int onKey = shortMessage.getData1();
+			final int velocity = shortMessage.getData2();
+			if (onKey <= splitTone) {
+				if (velocity > 0) {
+					if (recogTimeoutFuture != null) {
+						recogTimeoutFuture.cancel(false);
+					}
+					recognizer.pressTone(onKey);
+					recogTimeoutFuture = service.schedule(recognizer, recogHoldTime,
+							TimeUnit.MILLISECONDS);
+				} else {
+					recognizer.releaseTone(onKey);
 				}
-				recognizer.pressTone(onKey);
-				recogTimeoutFuture = service.schedule(recognizer, recogHoldTime,
-						TimeUnit.MILLISECONDS);
-			} else {
-				recognizer.releaseTone(onKey);
 			}
+		} finally {
+			lock.unlock();
 		}
 	}
 
@@ -89,9 +97,14 @@ public class ChordRecognizer implements Receiver {
 	 * @param shortMessage
 	 */
 	private void handleNoteOff(final ShortMessage shortMessage) {
-		final int offKey = shortMessage.getData1();
-		if (offKey <= splitTone) {
-			recognizer.releaseTone(offKey);
+		lock.lock();
+		try {
+			final int offKey = shortMessage.getData1();
+			if (offKey <= splitTone) {
+				recognizer.releaseTone(offKey);
+			}
+		} finally {
+			lock.unlock();
 		}
 	}
 
@@ -103,18 +116,23 @@ public class ChordRecognizer implements Receiver {
 	 */
 	@Override
 	public void send(final MidiMessage message, final long timeStamp) {
-		if (message instanceof ShortMessage) {
-			final ShortMessage shortMessage = (ShortMessage) message;
-			switch (shortMessage.getCommand()) {
-			case ShortMessage.NOTE_ON:
-				handleNoteOn(shortMessage);
-				break;
-			case ShortMessage.NOTE_OFF:
-				handleNoteOff(shortMessage);
-				break;
-			default:
+		service.execute(new Runnable() {
+			@Override
+			public void run() {
+				if (message instanceof ShortMessage) {
+					final ShortMessage shortMessage = (ShortMessage) message;
+					switch (shortMessage.getCommand()) {
+					case ShortMessage.NOTE_ON:
+						handleNoteOn(shortMessage);
+						break;
+					case ShortMessage.NOTE_OFF:
+						handleNoteOff(shortMessage);
+						break;
+					default:
+					}
+				}
 			}
-		}
+		});
 	}
 
 	/*
@@ -224,17 +242,22 @@ public class ChordRecognizer implements Receiver {
 		 */
 		@Override
 		public void run() {
-			final String chord = chordMap.get(Integer.valueOf(pressedTones));
-			if (logger.isDebugEnabled()) {
-				logger.debug("Recognized : " + pressedTones + " Chord " + chord);
-			}
-			if (!(chord == null || listener == null)) {
-				service.submit(new Runnable() {
-					@Override
-					public void run() {
-						listener.newChord(chord);
-					}
-				});
+			lock.lock();
+			try {
+				final String chord = chordMap.get(Integer.valueOf(pressedTones));
+				if (logger.isDebugEnabled() && chord != null) {
+					logger.debug("Recognized : " + pressedTones + " Chord " + chord);
+				}
+				if (!(chord == null || listener == null)) {
+					service.submit(new Runnable() {
+						@Override
+						public void run() {
+							listener.newChord(chord);
+						}
+					});
+				}
+			} finally {
+				lock.unlock();
 			}
 		}
 	}

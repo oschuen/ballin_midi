@@ -19,6 +19,7 @@
  */
 package jaccompaniment.ui;
 
+import jaccompaniment.resource.Beat.BeatListener;
 import jaccompaniment.ui.ValuePanel.ValueObserver;
 
 import java.awt.Color;
@@ -45,7 +46,7 @@ import javax.swing.JPanel;
  * @author oliver
  */
 @SuppressWarnings({ "serial", "PMD.AvoidInstantiatingObjectsInLoops" })
-public class LoopPanel extends JPanel {
+public class LoopPanel extends JPanel implements BeatListener {
 	public static interface Instrument {
 		@Override
 		public String toString();
@@ -58,6 +59,7 @@ public class LoopPanel extends JPanel {
 	private final List<ActionListener> listeners = new ArrayList<>();
 	private final Lock lock = new ReentrantLock();
 	private final Executor executor = Executors.newSingleThreadExecutor();
+	private PatternPanel beatPanel = null;
 
 	public LoopPanel(final Instrument set[]) {
 		super();
@@ -105,6 +107,9 @@ public class LoopPanel extends JPanel {
 							"PATTERN CHANGED"));
 				}
 			});
+			if (i == 0) {
+				beatPanel = patternPanel;
+			}
 		}
 	}
 
@@ -214,5 +219,23 @@ public class LoopPanel extends JPanel {
 		} finally {
 			lock.unlock();
 		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see jaccompaniment.resource.Beat.BeatListener#nextBeat(int)
+	 */
+	@Override
+	public void nextBeat(final int beat) {
+		lock.lock();
+		try {
+			if (beatPanel != null) {
+				beatPanel.nextBeat(beat);
+			}
+		} finally {
+			lock.unlock();
+		}
+
 	}
 }

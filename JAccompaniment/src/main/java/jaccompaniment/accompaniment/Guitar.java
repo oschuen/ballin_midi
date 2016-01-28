@@ -44,7 +44,6 @@ public class Guitar {
 
 	private String pattern[];
 	private int velocity[];
-	private int currentBeat = 0;
 	private int lastBaseTone = -1;
 	private int lastGTone = -1;
 	private int lastBTone = -1;
@@ -279,7 +278,6 @@ public class Guitar {
 			final Chord temp = Chord.valueOf(chord);
 			if (temp != null) {
 				activeChord = temp;
-				beat(currentBeat);
 			}
 		} catch (final Throwable thr) {
 			logger.error("Set chord failed", thr);
@@ -325,7 +323,6 @@ public class Guitar {
 	 * @throws InvalidMidiDataException
 	 */
 	public void beat(final int beat) throws InvalidMidiDataException {
-		currentBeat = beat;
 		if (activeChord != null) {
 			lastBaseTone = playString(pattern[0], beat, activeChord.getBaseTone(), lastBaseTone,
 					velocity[0]);
