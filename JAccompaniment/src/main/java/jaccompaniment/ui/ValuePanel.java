@@ -142,11 +142,17 @@ public class ValuePanel extends JPanel {
 	}
 
 	public void setValue(final int value) {
+		setValue(value, true);
+	}
+
+	public void setValue(final int value, final boolean fireUpdate) {
 		final int temp = Math.max(Math.min(maxValue, value), minValue);
 		if (temp != this.value) {
 			this.value = temp;
-			fireNewValue(this.value);
-			repaint();
+			if (fireUpdate) {
+				fireNewValue(this.value);
+				repaint();
+			}
 		}
 	}
 

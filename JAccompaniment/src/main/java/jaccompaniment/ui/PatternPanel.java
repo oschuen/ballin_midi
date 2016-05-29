@@ -19,8 +19,6 @@
  */
 package jaccompaniment.ui;
 
-import jaccompaniment.resource.Beat.BeatListener;
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -37,6 +35,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import javax.swing.JPanel;
 
+import jaccompaniment.resource.Beat.BeatListener;
+
 /**
  * Panel for editing a single loop Pattern
  * 
@@ -52,7 +52,7 @@ public class PatternPanel extends JPanel implements BeatListener {
 	private final List<ActionListener> listeners = new ArrayList<>();
 	private final Lock lock = new ReentrantLock();
 	private final Executor executor = Executors.newSingleThreadExecutor();
-	private int beat = -1;
+	private final int beat = -1;
 
 	public PatternPanel() {
 		super();
@@ -179,7 +179,9 @@ public class PatternPanel extends JPanel implements BeatListener {
 	 */
 	@Override
 	public void nextBeat(final int beat) {
-		this.beat = beat;
-		repaint();
+		// this.beat = beat;
+		// if (beat % 4 == 0) {
+		// repaint();
+		// }
 	}
 }

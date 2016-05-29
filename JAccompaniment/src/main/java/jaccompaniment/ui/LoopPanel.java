@@ -19,9 +19,6 @@
  */
 package jaccompaniment.ui;
 
-import jaccompaniment.resource.Beat.BeatListener;
-import jaccompaniment.ui.ValuePanel.ValueObserver;
-
 import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -39,6 +36,9 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.swing.JPanel;
+
+import jaccompaniment.resource.Beat.BeatListener;
+import jaccompaniment.ui.ValuePanel.ValueObserver;
 
 /**
  * Panel for editing loop Pattern and velocities
@@ -84,8 +84,8 @@ public class LoopPanel extends JPanel implements BeatListener {
 			velocityPanel.addValueObserver(new ValueObserver() {
 				@Override
 				public void valueChanged(final int newValue) {
-					fireActionEvent(new ActionEvent(this, ActionEvent.ACTION_PERFORMED,
-							"VOLUME CHANGED"));
+					fireActionEvent(
+							new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "VOLUME CHANGED"));
 				}
 			});
 
@@ -103,8 +103,8 @@ public class LoopPanel extends JPanel implements BeatListener {
 
 				@Override
 				public void actionPerformed(final ActionEvent e) {
-					fireActionEvent(new ActionEvent(this, ActionEvent.ACTION_PERFORMED,
-							"PATTERN CHANGED"));
+					fireActionEvent(
+							new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "PATTERN CHANGED"));
 				}
 			});
 			if (i == 0) {
@@ -180,9 +180,14 @@ public class LoopPanel extends JPanel implements BeatListener {
 	}
 
 	public void setVelocity(final Instrument instrument, final int velocity) {
+		setVelocity(instrument, velocity, true);
+	}
+
+	public void setVelocity(final Instrument instrument, final int velocity,
+			final boolean fireUpdate) {
 		final ValuePanel panel = velocityMap.get(instrument);
 		if (panel != null) {
-			panel.setValue(velocity);
+			panel.setValue(velocity, fireUpdate);
 		}
 	}
 

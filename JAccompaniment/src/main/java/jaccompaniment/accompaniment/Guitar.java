@@ -270,10 +270,8 @@ public class Guitar {
 	 * @param chord
 	 *            that shall be played. the currently played tone is finished
 	 *            and the new tone for the chord is played
-	 * 
-	 * @throws InvalidMidiDataException
 	 */
-	public void setChord(final String chord) throws InvalidMidiDataException {
+	public void setChord(final String chord) {
 		try {
 			final Chord temp = Chord.valueOf(chord);
 			if (temp != null) {
@@ -299,9 +297,10 @@ public class Guitar {
 	 *            of the picking
 	 * @return if string is picked the new tone otherwise the lastTone
 	 * @throws InvalidMidiDataException
+	 *             when receiver can't handle command
 	 */
-	private int playString(final String pattern, final int beat, final int tone,
-			final int lastTone, final int velocity) throws InvalidMidiDataException {
+	private int playString(final String pattern, final int beat, final int tone, final int lastTone, final int velocity)
+			throws InvalidMidiDataException {
 		final ShortMessage msg = new ShortMessage();
 		final char baseChar = pattern.charAt(beat % pattern.length());
 		if (baseChar == ' ') {
@@ -321,11 +320,11 @@ public class Guitar {
 	 * @param beat
 	 *            number of one-sixteenth tone that has to be played next
 	 * @throws InvalidMidiDataException
+	 *             when beat couldn't process by midi system for whatever reason
 	 */
 	public void beat(final int beat) throws InvalidMidiDataException {
 		if (activeChord != null) {
-			lastBaseTone = playString(pattern[0], beat, activeChord.getBaseTone(), lastBaseTone,
-					velocity[0]);
+			lastBaseTone = playString(pattern[0], beat, activeChord.getBaseTone(), lastBaseTone, velocity[0]);
 			lastGTone = playString(pattern[1], beat, activeChord.getGTone(), lastGTone, velocity[1]);
 			lastBTone = playString(pattern[2], beat, activeChord.getBTone(), lastBTone, velocity[2]);
 			lastETone = playString(pattern[3], beat, activeChord.getETone(), lastETone, velocity[3]);
@@ -346,5 +345,18 @@ public class Guitar {
 	 */
 	public void setVelocity(final int[] velocity) {
 		this.velocity = Arrays.copyOf(velocity, velocity.length);
+	}
+
+	/**
+	 * Mutes all Sounds played
+	 */
+	public void panic() {
+		try {
+			final ShortMessage msg = new ShortMessage();
+			msg.setMessage(ShortMessage.CONTROL_CHANGE, channel, 123, 0);
+			receiver.send(msg, -1);
+		} catch (InvalidMidiDataException e) {
+			logger.error("Panic Failed", e);
+		}
 	}
 }

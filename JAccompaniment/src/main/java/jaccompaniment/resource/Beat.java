@@ -136,7 +136,7 @@ public class Beat implements ChordListener {
 	/**
 	 * starts at syncstart the beat when chord is recognized
 	 * 
-	 * @see midi.chord.ChordRecognizer.ChordListener#newChord(java.lang.String)
+	 * @see jaccompaniment.chord.ChordRecognizer.ChordListener#newChord(java.lang.String)
 	 */
 	@Override
 	public void newChord(final String chord) {
@@ -182,6 +182,7 @@ public class Beat implements ChordListener {
 	 * internal used fire function that signals the next beat to the clients
 	 * 
 	 * @param beat
+	 *            number of beat
 	 */
 	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	private void fireNextBeat(final int beat) {

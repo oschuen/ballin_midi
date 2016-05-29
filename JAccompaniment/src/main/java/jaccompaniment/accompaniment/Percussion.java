@@ -27,6 +27,9 @@ import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * Percussion configured for GM standard drum map
  * 
@@ -47,7 +50,6 @@ public class Percussion {
 
 		private final String speekyName;
 		private final int tone;
-
 		/**
 		 * Constructor for a Percussion Instrument
 		 * 
@@ -82,6 +84,7 @@ public class Percussion {
 	private final int instrument[];
 	private final int lastPlayed[];
 	private String pattern[] = new String[] {};
+	private static final Logger logger = LogManager.getLogger(Percussion.class);
 
 	/**
 	 * Constructor defining the midi receiver the percussion shall use and which
@@ -121,7 +124,7 @@ public class Percussion {
 	 * @param velocity
 	 *            of the beating
 	 * @return if tom is beaten the new tone otherwise the lastTone
-	 * @throws InvalidMidiDataException
+	 * @throws InvalidMidiDataException when tom couldn't been played by midi system
 	 */
 	private int playTom(final String pattern, final int beat, final int tone, final int lastTone,
 			final int velocity) throws InvalidMidiDataException {
@@ -143,7 +146,7 @@ public class Percussion {
 	/**
 	 * @param beat
 	 *            number of one-sixteenth tone that has to be played next
-	 * @throws InvalidMidiDataException
+	 * @throws InvalidMidiDataException when beat couldn't been processed by midi system
 	 */
 	public void beat(final int beat) throws InvalidMidiDataException {
 		final char baseChar = pattern[0].charAt(beat % pattern[0].length());
@@ -180,5 +183,18 @@ public class Percussion {
 	 */
 	public void close() {
 		receiver.close();
+	}
+	
+	/**
+	 * Mutes all Sounds played
+	 */
+	public void panic() {
+		try {
+			final ShortMessage msg = new ShortMessage();
+			msg.setMessage(ShortMessage.CONTROL_CHANGE, channel, 123, 0);	
+			receiver.send(msg, -1);
+		} catch (InvalidMidiDataException e) {
+			logger.error("Panic Failed", e);
+		}
 	}
 }

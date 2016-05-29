@@ -68,6 +68,7 @@ public class ChordRecognizer implements Receiver {
 	 * handles midi ShortMessages that contain a Note_on command
 	 * 
 	 * @param shortMessage
+	 *            containing a Note on Command
 	 */
 	private void handleNoteOn(final ShortMessage shortMessage) {
 		lock.lock();
@@ -80,8 +81,7 @@ public class ChordRecognizer implements Receiver {
 						recogTimeoutFuture.cancel(false);
 					}
 					recognizer.pressTone(onKey);
-					recogTimeoutFuture = service.schedule(recognizer, recogHoldTime,
-							TimeUnit.MILLISECONDS);
+					recogTimeoutFuture = service.schedule(recognizer, recogHoldTime, TimeUnit.MILLISECONDS);
 				} else {
 					recognizer.releaseTone(onKey);
 				}
@@ -95,6 +95,8 @@ public class ChordRecognizer implements Receiver {
 	 * handles midi ShortMessages that contain a Note_Off command
 	 * 
 	 * @param shortMessage
+	 *            containing a note off command
+	 * 
 	 */
 	private void handleNoteOff(final ShortMessage shortMessage) {
 		lock.lock();

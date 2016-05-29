@@ -19,17 +19,6 @@
  */
 package jaccompaniment.ui;
 
-import jaccompaniment.accompaniment.Guitar;
-import jaccompaniment.accompaniment.Percussion;
-import jaccompaniment.chord.ChordRecognizer;
-import jaccompaniment.chord.ChordRecognizer.ChordListener;
-import jaccompaniment.filter.MidiThroughFilter;
-import jaccompaniment.resource.Beat;
-import jaccompaniment.resource.Beat.BeatListener;
-import jaccompaniment.resource.MidiDevices;
-import jaccompaniment.ui.LoopPanel.Instrument;
-import jaccompaniment.ui.ValuePanel.ValueObserver;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.EventQueue;
@@ -65,6 +54,17 @@ import javax.swing.event.ChangeListener;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import jaccompaniment.accompaniment.Guitar;
+import jaccompaniment.accompaniment.Percussion;
+import jaccompaniment.chord.ChordRecognizer;
+import jaccompaniment.chord.ChordRecognizer.ChordListener;
+import jaccompaniment.filter.MidiThroughFilter;
+import jaccompaniment.resource.Beat;
+import jaccompaniment.resource.Beat.BeatListener;
+import jaccompaniment.resource.MidiDevices;
+import jaccompaniment.ui.LoopPanel.Instrument;
+import jaccompaniment.ui.ValuePanel.ValueObserver;
 
 /**
  * Main application frame
@@ -115,6 +115,7 @@ public class MainFrame extends JFrame {
 	 * Create the frame.
 	 * 
 	 * @throws MidiUnavailableException
+	 *             when there is something wrong with the midi system
 	 */
 	public MainFrame() throws MidiUnavailableException {
 		final JPanel contentPane;
@@ -206,17 +207,31 @@ public class MainFrame extends JFrame {
 			@Override
 			public void stateChanged(final ChangeEvent e) {
 				copyLoopPanelInfo();
+				repaint();
 			}
 		});
 
-		KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(
-				new KeyEventDispatcher() {
+		KeyboardFocusManager.getCurrentKeyboardFocusManager()
+				.addKeyEventDispatcher(new KeyEventDispatcher() {
 
 					@Override
 					public boolean dispatchKeyEvent(final KeyEvent e) {
-						if (e.getKeyCode() >= KeyEvent.VK_F1
-								&& e.getKeyCode() < KeyEvent.VK_F1 + panelCount) {
-							tabbedPane.setSelectedIndex(e.getKeyCode() - KeyEvent.VK_F1);
+						if (e.getID() == KeyEvent.KEY_PRESSED) {
+							if (e.getKeyCode() >= KeyEvent.VK_F1
+									&& e.getKeyCode() < KeyEvent.VK_F1 + panelCount) {
+								tabbedPane.setSelectedIndex(e.getKeyCode() - KeyEvent.VK_F1);
+							} else if (e.getKeyCode() == KeyEvent.VK_F9) {
+								beat.start();
+							} else if (e.getKeyCode() == KeyEvent.VK_F10) {
+								beat.stop();
+							} else if (e.getKeyCode() == KeyEvent.VK_F11) {
+								beat.syncStart();
+							} else if (e.getKeyCode() == KeyEvent.VK_F12) {
+								guitar.panic();
+								percussion.panic();
+								filter.panic();
+							}
+							return true;
 						}
 						return false;
 					}
@@ -266,6 +281,22 @@ public class MainFrame extends JFrame {
 			@Override
 			public void actionPerformed(final ActionEvent e) {
 				beat.syncStart();
+			}
+		});
+
+		final JButton btnPanicStart = new JButton();
+		btnPanicStart.setText("Panic");
+		btnPanicStart.setFont(new Font("Arial Black", Font.PLAIN, 20));
+		btnPanicStart.setBackground(Color.DARK_GRAY);
+		btnPanicStart.setForeground(Color.RED);
+		panel_1.add(btnPanicStart);
+		btnPanicStart.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(final ActionEvent e) {
+				guitar.panic();
+				percussion.panic();
+				filter.panic();
 			}
 		});
 
@@ -421,8 +452,8 @@ public class MainFrame extends JFrame {
 			beatListener = null;
 		}
 
-		final MidiDevice guitarDevice = secureGetReceiverDevice(ConfigDialog
-				.getGuitarOutputDevice());
+		final MidiDevice guitarDevice = secureGetReceiverDevice(
+				ConfigDialog.getGuitarOutputDevice());
 		if (guitarDevice == null) {
 			logger.error("Guitar Device not found");
 		} else {
@@ -431,8 +462,8 @@ public class MainFrame extends JFrame {
 			}
 			guitar = new Guitar(guitarDevice.getReceiver(), ConfigDialog.getGuitarChannel());
 		}
-		final MidiDevice percussionDevice = secureGetReceiverDevice(ConfigDialog
-				.getPercussionOutputDevice());
+		final MidiDevice percussionDevice = secureGetReceiverDevice(
+				ConfigDialog.getPercussionOutputDevice());
 		if (percussionDevice == null) {
 			logger.error("Percussion Device not found");
 		} else {
@@ -443,8 +474,8 @@ public class MainFrame extends JFrame {
 					ConfigDialog.getPercussionChannel());
 		}
 
-		final MidiDevice recognizerDevice = secureGetTransmitterDevice(ConfigDialog
-				.getMidiThroughOutputDevice());
+		final MidiDevice recognizerDevice = secureGetTransmitterDevice(
+				ConfigDialog.getMidiThroughOutputDevice());
 		if (recognizerDevice == null) {
 			logger.error("Recognizer Device not found");
 		} else {
@@ -452,26 +483,22 @@ public class MainFrame extends JFrame {
 				try {
 					recognizerDevice.open();
 				} catch (final MidiUnavailableException e1) {
-					logger.error("Midi Exception occured for Recognizer");
+					logger.error("Midi Exception occured for Recognizer", e1);
 				}
 			}
 			recognizer = new ChordRecognizer(new ChordListener() {
 				@Override
 				public void newChord(final String chord) {
-					try {
-						beat.newChord(chord);
-						guitar.setChord(chord);
-					} catch (final InvalidMidiDataException e) {
-						logger.error(e.getMessage(), e);
-					}
+					beat.newChord(chord);
+					guitar.setChord(chord);
 				}
 			});
 			recognizerTransmitter = recognizerDevice.getTransmitter();
 			recognizerTransmitter.setReceiver(recognizer);
 		}
 
-		final MidiDevice midiThroughInputDevice = secureGetTransmitterDevice(ConfigDialog
-				.getMidiThroughInputDevice());
+		final MidiDevice midiThroughInputDevice = secureGetTransmitterDevice(
+				ConfigDialog.getMidiThroughInputDevice());
 		if (midiThroughInputDevice == null) {
 			logger.error("Midi Through Input Device not found");
 		} else {
@@ -484,8 +511,8 @@ public class MainFrame extends JFrame {
 			}
 		}
 
-		final MidiDevice midiThroughOutputDevice = secureGetReceiverDevice(ConfigDialog
-				.getMidiThroughOutputDevice());
+		final MidiDevice midiThroughOutputDevice = secureGetReceiverDevice(
+				ConfigDialog.getMidiThroughOutputDevice());
 		if (midiThroughOutputDevice == null) {
 			logger.error("Midi Through Output Device not found");
 		} else {
@@ -549,7 +576,7 @@ public class MainFrame extends JFrame {
 			guitar.setPattern(newGuitarPattern);
 			guitar.setVelocity(newGuitarVelocity);
 		}
-		quarterPanel.setValue(selectedPanel.getNumberOfQuarter());
+		quarterPanel.setValue(selectedPanel.getNumberOfQuarter(), false);
 	}
 
 	private final static String BPM_KEY = "bpm";
@@ -584,34 +611,37 @@ public class MainFrame extends JFrame {
 	}
 
 	private void setProperties(final Properties props) {
-		bpmPanel.setValue(Integer.parseInt(props.getProperty(BPM_KEY, "120")));
-		masterVelocityPanel.setValue(Integer.parseInt(props.getProperty(MASTER_KEY, "60")));
-
 		for (int i = 0; i < loopPanel.length; ++i) {
 			for (final Instrument instrument : percussionInstruments) {
-				final int velocity = Integer.parseInt(props.getProperty(
-						"P" + i + "_" + instrument.name() + VELOCITY_KEY, "60"));
-				final String pattern = props.getProperty("P" + i + "_" + instrument.name()
-						+ PATTERN_KEY, "    ");
+				final int velocity = Integer.parseInt(
+						props.getProperty("P" + i + "_" + instrument.name() + VELOCITY_KEY, "60"));
+				final String pattern = props
+						.getProperty("P" + i + "_" + instrument.name() + PATTERN_KEY, "    ");
 				loopPanel[i].setPattern(instrument, pattern);
-				loopPanel[i].setVelocity(instrument, velocity);
+				loopPanel[i].setVelocity(instrument, velocity, false);
 			}
 
 			for (final Instrument instrument : guitarInstruments) {
-				final int velocity = Integer.parseInt(props.getProperty(
-						"P" + i + "_" + instrument.name() + VELOCITY_KEY, "60"));
-				final String pattern = props.getProperty("P" + i + "_" + instrument.name()
-						+ PATTERN_KEY, "    ");
+				final int velocity = Integer.parseInt(
+						props.getProperty("P" + i + "_" + instrument.name() + VELOCITY_KEY, "60"));
+				final String pattern = props
+						.getProperty("P" + i + "_" + instrument.name() + PATTERN_KEY, "    ");
 				loopPanel[i].setPattern(instrument, pattern);
-				loopPanel[i].setVelocity(instrument, velocity);
+				loopPanel[i].setVelocity(instrument, velocity, false);
 			}
 		}
+		bpmPanel.setValue(Integer.parseInt(props.getProperty(BPM_KEY, "120")), false);
+		masterVelocityPanel.setValue(Integer.parseInt(props.getProperty(MASTER_KEY, "60")), false);
 		copyLoopPanelInfo();
 		repaint();
 	}
 
 	/**
 	 * Launch the application.
+	 * 
+	 * @param args
+	 *            form command line
+	 * 
 	 */
 	public static void main(final String[] args) {
 		EventQueue.invokeLater(new Runnable() {

@@ -128,4 +128,20 @@ public class MidiThroughFilter implements Receiver {
 	public void setFilterChord(final boolean filterChord) {
 		this.filterChord = filterChord;
 	}
+	
+	/**
+	 * Mutes all Sounds played
+	 */
+	public void panic() {
+		try {
+			for (int i = 0; i < 16; ++i){
+				final ShortMessage msg = new ShortMessage();
+				msg.setMessage(ShortMessage.CONTROL_CHANGE, i, 123, 0);	
+				receiver.send(msg, -1);
+			}
+		} catch (InvalidMidiDataException e) {
+			logger.error("Panic Failed", e);
+		}
+	}
+
 }
