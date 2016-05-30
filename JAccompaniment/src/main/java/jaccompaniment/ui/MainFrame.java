@@ -630,9 +630,9 @@ public class MainFrame extends JFrame {
 				loopPanel[i].setVelocity(instrument, velocity, false);
 			}
 		}
-		bpmPanel.setValue(Integer.parseInt(props.getProperty(BPM_KEY, "120")), false);
-		masterVelocityPanel.setValue(Integer.parseInt(props.getProperty(MASTER_KEY, "60")), false);
 		copyLoopPanelInfo();
+		bpmPanel.setValue(Integer.parseInt(props.getProperty(BPM_KEY, "120")), true);
+		masterVelocityPanel.setValue(Integer.parseInt(props.getProperty(MASTER_KEY, "60")), true);
 		repaint();
 	}
 
