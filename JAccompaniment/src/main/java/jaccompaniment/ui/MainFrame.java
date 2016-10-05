@@ -64,7 +64,8 @@ import jaccompaniment.resource.Beat;
 import jaccompaniment.resource.Beat.BeatListener;
 import jaccompaniment.resource.MidiDevices;
 import jaccompaniment.ui.LoopPanel.Instrument;
-import jaccompaniment.ui.ValuePanel.ValueObserver;
+import jmidi.gui.ValuePanel;
+import jmidi.gui.model.IntegerModel.ValueObserver;
 
 /**
  * Main application frame
@@ -157,15 +158,9 @@ public class MainFrame extends JFrame {
 			@Override
 			public void valueChanged(final int newValue) {
 				beat.setBpM(newValue);
+				copyLoopPanelInfo();
 			}
 		});
-
-		quarterPanel = new ValuePanel();
-		panel.add(quarterPanel);
-		quarterPanel.setLabel("Nr. quarter");
-		quarterPanel.setValue(4);
-		quarterPanel.setMinValue(1);
-		quarterPanel.setMaxValue(16);
 
 		masterVelocityPanel = new ValuePanel();
 		panel.add(masterVelocityPanel);
@@ -385,11 +380,21 @@ public class MainFrame extends JFrame {
 			}
 		});
 
+		quarterPanel = new ValuePanel();
+		panel.add(quarterPanel);
+		quarterPanel.setLabel("Nr. quarter");
+		quarterPanel.setValue(4);
+		quarterPanel.setMinValue(1);
+		quarterPanel.setMaxValue(16);
+
 		quarterPanel.addValueObserver(new ValueObserver() {
 
 			@Override
 			public void valueChanged(final int newValue) {
-				loopPanel[tabbedPane.getSelectedIndex()].setNumberOfQuarter(newValue);
+				for (final LoopPanel loopPanel : MainFrame.this.loopPanel) {
+					loopPanel.setNumberOfQuarter(newValue);
+				}
+				copyLoopPanelInfo();
 			}
 		});
 		loopPanel[tabbedPane.getSelectedIndex()].setNumberOfQuarter(4);
@@ -490,8 +495,15 @@ public class MainFrame extends JFrame {
 				@Override
 				public void newChord(final String chord) {
 					beat.newChord(chord);
-					guitar.setChord(chord);
+					guitar.newChord(chord);
 				}
+
+				@Override
+				public void noChord() {
+					beat.noChord();
+					guitar.noChord();
+				}
+
 			});
 			recognizerTransmitter = recognizerDevice.getTransmitter();
 			recognizerTransmitter.setReceiver(recognizer);
@@ -576,7 +588,8 @@ public class MainFrame extends JFrame {
 			guitar.setPattern(newGuitarPattern);
 			guitar.setVelocity(newGuitarVelocity);
 		}
-		quarterPanel.setValue(selectedPanel.getNumberOfQuarter(), false);
+		quarterPanel.setValue(selectedPanel.getNumberOfQuarter());
+		repaint();
 	}
 
 	private final static String BPM_KEY = "bpm";
@@ -618,7 +631,7 @@ public class MainFrame extends JFrame {
 				final String pattern = props
 						.getProperty("P" + i + "_" + instrument.name() + PATTERN_KEY, "    ");
 				loopPanel[i].setPattern(instrument, pattern);
-				loopPanel[i].setVelocity(instrument, velocity, false);
+				loopPanel[i].setVelocity(instrument, velocity);
 			}
 
 			for (final Instrument instrument : guitarInstruments) {
@@ -627,12 +640,13 @@ public class MainFrame extends JFrame {
 				final String pattern = props
 						.getProperty("P" + i + "_" + instrument.name() + PATTERN_KEY, "    ");
 				loopPanel[i].setPattern(instrument, pattern);
-				loopPanel[i].setVelocity(instrument, velocity, false);
+				loopPanel[i].setVelocity(instrument, velocity);
 			}
 		}
+		bpmPanel.setValue(Integer.parseInt(props.getProperty(BPM_KEY, "120")));
+		masterVelocityPanel.setValue(Integer.parseInt(props.getProperty(MASTER_KEY, "60")));
+		beat.setBpM(bpmPanel.getValue());
 		copyLoopPanelInfo();
-		bpmPanel.setValue(Integer.parseInt(props.getProperty(BPM_KEY, "120")), true);
-		masterVelocityPanel.setValue(Integer.parseInt(props.getProperty(MASTER_KEY, "60")), true);
 		repaint();
 	}
 

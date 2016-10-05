@@ -1,0 +1,165 @@
+/**
+ * Copyright (C) 2016 Oliver Schünemann
+ * 
+ * This program is free software; you can redistribute it and/or modify it under the terms of the 
+ * GNU General Public License as published by the Free Software Foundation; either version 2 of 
+ * the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ * See the GNU General Public License for more details. 
+ * 
+ * You should have received a copy of the GNU General Public License along with this program; 
+ * if not, write to the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, 
+ * Boston, MA 02110, USA 
+ * 
+ * @since 03.10.2016
+ * @version 1.0
+ * @author oliver
+ */
+package jmidi.gui;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.geom.Rectangle2D;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import jmidi.gui.model.IntegerModel;
+import jmidi.gui.model.IntegerModel.ValueObserver;
+
+/**
+ * @author oliver
+ *
+ */
+@SuppressWarnings("serial")
+public class GM_Instrument extends Component {
+
+	private static final Logger logger = LogManager.getLogger(GM_Instrument.class);
+	private final List<Instrument> instruments = new ArrayList<>();
+	private final IntegerModel model;
+
+	public GM_Instrument() {
+		super();
+		try {
+			final BufferedReader br = new BufferedReader(
+					new InputStreamReader(GM_Instrument.class.getResourceAsStream("font.txt")));
+			String line;
+			line = br.readLine();
+			while (line != null) {
+				final String tokens[] = line.split(",");
+				if (tokens.length == 3) {
+					final String name = tokens[0];
+					final int bank = Integer.valueOf(tokens[1]);
+					final int program = Integer.valueOf(tokens[2]);
+					instruments.add(new Instrument(name, bank, program));
+				} else {
+					logger.error("Number of tokens is not correct : " + line);
+				}
+				line = br.readLine();
+			}
+			br.close();
+			Collections.sort(instruments, new Comparator<Instrument>() {
+				@Override
+				public int compare(final Instrument o1, final Instrument o2) {
+					return o1.getName().compareTo(o2.getName());
+				}
+			});
+		} catch (final IOException e) {
+			logger.error(e.getMessage(), e);
+		}
+		model = new IntegerModel(0, instruments.size() - 1, 0);
+		model.addValueObserver(new ValueObserver() {
+			@Override
+			public void valueChanged(final int newValue) {
+				repaint();
+				firePropertyChange("instrument", null, getInstrument());
+			}
+		});
+	}
+
+	public static class Instrument {
+		private final String name;
+		private final int bank;
+		private final int program;
+
+		public Instrument(final String name, final int bank, final int program) {
+			super();
+			this.name = name;
+			this.bank = bank;
+			this.program = program;
+		}
+
+		/**
+		 * @return the name
+		 */
+		public String getName() {
+			return name;
+		}
+
+		/**
+		 * @return the bank
+		 */
+		public int getBank() {
+			return bank;
+		}
+
+		/**
+		 * @return the program
+		 */
+		public int getProgram() {
+			return program;
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see javax.swing.JComponent#paint(java.awt.Graphics)
+	 */
+	@Override
+	public void paint(final Graphics g) {
+		super.paint(g);
+		final int width = getWidth();
+		final int height = getHeight();
+		g.setColor(Color.DARK_GRAY);
+
+		g.fillRect(0, 0, width - 1, height - 1);
+		g.setFont(new Font("Arial Black", Font.PLAIN, 20));
+		g.setColor(Color.GREEN);
+		final String label = instruments.get(model.getValue()).getName();
+		final FontMetrics fm = g.getFontMetrics();
+		final Rectangle2D r = fm.getStringBounds(label, g);
+		final int y = (height - (int) r.getHeight()) / 2 + fm.getAscent();
+		g.drawString(label, 5, y);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see jmidi.gui.Component#mouseWheelEvent(int)
+	 */
+	@Override
+	public void mouseWheelEvent(final int steps) {
+		if (steps > 0) {
+			model.increment(steps);
+		} else {
+			model.decrement(steps);
+		}
+	}
+
+	public Instrument getInstrument() {
+		return instruments.get(model.getValue());
+	}
+
+}

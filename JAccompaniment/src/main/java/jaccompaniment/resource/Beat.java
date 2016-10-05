@@ -19,8 +19,6 @@
  */
 package jaccompaniment.resource;
 
-import jaccompaniment.chord.ChordRecognizer.ChordListener;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -29,6 +27,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import jaccompaniment.chord.ChordRecognizer.ChordListener;
 
 /**
  * Produces a beat of one-sixteenth steps that correspond to the configured bpm
@@ -149,6 +149,16 @@ public class Beat implements ChordListener {
 		} finally {
 			lock.unlock();
 		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see jaccompaniment.chord.ChordRecognizer.ChordListener#noChord()
+	 */
+	@Override
+	public void noChord() {
+
 	}
 
 	/**

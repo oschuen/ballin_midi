@@ -17,25 +17,11 @@
  * @version 1.0
  * @author oliver
  */
-package jaccompaniment.ui;
+package jmidi.gui;
 
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
-import javax.swing.JPanel;
-
-import jaccompaniment.resource.Beat.BeatListener;
 
 /**
  * Panel for editing a single loop Pattern
@@ -43,45 +29,18 @@ import jaccompaniment.resource.Beat.BeatListener;
  * @author oliver
  */
 @SuppressWarnings("serial")
-public class PatternPanel extends JPanel implements BeatListener {
+public class PatternPanel extends Component {
 	private String pattern = "                ";
 	public static final int patHeight = 30;
 	public static final int patWidth = 25;
 	public static int taktDistance = 15;
 	public static int taktWidth = 4 * patWidth + taktDistance;
-	private final List<ActionListener> listeners = new ArrayList<>();
-	private final Lock lock = new ReentrantLock();
-	private final Executor executor = Executors.newSingleThreadExecutor();
 	private int beat = -1;
 
 	public PatternPanel() {
 		super();
 		super.setBackground(Color.DARK_GRAY);
-
-		addMouseListener(new MouseAdapter() {
-			@Override
-			public void mousePressed(final MouseEvent e) {
-				final int x = e.getPoint().x;
-				final int takt = x / taktWidth;
-
-				final int pos = takt * 4 + (e.getPoint().x - takt * taktWidth) / patWidth;
-				String insert = " ";
-				if (pos >= 0 && pos < pattern.length()) {
-					if (pattern.charAt(pos) == ' ') {
-						insert = "X";
-					}
-					pattern = pattern.substring(0, pos) + insert + pattern.substring(pos + 1);
-					repaint();
-				}
-				fireActionEvent(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, pattern));
-			}
-
-			@Override
-			public void mouseReleased(final MouseEvent e) {
-				// Nothing happens when mouse is released
-			}
-		});
-
+		setDoubleBuffered(true);
 	}
 
 	/**
@@ -108,8 +67,8 @@ public class PatternPanel extends JPanel implements BeatListener {
 	 * @see javax.swing.JComponent#paint(java.awt.Graphics)
 	 */
 	@Override
-	public void paint(final Graphics g) {
-		super.paint(g);
+	public void paintComponent(final Graphics g) {
+		super.paintComponent(g);
 		for (int i = 0; i < pattern.length(); i++) {
 			final int offset = taktDistance * (i / 4);
 			final boolean beatBox = beat >= 0 && beat % pattern.length() == i;
@@ -136,50 +95,30 @@ public class PatternPanel extends JPanel implements BeatListener {
 				patHeight);
 	}
 
-	public void addActionListener(final ActionListener listener) {
-		lock.lock();
-		try {
-			listeners.add(listener);
-		} finally {
-			lock.unlock();
-		}
-	}
-
-	public void removeActionListener(final ActionListener listener) {
-		lock.lock();
-		try {
-			listeners.remove(listener);
-		} finally {
-			lock.unlock();
-		}
-	}
-
-	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
-	private void fireActionEvent(final ActionEvent event) {
-		lock.lock();
-		try {
-			for (final ActionListener listener : listeners) {
-				executor.execute(new Runnable() {
-
-					@Override
-					public void run() {
-						listener.actionPerformed(event);
-					}
-				});
-			}
-		} finally {
-			lock.unlock();
-		}
+	public void setBeat(final int beat) {
+		this.beat = beat;
+		repaint();
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see jaccompaniment.resource.Beat.BeatListener#nextBeat(int)
+	 * @see jmidi.gui.Component#mousePressed(int, int)
 	 */
 	@Override
-	public void nextBeat(final int beat) {
-		this.beat = beat;
+	public void mousePressed(final int x, final int y) {
+		final int takt = x / taktWidth;
+
+		final int pos = takt * 4 + (x - takt * taktWidth) / patWidth;
+		String insert = " ";
+		if (pos >= 0 && pos < pattern.length()) {
+			if (pattern.charAt(pos) == ' ') {
+				insert = "X";
+			}
+			pattern = pattern.substring(0, pos) + insert + pattern.substring(pos + 1);
+			repaint();
+		}
 		repaint();
+		firePropertyChange("pattern", null, pattern);
 	}
 }

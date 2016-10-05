@@ -19,8 +19,6 @@
  */
 package jaccompaniment.accompaniment;
 
-import jaccompaniment.ui.LoopPanel.Instrument;
-
 import java.util.Arrays;
 
 import javax.sound.midi.InvalidMidiDataException;
@@ -30,13 +28,16 @@ import javax.sound.midi.ShortMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import jaccompaniment.chord.ChordRecognizer.ChordListener;
+import jaccompaniment.ui.LoopPanel.Instrument;
+
 /**
  * Guitar accompaniment playing picking patterns. Pattern must be provided for
  * bass, G, B and E String in one-sixteenth resolution.
  * 
  * @author oliver
  */
-public class Guitar {
+public class Guitar implements ChordListener {
 
 	private final Receiver receiver;
 	private final int channel;
@@ -48,6 +49,8 @@ public class Guitar {
 	private int lastGTone = -1;
 	private int lastBTone = -1;
 	private int lastETone = -1;
+	private Integer lostBeat = null;
+	private int looseActiveChordBeats = -1;
 
 	private static final Logger logger = LogManager.getLogger(Guitar.class);
 
@@ -58,7 +61,8 @@ public class Guitar {
 	 */
 	public static enum GuitarInstrument implements Instrument {
 
-		BASS_STRING("Bass String"), G_STRING("G String"), B_STRING("B_String"), E_STRING("E String");
+		BASS_STRING("Bass String"), G_STRING("G String"), B_STRING("B_String"), E_STRING(
+				"E String");
 
 		private final String speekyName;
 
@@ -271,15 +275,31 @@ public class Guitar {
 	 *            that shall be played. the currently played tone is finished
 	 *            and the new tone for the chord is played
 	 */
-	public void setChord(final String chord) {
+	@Override
+	public void newChord(final String chord) {
 		try {
 			final Chord temp = Chord.valueOf(chord);
+			final Integer lostBeat = this.lostBeat;
 			if (temp != null) {
+				looseActiveChordBeats = -1;
 				activeChord = temp;
+				if (lostBeat != null) {
+					beat(lostBeat.intValue());
+				}
 			}
 		} catch (final Throwable thr) {
 			logger.error("Set chord failed", thr);
 		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see jaccompaniment.chord.ChordRecognizer.ChordListener#noChord()
+	 */
+	@Override
+	public void noChord() {
+		looseActiveChordBeats = 2;
 	}
 
 	/**
@@ -299,8 +319,8 @@ public class Guitar {
 	 * @throws InvalidMidiDataException
 	 *             when receiver can't handle command
 	 */
-	private int playString(final String pattern, final int beat, final int tone, final int lastTone, final int velocity)
-			throws InvalidMidiDataException {
+	private int playString(final String pattern, final int beat, final int tone, final int lastTone,
+			final int velocity) throws InvalidMidiDataException {
 		final ShortMessage msg = new ShortMessage();
 		final char baseChar = pattern.charAt(beat % pattern.length());
 		if (baseChar == ' ') {
@@ -323,11 +343,23 @@ public class Guitar {
 	 *             when beat couldn't process by midi system for whatever reason
 	 */
 	public void beat(final int beat) throws InvalidMidiDataException {
-		if (activeChord != null) {
-			lastBaseTone = playString(pattern[0], beat, activeChord.getBaseTone(), lastBaseTone, velocity[0]);
-			lastGTone = playString(pattern[1], beat, activeChord.getGTone(), lastGTone, velocity[1]);
-			lastBTone = playString(pattern[2], beat, activeChord.getBTone(), lastBTone, velocity[2]);
-			lastETone = playString(pattern[3], beat, activeChord.getETone(), lastETone, velocity[3]);
+		looseActiveChordBeats = looseActiveChordBeats > 0 ? looseActiveChordBeats - 1 : -1;
+		if (looseActiveChordBeats == 0) {
+			looseActiveChordBeats = -1;
+			activeChord = null;
+		}
+		if (activeChord == null) {
+			lostBeat = Integer.valueOf(beat);
+		} else {
+			lostBeat = null;
+			lastBaseTone = playString(pattern[0], beat, activeChord.getBaseTone(), lastBaseTone,
+					velocity[0]);
+			lastGTone = playString(pattern[1], beat, activeChord.getGTone(), lastGTone,
+					velocity[1]);
+			lastBTone = playString(pattern[2], beat, activeChord.getBTone(), lastBTone,
+					velocity[2]);
+			lastETone = playString(pattern[3], beat, activeChord.getETone(), lastETone,
+					velocity[3]);
 		}
 	}
 
@@ -355,7 +387,7 @@ public class Guitar {
 			final ShortMessage msg = new ShortMessage();
 			msg.setMessage(ShortMessage.CONTROL_CHANGE, channel, 123, 0);
 			receiver.send(msg, -1);
-		} catch (InvalidMidiDataException e) {
+		} catch (final InvalidMidiDataException e) {
 			logger.error("Panic Failed", e);
 		}
 	}

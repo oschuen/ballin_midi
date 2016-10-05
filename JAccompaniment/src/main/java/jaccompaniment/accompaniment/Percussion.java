@@ -19,8 +19,6 @@
  */
 package jaccompaniment.accompaniment;
 
-import jaccompaniment.ui.LoopPanel.Instrument;
-
 import java.util.Arrays;
 
 import javax.sound.midi.InvalidMidiDataException;
@@ -29,6 +27,8 @@ import javax.sound.midi.ShortMessage;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import jaccompaniment.ui.LoopPanel.Instrument;
 
 /**
  * Percussion configured for GM standard drum map
@@ -43,13 +43,16 @@ public class Percussion {
 	 * @author oliver
 	 */
 	public static enum PercussionInstrument implements Instrument {
-		ACCENT("Accent", 0), CYMBAL("Cymbal", 51), CLOSED_HIGH_HAT("Closed High Hat", 42), OPEN_HIGH_HAT(
-				"Open High Hat", 46), HIGH_TOM("High Tom", 50), HIGH_MID_TOM("High Mid Tom", 48), ACOUSTIC_SNARE(
-				"Acoustic Snare", 38), RIM_SHOT("Rim Shot", 37), LOW_FLOOR_TOM("Low Floor Tom", 41), CLAPS(
-				"Hand Clap", 39), COW_BELL("Cowbell", 56), BASS_DRUM("Bass Drum", 36);
+		ACCENT("Accent", 0), CYMBAL("Cymbal", 51), CLOSED_HIGH_HAT("Closed High Hat",
+				42), OPEN_HIGH_HAT("Open High Hat", 46), HIGH_TOM("High Tom", 50), HIGH_MID_TOM(
+						"High Mid Tom",
+						48), ACOUSTIC_SNARE("Acoustic Snare", 38), RIM_SHOT("Rim Shot",
+								37), LOW_FLOOR_TOM("Low Floor Tom", 41), CLAPS("Hand Clap",
+										39), COW_BELL("Cowbell", 56), BASS_DRUM("Bass Drum", 36);
 
 		private final String speekyName;
 		private final int tone;
+
 		/**
 		 * Constructor for a Percussion Instrument
 		 * 
@@ -124,7 +127,8 @@ public class Percussion {
 	 * @param velocity
 	 *            of the beating
 	 * @return if tom is beaten the new tone otherwise the lastTone
-	 * @throws InvalidMidiDataException when tom couldn't been played by midi system
+	 * @throws InvalidMidiDataException
+	 *             when tom couldn't been played by midi system
 	 */
 	private int playTom(final String pattern, final int beat, final int tone, final int lastTone,
 			final int velocity) throws InvalidMidiDataException {
@@ -146,7 +150,8 @@ public class Percussion {
 	/**
 	 * @param beat
 	 *            number of one-sixteenth tone that has to be played next
-	 * @throws InvalidMidiDataException when beat couldn't been processed by midi system
+	 * @throws InvalidMidiDataException
+	 *             when beat couldn't been processed by midi system
 	 */
 	public void beat(final int beat) throws InvalidMidiDataException {
 		final char baseChar = pattern[0].charAt(beat % pattern[0].length());
@@ -157,8 +162,8 @@ public class Percussion {
 			factor = 127;
 		}
 		for (int i = 1; i < pattern.length; ++i) {
-			lastPlayed[i] = playTom(pattern[i], beat, instrument[i], lastPlayed[i], factor
-					* velocity[i] / 127);
+			lastPlayed[i] = playTom(pattern[i], beat, instrument[i], lastPlayed[i],
+					factor * velocity[i] / 127);
 		}
 	}
 
@@ -184,16 +189,16 @@ public class Percussion {
 	public void close() {
 		receiver.close();
 	}
-	
+
 	/**
 	 * Mutes all Sounds played
 	 */
 	public void panic() {
 		try {
 			final ShortMessage msg = new ShortMessage();
-			msg.setMessage(ShortMessage.CONTROL_CHANGE, channel, 123, 0);	
+			msg.setMessage(ShortMessage.CONTROL_CHANGE, channel, 123, 0);
 			receiver.send(msg, -1);
-		} catch (InvalidMidiDataException e) {
+		} catch (final InvalidMidiDataException e) {
 			logger.error("Panic Failed", e);
 		}
 	}

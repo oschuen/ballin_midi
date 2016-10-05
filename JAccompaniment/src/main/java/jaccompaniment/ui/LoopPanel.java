@@ -23,6 +23,7 @@ import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -38,7 +39,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.swing.JPanel;
 
 import jaccompaniment.resource.Beat.BeatListener;
-import jaccompaniment.ui.ValuePanel.ValueObserver;
+import jmidi.gui.ValuePanel;
+import jmidi.gui.model.IntegerModel.ValueObserver;
 
 /**
  * Panel for editing loop Pattern and velocities
@@ -80,6 +82,7 @@ public class LoopPanel extends JPanel implements BeatListener {
 			velocityPanel.setLabel(set[i].toString());
 			velocityPanel.setMaxValue(127);
 			velocityPanel.setMinValue(1);
+			velocityPanel.setValue(100);
 			velocityMap.put(set[i], velocityPanel);
 			velocityPanel.addValueObserver(new ValueObserver() {
 				@Override
@@ -180,14 +183,9 @@ public class LoopPanel extends JPanel implements BeatListener {
 	}
 
 	public void setVelocity(final Instrument instrument, final int velocity) {
-		setVelocity(instrument, velocity, true);
-	}
-
-	public void setVelocity(final Instrument instrument, final int velocity,
-			final boolean fireUpdate) {
 		final ValuePanel panel = velocityMap.get(instrument);
 		if (panel != null) {
-			panel.setValue(velocity, fireUpdate);
+			panel.setValue(velocity);
 		}
 	}
 
@@ -237,6 +235,7 @@ public class LoopPanel extends JPanel implements BeatListener {
 		try {
 			if (beatPanel != null) {
 				beatPanel.nextBeat(beat);
+				Toolkit.getDefaultToolkit().sync();
 			}
 		} finally {
 			lock.unlock();
