@@ -21,6 +21,7 @@ package jaccompaniment.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -28,6 +29,7 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -46,7 +48,6 @@ import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
@@ -63,9 +64,11 @@ import jaccompaniment.filter.MidiThroughFilter;
 import jaccompaniment.resource.Beat;
 import jaccompaniment.resource.Beat.BeatListener;
 import jaccompaniment.resource.MidiDevices;
-import jaccompaniment.ui.LoopPanel.Instrument;
-import jmidi.gui.ValuePanel;
+import jmidi.gui.group.LoopPanel;
+import jmidi.gui.group.LoopPanel.Instrument;
 import jmidi.gui.model.IntegerModel.ValueObserver;
+import jmidi.gui.widget.TriggerButton;
+import jmidi.gui.widget.ValuePanel;
 
 /**
  * Main application frame
@@ -90,6 +93,8 @@ public class MainFrame extends JFrame {
 	private final ValuePanel masterVelocityPanel;
 	private final ValuePanel bpmPanel;
 	private final ValuePanel quarterPanel;
+	private final ValuePanel pagePanel;
+	private final ValuePanel divisionPanel;
 	private final Beat beat = new Beat();
 
 	private static final String LAST_FILE_KEY = "last file";
@@ -140,54 +145,22 @@ public class MainFrame extends JFrame {
 		contentPane = new JPanel();
 		setContentPane(contentPane);
 		contentPane.setBackground(Color.DARK_GRAY);
-		contentPane.setLayout(new BorderLayout(0, 0));
+		contentPane.setLayout(new BorderLayout(5, 5));
 
 		final JPanel panel = new JPanel();
 		contentPane.add(panel, BorderLayout.SOUTH);
-		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
 		panel.setBackground(Color.DARK_GRAY);
+		panel.setLayout(new GridLayout(0, 3, 5, 5));
 
-		bpmPanel = new ValuePanel();
-		panel.add(bpmPanel);
-		bpmPanel.setLabel("BPM");
-		bpmPanel.setValue(120);
-		bpmPanel.setMaxValue(300);
-		bpmPanel.setMinValue(10);
-		bpmPanel.addValueObserver(new ValueObserver() {
-
-			@Override
-			public void valueChanged(final int newValue) {
-				beat.setBpM(newValue);
-				copyLoopPanelInfo();
-			}
-		});
-
-		masterVelocityPanel = new ValuePanel();
-		panel.add(masterVelocityPanel);
-		masterVelocityPanel.setLabel("Master");
-		masterVelocityPanel.setValue(100);
-		masterVelocityPanel.setMinValue(1);
-		masterVelocityPanel.setMaxValue(127);
-
-		masterVelocityPanel.addValueObserver(new ValueObserver() {
-
-			@Override
-			public void valueChanged(final int newValue) {
-				copyLoopPanelInfo();
-			}
-		});
-
-		tabbedPane = new JTabbedPane();
+		tabbedPane = new JTabbedPane(JTabbedPane.RIGHT);
 		contentPane.add(tabbedPane);
 
 		for (int i = 0; i < loopPanel.length; ++i) {
-			final JScrollPane scrollPane = new JScrollPane();
-			tabbedPane.add("F" + (1 + i), scrollPane);
+			loopPanel[i] = new LoopPanel(allInstruments);
+			tabbedPane.add("F" + (1 + i), loopPanel[i]);
 			tabbedPane.setBackground(Color.DARK_GRAY);
 			tabbedPane.setBackgroundAt(0, Color.DARK_GRAY);
 
-			loopPanel[i] = new LoopPanel(allInstruments);
-			scrollPane.setViewportView(loopPanel[i]);
 			loopPanel[i].addActionListener(new ActionListener() {
 
 				@Override
@@ -237,11 +210,9 @@ public class MainFrame extends JFrame {
 		panel_1.setBackground(Color.DARK_GRAY);
 		panel_1.setLayout(new GridLayout(0, 1, 0, 0));
 
-		final JButton btnStart = new JButton();
-		btnStart.setText("Start");
-		btnStart.setFont(new Font("Arial Black", Font.PLAIN, 20));
-		btnStart.setBackground(Color.DARK_GRAY);
-		btnStart.setForeground(Color.GREEN);
+		final TriggerButton btnStart = new TriggerButton();
+		btnStart.setLabel("Start");
+		btnStart.setPreferredSize(new Dimension(150, 120));
 		panel_1.add(btnStart);
 		btnStart.addActionListener(new ActionListener() {
 
@@ -251,12 +222,12 @@ public class MainFrame extends JFrame {
 			}
 		});
 
-		final JButton btnStop = new JButton();
-		btnStop.setText("Stop");
-		btnStop.setFont(new Font("Arial Black", Font.PLAIN, 20));
-		btnStop.setBackground(Color.DARK_GRAY);
-		btnStop.setForeground(Color.RED);
+		final TriggerButton btnStop = new TriggerButton();
+		btnStop.setLabel("Stop");
+		btnStop.setPreferredSize(new Dimension(150, 120));
+		btnStop.setTextColor(Color.RED);
 		panel_1.add(btnStop);
+
 		btnStop.addActionListener(new ActionListener() {
 
 			@Override
@@ -265,11 +236,9 @@ public class MainFrame extends JFrame {
 			}
 		});
 
-		final JButton btnSyncStart = new JButton();
-		btnSyncStart.setText("Sync Start");
-		btnSyncStart.setFont(new Font("Arial Black", Font.PLAIN, 20));
-		btnSyncStart.setBackground(Color.DARK_GRAY);
-		btnSyncStart.setForeground(Color.GREEN);
+		final TriggerButton btnSyncStart = new TriggerButton();
+		btnSyncStart.setLabel("Sync Start");
+		btnSyncStart.setPreferredSize(new Dimension(150, 120));
 		panel_1.add(btnSyncStart);
 		btnSyncStart.addActionListener(new ActionListener() {
 
@@ -279,11 +248,10 @@ public class MainFrame extends JFrame {
 			}
 		});
 
-		final JButton btnPanicStart = new JButton();
-		btnPanicStart.setText("Panic");
-		btnPanicStart.setFont(new Font("Arial Black", Font.PLAIN, 20));
-		btnPanicStart.setBackground(Color.DARK_GRAY);
-		btnPanicStart.setForeground(Color.RED);
+		final TriggerButton btnPanicStart = new TriggerButton();
+		btnPanicStart.setLabel("Panic");
+		btnPanicStart.setPreferredSize(new Dimension(150, 120));
+		btnPanicStart.setTextColor(Color.RED);
 		panel_1.add(btnPanicStart);
 		btnPanicStart.addActionListener(new ActionListener() {
 
@@ -380,24 +348,90 @@ public class MainFrame extends JFrame {
 			}
 		});
 
+		pagePanel = new ValuePanel();
+		panel.add(pagePanel);
+		pagePanel.setLabel("Nr. pages");
+		pagePanel.setValue(1);
+		pagePanel.setMinValue(1);
+		pagePanel.setMaxValue(8);
+
+		pagePanel.addValueObserver(new ValueObserver() {
+
+			@Override
+			public void valueChanged(final int newValue) {
+				for (final LoopPanel loopPanel : MainFrame.this.loopPanel) {
+					loopPanel.setNumberOfPages(newValue);
+				}
+				copyLoopPanelInfo();
+			}
+		});
+
 		quarterPanel = new ValuePanel();
 		panel.add(quarterPanel);
 		quarterPanel.setLabel("Nr. quarter");
 		quarterPanel.setValue(4);
 		quarterPanel.setMinValue(1);
-		quarterPanel.setMaxValue(16);
+		quarterPanel.setMaxValue(6);
 
 		quarterPanel.addValueObserver(new ValueObserver() {
 
 			@Override
 			public void valueChanged(final int newValue) {
 				for (final LoopPanel loopPanel : MainFrame.this.loopPanel) {
-					loopPanel.setNumberOfQuarter(newValue);
+					loopPanel.setQuarterPerPage(newValue);
 				}
 				copyLoopPanelInfo();
 			}
 		});
-		loopPanel[tabbedPane.getSelectedIndex()].setNumberOfQuarter(4);
+
+		divisionPanel = new ValuePanel();
+		panel.add(divisionPanel);
+		divisionPanel.setLabel("Division");
+		divisionPanel.setValue(4);
+		divisionPanel.setMinValue(2);
+		divisionPanel.setMaxValue(6);
+
+		divisionPanel.addValueObserver(new ValueObserver() {
+
+			@Override
+			public void valueChanged(final int newValue) {
+				for (final LoopPanel loopPanel : MainFrame.this.loopPanel) {
+					loopPanel.setQuarterDivision(newValue);
+				}
+				copyLoopPanelInfo();
+				beat.setDivision(newValue);
+			}
+		});
+
+		bpmPanel = new ValuePanel();
+		panel.add(bpmPanel);
+		bpmPanel.setLabel("BPM");
+		bpmPanel.setValue(120);
+		bpmPanel.setMaxValue(300);
+		bpmPanel.setMinValue(10);
+		bpmPanel.addValueObserver(new ValueObserver() {
+
+			@Override
+			public void valueChanged(final int newValue) {
+				beat.setBpM(newValue);
+				copyLoopPanelInfo();
+			}
+		});
+
+		masterVelocityPanel = new ValuePanel();
+		panel.add(masterVelocityPanel);
+		masterVelocityPanel.setLabel("Master");
+		masterVelocityPanel.setValue(100);
+		masterVelocityPanel.setMinValue(1);
+		masterVelocityPanel.setMaxValue(127);
+
+		masterVelocityPanel.addValueObserver(new ValueObserver() {
+
+			@Override
+			public void valueChanged(final int newValue) {
+				copyLoopPanelInfo();
+			}
+		});
 
 		setupMidi();
 
@@ -544,6 +578,7 @@ public class MainFrame extends JFrame {
 						guitar.beat(beat);
 					}
 					loopPanel[tabbedPane.getSelectedIndex()].nextBeat(beat);
+					Toolkit.getDefaultToolkit().sync();
 				} catch (final InvalidMidiDataException e) {
 					logger.error(e.getMessage(), e);
 				}
@@ -566,6 +601,8 @@ public class MainFrame extends JFrame {
 		final LoopPanel selectedPanel = loopPanel[tabbedPane.getSelectedIndex()];
 		final String newPercussionPattern[] = new String[percussionInstruments.length];
 		final int newPercussionVelocity[] = new int[percussionInstruments.length];
+		final String accent = selectedPanel.getPattern(LoopPanel.ACCENT);
+		final int factor = selectedPanel.getVelocity(LoopPanel.ACCENT);
 
 		for (int i = 0; i < newPercussionPattern.length; ++i) {
 			newPercussionPattern[i] = selectedPanel.getPattern(percussionInstruments[i]);
@@ -573,8 +610,8 @@ public class MainFrame extends JFrame {
 					* selectedPanel.getVelocity(percussionInstruments[i]) / 127;
 		}
 		if (percussion != null) {
-			percussion.setPattern(newPercussionPattern);
-			percussion.setVelocity(newPercussionVelocity);
+			percussion.setPattern(accent, newPercussionPattern);
+			percussion.setVelocity(factor, newPercussionVelocity);
 		}
 
 		final String newGuitarPattern[] = new String[guitarInstruments.length];
@@ -588,7 +625,6 @@ public class MainFrame extends JFrame {
 			guitar.setPattern(newGuitarPattern);
 			guitar.setVelocity(newGuitarVelocity);
 		}
-		quarterPanel.setValue(selectedPanel.getNumberOfQuarter());
 		repaint();
 	}
 
@@ -596,11 +632,17 @@ public class MainFrame extends JFrame {
 	private final static String MASTER_KEY = "master";
 	private final static String VELOCITY_KEY = ".velocity";
 	private final static String PATTERN_KEY = ".pattern";
+	private final static String PAGE_KEY = "page";
+	private final static String QUARTER_KEY = "quarter";
+	private final static String DIVISION_KEY = "division";
 
 	private Properties getProperties() {
 		final Properties props = new Properties();
 		props.setProperty(BPM_KEY, Integer.toString(bpmPanel.getValue()));
 		props.setProperty(MASTER_KEY, Integer.toString(masterVelocityPanel.getValue()));
+		props.setProperty(PAGE_KEY, Integer.toString(pagePanel.getValue()));
+		props.setProperty(QUARTER_KEY, Integer.toString(quarterPanel.getValue()));
+		props.setProperty(DIVISION_KEY, Integer.toString(divisionPanel.getValue()));
 
 		for (int i = 0; i < loopPanel.length; i++) {
 			for (final Instrument instrument : percussionInstruments) {
@@ -624,6 +666,11 @@ public class MainFrame extends JFrame {
 	}
 
 	private void setProperties(final Properties props) {
+
+		pagePanel.setValue(Integer.parseInt(props.getProperty(PAGE_KEY, "1")));
+		quarterPanel.setValue(Integer.parseInt(props.getProperty(QUARTER_KEY, "4")));
+		divisionPanel.setValue(Integer.parseInt(props.getProperty(DIVISION_KEY, "4")));
+
 		for (int i = 0; i < loopPanel.length; ++i) {
 			for (final Instrument instrument : percussionInstruments) {
 				final int velocity = Integer.parseInt(
@@ -642,10 +689,15 @@ public class MainFrame extends JFrame {
 				loopPanel[i].setPattern(instrument, pattern);
 				loopPanel[i].setVelocity(instrument, velocity);
 			}
+			loopPanel[i].setNumberOfPages(pagePanel.getValue());
+			loopPanel[i].setQuarterPerPage(quarterPanel.getValue());
+			loopPanel[i].setQuarterDivision(divisionPanel.getValue());
 		}
 		bpmPanel.setValue(Integer.parseInt(props.getProperty(BPM_KEY, "120")));
 		masterVelocityPanel.setValue(Integer.parseInt(props.getProperty(MASTER_KEY, "60")));
+
 		beat.setBpM(bpmPanel.getValue());
+		beat.setDivision(divisionPanel.getValue());
 		copyLoopPanelInfo();
 		repaint();
 	}
@@ -663,6 +715,7 @@ public class MainFrame extends JFrame {
 			public void run() {
 				try {
 					final MainFrame frame = new MainFrame();
+					frame.setResizable(false);
 					frame.setVisible(true);
 				} catch (final Exception e) {
 					logger.error(e.getMessage(), e);

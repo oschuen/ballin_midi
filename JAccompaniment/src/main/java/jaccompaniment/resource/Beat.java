@@ -44,8 +44,10 @@ public class Beat implements ChordListener {
 	private final Lock lock = new ReentrantLock();
 	private long bpm = 120;
 	private int currentBeat = 0;
+	private int division = 4;
 
 	private boolean awaitSyncStart = false;
+	private boolean beatChanged = false;
 
 	/**
 	 * Constructs an instance of beat and allocates all needed resources
@@ -106,12 +108,18 @@ public class Beat implements ChordListener {
 			if (stopFuture != null) {
 				stopFuture.cancel(false);
 			}
+			final long rate = 60000000000l / bpm / division;
+			;
 			stopFuture = service.scheduleAtFixedRate(new Runnable() {
 				@Override
 				public void run() {
 					fireNextBeat(currentBeat++);
+					if (beatChanged) {
+						beatChanged = false;
+						startBeat();
+					}
 				}
-			}, 0, 60000000000l / bpm / 4, TimeUnit.NANOSECONDS);
+			}, rate, rate, TimeUnit.NANOSECONDS);
 		} finally {
 			lock.unlock();
 		}
@@ -225,12 +233,30 @@ public class Beat implements ChordListener {
 	public void setBpM(final long bpm) {
 		lock.lock();
 		try {
-			this.bpm = bpm;
-			if (stopFuture != null) {
-				startBeat();
+			if (this.bpm != bpm) {
+				this.bpm = bpm;
+				beatChanged = true;
 			}
 		} finally {
 			lock.unlock();
+		}
+	}
+
+	/**
+	 * @return the division
+	 */
+	public int getDivision() {
+		return division;
+	}
+
+	/**
+	 * @param division
+	 *            the division to set
+	 */
+	public void setDivision(final int division) {
+		if (this.division != division) {
+			this.division = division;
+			beatChanged = true;
 		}
 	}
 }

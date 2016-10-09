@@ -29,7 +29,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import jaccompaniment.chord.ChordRecognizer.ChordListener;
-import jaccompaniment.ui.LoopPanel.Instrument;
+import jmidi.gui.group.LoopPanel.Instrument;
 
 /**
  * Guitar accompaniment playing picking patterns. Pattern must be provided for

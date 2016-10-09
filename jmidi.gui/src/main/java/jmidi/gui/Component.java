@@ -21,7 +21,6 @@ package jmidi.gui;
 
 import java.awt.EventQueue;
 import java.awt.Font;
-import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
@@ -89,7 +88,6 @@ public class Component extends JPanel {
 			public void run() {
 				try {
 					Component.super.repaint();
-					Toolkit.getDefaultToolkit().sync();
 				} catch (final Exception e) {
 					logger.error(e.getMessage(), e);
 				}

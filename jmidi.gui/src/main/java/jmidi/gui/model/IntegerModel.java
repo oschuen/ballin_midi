@@ -19,6 +19,7 @@
  */
 package jmidi.gui.model;
 
+import java.awt.EventQueue;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -179,7 +180,7 @@ public class IntegerModel {
 		try {
 			final int newValue = getValue();
 			for (final ValueObserver observer : observers) {
-				executor.execute(new Runnable() {
+				EventQueue.invokeLater(new Runnable() {
 					@Override
 					public void run() {
 						observer.valueChanged(newValue);

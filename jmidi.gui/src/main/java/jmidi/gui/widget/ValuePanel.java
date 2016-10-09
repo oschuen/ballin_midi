@@ -17,15 +17,15 @@
  * @version 1.0
  * @author oliver
  */
-package jmidi.gui;
+package jmidi.gui.widget;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.geom.Rectangle2D;
 
+import jmidi.gui.Component;
 import jmidi.gui.model.IntegerModel;
 import jmidi.gui.model.IntegerModel.ValueObserver;
 
@@ -39,9 +39,8 @@ public class ValuePanel extends Component {
 	private String label = "Velocity";
 	public static final int labelWidth = 200;
 	public static final int valueWidth = 80;
-	public static final int buttonWidth = 20;
-	public static final int width = labelWidth + valueWidth + buttonWidth;
-	private static final int height = 30;
+	public static final int width = labelWidth + valueWidth;
+	public static final int height = 26;
 	private final IntegerModel model = new IntegerModel(Integer.MIN_VALUE, Integer.MAX_VALUE, 0);
 	private int pressValue;
 
@@ -91,36 +90,23 @@ public class ValuePanel extends Component {
 	 * @see javax.swing.JComponent#paint(java.awt.Graphics)
 	 */
 	@Override
-	public void paint(final Graphics g) {
+	public void paintComponent(final Graphics g) {
 		final String value = Integer.toString(getValue());
-		super.paint(g);
+		super.paintComponent(g);
 		g.setColor(Color.DARK_GRAY);
 		g.fillRect(0, 0, labelWidth, height);
-		g.setFont(new Font("Arial Black", Font.PLAIN, 20));
+		g.setFont(sf);
 		g.setColor(Color.GREEN);
 		final FontMetrics fm = g.getFontMetrics();
 		Rectangle2D r = fm.getStringBounds(label, g);
-		int y = (height - (int) r.getHeight()) / 2 + fm.getAscent();
+		final int y = (height - (int) r.getHeight()) / 2 + fm.getAscent();
 		g.drawString(label, 5, y);
 		g.setColor(Color.DARK_GRAY);
 		g.fill3DRect(labelWidth, 0, valueWidth, height, false);
 		g.setColor(Color.YELLOW);
 		r = fm.getStringBounds(value, g);
-		int x = labelWidth + valueWidth - 5 - (int) r.getWidth();
+		final int x = labelWidth + valueWidth - 5 - (int) r.getWidth();
 		g.drawString(value, x, y);
-		g.setColor(Color.DARK_GRAY);
-		g.fill3DRect(labelWidth + valueWidth, 0, buttonWidth, height / 2, false);
-		g.fill3DRect(labelWidth + valueWidth, height / 2 + 1, buttonWidth, height, false);
-		r = fm.getStringBounds("+", g);
-		x = labelWidth + valueWidth + (buttonWidth - (int) r.getWidth()) / 2;
-		y = (height / 2 - (int) r.getHeight()) / 2 + fm.getAscent();
-		g.setColor(Color.WHITE);
-		g.drawString("+", x, y);
-		r = fm.getStringBounds("-", g);
-		x = labelWidth + valueWidth + (buttonWidth - (int) r.getWidth()) / 2;
-		y = height / 2 + (height / 2 - (int) r.getHeight()) / 2 + fm.getAscent();
-		g.setColor(Color.WHITE);
-		g.drawString("-", x, y);
 	}
 
 	/*
@@ -149,8 +135,8 @@ public class ValuePanel extends Component {
 	@Override
 	public void mousePressed(final int x, final int y) {
 		pressValue = getValue();
-		if (x > labelWidth + valueWidth && x < width) {
-			if (y < height / 2) {
+		if (x > labelWidth && x < width) {
+			if (x - labelWidth > valueWidth / 2) {
 				model.increment();
 				model.startIncrementing();
 			} else {
@@ -183,6 +169,8 @@ public class ValuePanel extends Component {
 			setValue(pressValue - origin_x + x - origin_y + y);
 			model.fireNewValue();
 		}
+		model.stopIncrementing();
+		model.stopDecrementing();
 		repaint();
 	}
 
@@ -193,7 +181,7 @@ public class ValuePanel extends Component {
 	 */
 	@Override
 	public void mouseWheelEvent(final int steps) {
-		if (steps > 0) {
+		if (steps < 0) {
 			model.increment();
 		} else {
 			model.decrement();

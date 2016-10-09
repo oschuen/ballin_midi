@@ -19,7 +19,7 @@
  */
 package jmidi.gui;
 
-import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 
@@ -28,17 +28,22 @@ import javax.swing.JFrame;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import jmidi.gui.widget.PageSelector;
+
 /**
  * @author oliver
  *
  */
 @SuppressWarnings("serial")
 public class TestFrame extends JFrame {
-	final ValuePanel panel = new ValuePanel();
+	final PageSelector panel = new PageSelector();
 
 	public TestFrame() {
+		getContentPane().setBackground(Color.BLUE);
+		getContentPane().setLayout(null);
+		getContentPane().add(panel);
 
-		getContentPane().add(panel, BorderLayout.CENTER);
+		panel.setBounds(50, 50, 600, 65);
 	}
 
 	private static final Logger logger = LogManager.getLogger(TestFrame.class);

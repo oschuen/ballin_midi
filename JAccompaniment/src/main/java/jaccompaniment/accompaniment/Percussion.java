@@ -28,7 +28,7 @@ import javax.sound.midi.ShortMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import jaccompaniment.ui.LoopPanel.Instrument;
+import jmidi.gui.group.LoopPanel.Instrument;
 
 /**
  * Percussion configured for GM standard drum map
@@ -43,9 +43,8 @@ public class Percussion {
 	 * @author oliver
 	 */
 	public static enum PercussionInstrument implements Instrument {
-		ACCENT("Accent", 0), CYMBAL("Cymbal", 51), CLOSED_HIGH_HAT("Closed High Hat",
-				42), OPEN_HIGH_HAT("Open High Hat", 46), HIGH_TOM("High Tom", 50), HIGH_MID_TOM(
-						"High Mid Tom",
+		CYMBAL("Cymbal", 51), CLOSED_HIGH_HAT("Closed High Hat", 42), OPEN_HIGH_HAT("Open High Hat",
+				46), HIGH_TOM("High Tom", 50), HIGH_MID_TOM("High Mid Tom",
 						48), ACOUSTIC_SNARE("Acoustic Snare", 38), RIM_SHOT("Rim Shot",
 								37), LOW_FLOOR_TOM("Low Floor Tom", 41), CLAPS("Hand Clap",
 										39), COW_BELL("Cowbell", 56), BASS_DRUM("Bass Drum", 36);
@@ -87,6 +86,8 @@ public class Percussion {
 	private final int instrument[];
 	private final int lastPlayed[];
 	private String pattern[] = new String[] {};
+	private String accent = "";
+	private int factor = 127;
 	private static final Logger logger = LogManager.getLogger(Percussion.class);
 
 	/**
@@ -154,14 +155,14 @@ public class Percussion {
 	 *             when beat couldn't been processed by midi system
 	 */
 	public void beat(final int beat) throws InvalidMidiDataException {
-		final char baseChar = pattern[0].charAt(beat % pattern[0].length());
+		final char baseChar = accent.charAt(beat % pattern[0].length());
 		final int factor;
 		if (baseChar == ' ') {
-			factor = velocity[0];
+			factor = this.factor;
 		} else {
 			factor = 127;
 		}
-		for (int i = 1; i < pattern.length; ++i) {
+		for (int i = 0; i < pattern.length; ++i) {
 			lastPlayed[i] = playTom(pattern[i], beat, instrument[i], lastPlayed[i],
 					factor * velocity[i] / 127);
 		}
@@ -171,7 +172,8 @@ public class Percussion {
 	 * @param pattern
 	 *            the pattern to set for the 4 Strings
 	 */
-	public void setPattern(final String[] pattern) {
+	public void setPattern(final String accent, final String[] pattern) {
+		this.accent = accent;
 		this.pattern = Arrays.copyOf(pattern, pattern.length);
 	}
 
@@ -179,8 +181,9 @@ public class Percussion {
 	 * @param velocity
 	 *            the velocity to set for each String
 	 */
-	public void setVelocity(final int[] velocity) {
+	public void setVelocity(final int factor, final int[] velocity) {
 		this.velocity = Arrays.copyOf(velocity, velocity.length);
+		this.factor = factor;
 	}
 
 	/**

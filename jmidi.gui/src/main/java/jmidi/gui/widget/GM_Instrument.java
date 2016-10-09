@@ -17,7 +17,7 @@
  * @version 1.0
  * @author oliver
  */
-package jmidi.gui;
+package jmidi.gui.widget;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -35,6 +35,7 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import jmidi.gui.Component;
 import jmidi.gui.model.IntegerModel;
 import jmidi.gui.model.IntegerModel.ValueObserver;
 

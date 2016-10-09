@@ -8,7 +8,7 @@
 	</parent>
 
 	<artifactId>jaccompaniment</artifactId>
-	<version>0.0.4</version>
+	<version>0.0.5</version>
 	<packaging>jar</packaging>
 	<name>JAccompaniment</name>
 
