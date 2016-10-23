@@ -17,7 +17,7 @@
  * @version 1.0
  * @author oliver
  */
-package jaccompaniment.resource;
+package midi.device.resource;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -6,7 +6,6 @@
 		<artifactId>jmidi-parent</artifactId>
 		<version>0.0.1</version>
 	</parent>
-
 	<artifactId>jaccompaniment</artifactId>
 	<version>0.0.5</version>
 	<packaging>jar</packaging>
@@ -25,8 +24,12 @@
 			<artifactId>log4j-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>jmidi.gui</groupId>
+			<groupId>jmidi</groupId>
 			<artifactId>jmidi.gui</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>jmidi</groupId>	
+			<artifactId>midi.device</artifactId>
 		</dependency>
 	</dependencies>
 	<build>

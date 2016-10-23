@@ -5,8 +5,8 @@
     <artifactId>jmidi-parent</artifactId>
     <version>0.0.1</version>
   </parent>
-  <artifactId>jmidi.gui</artifactId>
-  <version>${jmidi.gui.version}</version>
+  <artifactId>midi.device</artifactId>
+  <version>${midi.device.version}</version>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
@@ -33,4 +33,5 @@
 			</plugin>
 		</plugins>
 	</build>
+
 </project>

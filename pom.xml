@@ -11,11 +11,13 @@
 	<properties>
 		<JAVA_VERSION>1.8</JAVA_VERSION>
 		<jmidi.gui.version>0.0.1</jmidi.gui.version>
+		<midi.device.version>0.0.1</midi.device.version>
 	</properties>
 
 	<modules>
 		<module>JAccompaniment</module>
 		<module>jmidi.gui</module>
+		<module>midi.device</module>
 	</modules>
 	<dependencyManagement>
 		<dependencies>
@@ -41,9 +43,14 @@
 				<version>2.1</version>
 			</dependency>
 			<dependency>
-				<groupId>jmidi.gui</groupId>
+				<groupId>jmidi</groupId>
 				<artifactId>jmidi.gui</artifactId>
 				<version>${jmidi.gui.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>jmidi</groupId>
+				<artifactId>midi.device</artifactId>
+				<version>${midi.device.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

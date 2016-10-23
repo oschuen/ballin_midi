@@ -63,12 +63,12 @@ import jaccompaniment.chord.ChordRecognizer.ChordListener;
 import jaccompaniment.filter.MidiThroughFilter;
 import jaccompaniment.resource.Beat;
 import jaccompaniment.resource.Beat.BeatListener;
-import jaccompaniment.resource.MidiDevices;
 import jmidi.gui.group.LoopPanel;
 import jmidi.gui.group.LoopPanel.Instrument;
 import jmidi.gui.model.IntegerModel.ValueObserver;
 import jmidi.gui.widget.TriggerButton;
 import jmidi.gui.widget.ValuePanel;
+import midi.device.resource.MidiDevices;
 
 /**
  * Main application frame
@@ -199,7 +199,6 @@ public class MainFrame extends JFrame {
 								percussion.panic();
 								filter.panic();
 							}
-							return true;
 						}
 						return false;
 					}
@@ -645,6 +644,11 @@ public class MainFrame extends JFrame {
 		props.setProperty(DIVISION_KEY, Integer.toString(divisionPanel.getValue()));
 
 		for (int i = 0; i < loopPanel.length; i++) {
+			props.setProperty("P" + i + "_" + LoopPanel.ACCENT.name() + VELOCITY_KEY,
+					Integer.toString(loopPanel[i].getVelocity(LoopPanel.ACCENT)));
+			props.setProperty("P" + i + "_" + LoopPanel.ACCENT.name() + PATTERN_KEY,
+					loopPanel[i].getPattern(LoopPanel.ACCENT));
+
 			for (final Instrument instrument : percussionInstruments) {
 				final int velocity = loopPanel[i].getVelocity(instrument);
 				final String pattern = loopPanel[i].getPattern(instrument);
@@ -672,6 +676,11 @@ public class MainFrame extends JFrame {
 		divisionPanel.setValue(Integer.parseInt(props.getProperty(DIVISION_KEY, "4")));
 
 		for (int i = 0; i < loopPanel.length; ++i) {
+			loopPanel[i].setVelocity(LoopPanel.ACCENT, Integer.parseInt(props
+					.getProperty("P" + i + "_" + LoopPanel.ACCENT.name() + VELOCITY_KEY, "127")));
+			loopPanel[i].setPattern(LoopPanel.ACCENT, props
+					.getProperty("P" + i + "_" + LoopPanel.ACCENT.name() + PATTERN_KEY, "    "));
+
 			for (final Instrument instrument : percussionInstruments) {
 				final int velocity = Integer.parseInt(
 						props.getProperty("P" + i + "_" + instrument.name() + VELOCITY_KEY, "60"));

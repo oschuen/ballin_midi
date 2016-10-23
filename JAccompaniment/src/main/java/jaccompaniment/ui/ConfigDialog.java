@@ -19,8 +19,6 @@
  */
 package jaccompaniment.ui;
 
-import jaccompaniment.resource.MidiDevices;
-
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Frame;
@@ -45,6 +43,8 @@ import javax.swing.border.EmptyBorder;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import midi.device.resource.MidiDevices;
 
 /**
  * Configures Midi devices and channels
