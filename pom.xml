@@ -12,12 +12,14 @@
 		<JAVA_VERSION>1.8</JAVA_VERSION>
 		<midi.gui.version>0.0.1</midi.gui.version>
 		<midi.device.version>0.0.1</midi.device.version>
+		<midi.pad.version>0.0.1</midi.pad.version>
 	</properties>
 
 	<modules>
 		<module>JAccompaniment</module>
 		<module>midi.gui</module>
 		<module>midi.device</module>
+		<module>midi.pad</module>
 	</modules>
 	<dependencyManagement>
 		<dependencies>
@@ -43,12 +45,12 @@
 				<version>2.1</version>
 			</dependency>
 			<dependency>
-				<groupId>jmidi</groupId>
-				<artifactId>jmidi.gui</artifactId>
-				<version>${jmidi.gui.version}</version>
+				<groupId>de.yamap</groupId>
+				<artifactId>midi.gui</artifactId>
+				<version>${midi.gui.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>jmidi</groupId>
+				<groupId>de.yamap</groupId>
 				<artifactId>midi.device</artifactId>
 				<version>${midi.device.version}</version>
 			</dependency>

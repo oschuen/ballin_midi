@@ -2,8 +2,8 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>jmidi</groupId>
-		<artifactId>jmidi-parent</artifactId>
+		<groupId>de.yamap</groupId>
+		<artifactId>midi-parent</artifactId>
 		<version>0.0.1</version>
 	</parent>
 	<artifactId>jaccompaniment</artifactId>
@@ -24,11 +24,11 @@
 			<artifactId>log4j-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>jmidi</groupId>
-			<artifactId>jmidi.gui</artifactId>
+			<groupId>de.yamap</groupId>
+			<artifactId>midi.gui</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>jmidi</groupId>	
+			<groupId>de.yamap</groupId>	
 			<artifactId>midi.device</artifactId>
 		</dependency>
 	</dependencies>

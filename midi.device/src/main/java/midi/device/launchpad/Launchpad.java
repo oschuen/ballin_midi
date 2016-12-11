@@ -35,12 +35,18 @@ public class Launchpad {
 		final MidiDevice launchPad = MidiDevices.getReceiverDevice("Mini [hw:2,0,0]");
 		launchPad.open();
 		final Receiver receiver = launchPad.getReceiver();
-		final String text = " Drum";
+		String text = " Drumksdjhfhsdöfhsdökhsdökghdföhdöfhreswoiretoertoretuoretueortueortueortuerotöerkthrkebterbt,nebrvt,nerbtv,ernbtvr,netvr,nebtvr,nebtv,erntvbgfldjfbgxcklvjdkfjghkdfjghkdfjghöiutöerthödkjghkdjghdkfjghökdghökdjgökdjgködfjg";
+		text = text + text;
+		text = text + text;
+		text = text + text;
+		text = text + text;
 		final ShortMessage msg = new ShortMessage();
+		final long startTime = System.currentTimeMillis();
+		int count = 0;
 		for (int j = 0; j < text.length() * 3 + 1; j++) {
 			msg.setMessage(ShortMessage.CONTROL_CHANGE, 0, 0, 32 + 4);
 			receiver.send(msg, 0);
-			Thread.sleep(75);
+			// Thread.sleep(75);
 			int b[] = Font.getBitmap(text, j * 2);
 			for (int i = 0; i < 32; ++i) {
 				final ShortMessage msg2 = new ShortMessage();
@@ -53,7 +59,7 @@ public class Launchpad {
 			}
 			msg.setMessage(ShortMessage.CONTROL_CHANGE, 0, 0, 32 + 1);
 			receiver.send(msg, 0);
-			Thread.sleep(75);
+			// Thread.sleep(75);
 			receiver.send(msg, j * 2);
 			b = Font.getBitmap(text, j * 2 + 1);
 			for (int i = 0; i < 32; ++i) {
@@ -65,7 +71,11 @@ public class Launchpad {
 				msg2.setMessage(0x92, 2, vel1, vel2);
 				receiver.send(msg2, 0);
 			}
+			count += 2;
 		}
+		System.out.println(System.currentTimeMillis() - startTime);
+		System.out.println((double) (System.currentTimeMillis() - startTime) / count);
+
 		msg.setMessage(ShortMessage.CONTROL_CHANGE, 0, 0, 32 + 4);
 		receiver.send(msg, 0);
 		Thread.sleep(100);

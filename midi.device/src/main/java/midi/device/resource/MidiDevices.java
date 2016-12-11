@@ -101,4 +101,20 @@ public final class MidiDevices {
 		}
 		return receivers;
 	}
+
+	public static MidiDevice secureGetReceiverDevice(final String name) {
+		MidiDevice device = MidiDevices.getReceiverDevice(name);
+		if (device == null) {
+			device = MidiDevices.getReceiverDevice(MidiDevices.getReceiverNames().get(0));
+		}
+		return device;
+	}
+
+	public static MidiDevice secureGetTransmitterDevice(final String name) {
+		MidiDevice device = MidiDevices.getTransmitterDevice(name);
+		if (device == null) {
+			device = MidiDevices.getTransmitterDevice(MidiDevices.getTransmitterNames().get(0));
+		}
+		return device;
+	}
 }

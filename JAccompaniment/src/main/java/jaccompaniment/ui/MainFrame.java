@@ -438,22 +438,6 @@ public class MainFrame extends JFrame {
 		setBounds(100, 100, getPreferredSize().width, getPreferredSize().height);
 	}
 
-	private MidiDevice secureGetReceiverDevice(final String name) {
-		MidiDevice device = MidiDevices.getReceiverDevice(name);
-		if (device == null) {
-			device = MidiDevices.getReceiverDevice(MidiDevices.getReceiverNames().get(0));
-		}
-		return device;
-	}
-
-	private MidiDevice secureGetTransmitterDevice(final String name) {
-		MidiDevice device = MidiDevices.getTransmitterDevice(name);
-		if (device == null) {
-			device = MidiDevices.getTransmitterDevice(MidiDevices.getTransmitterNames().get(0));
-		}
-		return device;
-	}
-
 	private void setupMidi() throws MidiUnavailableException {
 
 		if (guitar != null) {
@@ -490,8 +474,8 @@ public class MainFrame extends JFrame {
 			beatListener = null;
 		}
 
-		final MidiDevice guitarDevice = secureGetReceiverDevice(
-				ConfigDialog.getGuitarOutputDevice());
+		final MidiDevice guitarDevice = MidiDevices
+				.secureGetReceiverDevice(ConfigDialog.getGuitarOutputDevice());
 		if (guitarDevice == null) {
 			logger.error("Guitar Device not found");
 		} else {
@@ -500,8 +484,8 @@ public class MainFrame extends JFrame {
 			}
 			guitar = new Guitar(guitarDevice.getReceiver(), ConfigDialog.getGuitarChannel());
 		}
-		final MidiDevice percussionDevice = secureGetReceiverDevice(
-				ConfigDialog.getPercussionOutputDevice());
+		final MidiDevice percussionDevice = MidiDevices
+				.secureGetReceiverDevice(ConfigDialog.getPercussionOutputDevice());
 		if (percussionDevice == null) {
 			logger.error("Percussion Device not found");
 		} else {
@@ -512,8 +496,8 @@ public class MainFrame extends JFrame {
 					ConfigDialog.getPercussionChannel());
 		}
 
-		final MidiDevice recognizerDevice = secureGetTransmitterDevice(
-				ConfigDialog.getMidiThroughOutputDevice());
+		final MidiDevice recognizerDevice = MidiDevices
+				.secureGetTransmitterDevice(ConfigDialog.getMidiThroughOutputDevice());
 		if (recognizerDevice == null) {
 			logger.error("Recognizer Device not found");
 		} else {
@@ -542,8 +526,8 @@ public class MainFrame extends JFrame {
 			recognizerTransmitter.setReceiver(recognizer);
 		}
 
-		final MidiDevice midiThroughInputDevice = secureGetTransmitterDevice(
-				ConfigDialog.getMidiThroughInputDevice());
+		final MidiDevice midiThroughInputDevice = MidiDevices
+				.secureGetTransmitterDevice(ConfigDialog.getMidiThroughInputDevice());
 		if (midiThroughInputDevice == null) {
 			logger.error("Midi Through Input Device not found");
 		} else {
@@ -556,8 +540,8 @@ public class MainFrame extends JFrame {
 			}
 		}
 
-		final MidiDevice midiThroughOutputDevice = secureGetReceiverDevice(
-				ConfigDialog.getMidiThroughOutputDevice());
+		final MidiDevice midiThroughOutputDevice = MidiDevices
+				.secureGetReceiverDevice(ConfigDialog.getMidiThroughOutputDevice());
 		if (midiThroughOutputDevice == null) {
 			logger.error("Midi Through Output Device not found");
 		} else {

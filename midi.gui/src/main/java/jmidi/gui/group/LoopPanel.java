@@ -311,6 +311,7 @@ public class LoopPanel extends JPanel {
 		}
 		this.numberOfPages = numberOfPages;
 		pageSelector.setNumberOfPages(numberOfPages);
+		setCurrentPage(pageSelector.getCurrentPage());
 	}
 
 	/**
