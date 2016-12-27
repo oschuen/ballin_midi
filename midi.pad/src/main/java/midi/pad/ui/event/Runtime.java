@@ -49,9 +49,10 @@ public class Runtime {
 	private Transmitter transmitter = null;
 	private Receiver receiver = null;
 	private static boolean checkConfiguration = true;
-	private static String defaultDevice = "Mini [hw:2,0,0]";
+	private static String defaultDevice = "Mini [hw:3,0,0]";
 	private static long flashPeriod = 500;
 	private boolean inRuntimeThread = false;
+	private final Receiver inputReceiver = new PadReceiver(screen);
 
 	@SuppressWarnings("serial")
 	private static Map<String, Object> runtimeConfig = new HashMap<String, Object>() {
@@ -149,6 +150,7 @@ public class Runtime {
 					transmitterDevice.open();
 				}
 				transmitter = transmitterDevice.getTransmitter();
+				transmitter.setReceiver(inputReceiver);
 				runningConfig.put(CFG_INPUT_DEVICE, inputDevice);
 			}
 			final String outputDevice = getStringConfig(CFG_OUTPUT_DEVICE, defaultDevice);
@@ -156,8 +158,7 @@ public class Runtime {
 				if (receiver != null) {
 					receiver.close();
 				}
-				final MidiDevice receiverDevice = MidiDevices
-						.secureGetTransmitterDevice(outputDevice);
+				final MidiDevice receiverDevice = MidiDevices.secureGetReceiverDevice(outputDevice);
 				if (!receiverDevice.isOpen()) {
 					receiverDevice.open();
 				}
@@ -166,7 +167,7 @@ public class Runtime {
 			}
 
 		} catch (final MidiUnavailableException mue) {
-
+			mue.printStackTrace();
 		} finally {
 			checkConfiguration = false;
 			lock.unlock();
@@ -300,5 +301,12 @@ public class Runtime {
 		public void setFuture(final Future<?> future) {
 			this.future = future;
 		}
+	}
+
+	/**
+	 * @return the screen
+	 */
+	public Screen getScreen() {
+		return screen;
 	}
 }

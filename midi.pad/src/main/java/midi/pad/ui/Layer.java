@@ -39,7 +39,7 @@ public class Layer extends Widget {
 	 * @see midi.pad.ui.Widget#paint(midi.pad.ui.Graphic)
 	 */
 	@Override
-	void paint(final Graphic g) {
+	public void paint(final Graphic g) {
 		for (final Widget widget : widgets) {
 			final Graphic subG = g.create(widget.getX(), widget.getY(), widget.getWidth(),
 					widget.getHeight());

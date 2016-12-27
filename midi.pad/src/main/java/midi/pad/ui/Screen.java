@@ -23,6 +23,8 @@ import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
 
+import midi.pad.ui.event.PadEvent;
+
 /**
  * @author oliver
  *
@@ -89,5 +91,27 @@ public class Screen {
 
 	public void toggleFlash() {
 		blink = !blink;
+	}
+
+	public void putLayer(final int level, final Layer layer) {
+		if (level >= 0 && level < layers.length) {
+			layers[level] = layer;
+			graphics[level] = new Graphic();
+		}
+	}
+
+	public void removeLayer(final int level) {
+		if (level >= 0 && level < layers.length) {
+			layers[level] = null;
+			graphics[level] = null;
+		}
+	}
+
+	public void padEventOccured(final PadEvent event) {
+		for (int i = layers.length - 1; i >= 0; --i) {
+			if (layers[i] != null && layers[i].padEventOccured(event)) {
+				break;
+			}
+		}
 	}
 }

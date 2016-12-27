@@ -65,7 +65,7 @@ public class Color {
 	public static Color FULL_RED = new Color(Brighness.FULL, Brighness.OFF);
 	public static Color LOW_AMBER = new Color(Brighness.LOW, Brighness.LOW);
 	public static Color FULL_AMBER = new Color(Brighness.FULL, Brighness.FULL);
-	public static Color FULL_YELLOW = new Color(Brighness.FULL, Brighness.NORMAL);
+	public static Color FULL_YELLOW = new Color(Brighness.LOW, Brighness.FULL);
 	public static Color LOW_GREEN = new Color(Brighness.OFF, Brighness.LOW);
 	public static Color GREEN = new Color(Brighness.OFF, Brighness.NORMAL);
 	public static Color FULL_GREEN = new Color(Brighness.OFF, Brighness.FULL);
@@ -101,5 +101,15 @@ public class Color {
 
 	public byte getMidiValue() {
 		return (byte) (0x10 * g.ordinal() + r.ordinal());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "Color [r=" + r + ", g=" + g + ", flashing=" + flashing + ", opaque=" + opaque + "]";
 	}
 }

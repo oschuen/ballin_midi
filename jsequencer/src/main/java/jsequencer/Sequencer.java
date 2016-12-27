@@ -13,54 +13,35 @@
  * if not, write to the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, 
  * Boston, MA 02110, USA 
  * 
- * @since 30.10.2016
+ * @since 27.12.2016
  * @version 1.0
  * @author oliver
  */
-package midi.pad.ui;
+package jsequencer;
 
-import java.awt.Rectangle;
-
-import midi.pad.ui.event.PadEvent;
+import midi.pad.ui.Screen;
+import midi.pad.ui.dialogs.ConfirmDialog;
+import midi.pad.ui.event.Runtime;
 
 /**
  * @author oliver
  *
  */
-public abstract class Widget {
+public class Sequencer {
+	public static void main(final String[] args) {
+		final Screen screen = Runtime.getRuntime().getScreen();
+		final Runnable finishRunnable = new Runnable() {
 
-	protected final Rectangle bounds = new Rectangle();
-
-	public int getWidth() {
-		return bounds.width;
+			@Override
+			public void run() {
+				System.exit(0);
+			}
+		};
+		// final Layer layer = new Layer();
+		// // layer.addWidget(new TextField(0, 0, "hallo Welt",
+		// finishRunnable));
+		//
+		// layer.addWidget(new YesButton(2, 2, finishRunnable));
+		screen.putLayer(4, new ConfirmDialog("Zufrieden ? ", finishRunnable, finishRunnable));
 	}
-
-	public int getHeight() {
-		return bounds.height;
-	}
-
-	public int getX() {
-		return bounds.x;
-	}
-
-	public int getY() {
-		return bounds.y;
-	}
-
-	public abstract void paint(Graphic g);
-
-	/**
-	 * @param event
-	 *            coords in event must be relative to the origin of the widget
-	 * @return true when event is consumed
-	 */
-	public abstract boolean padEventOccured(PadEvent event);
-
-	/**
-	 * @return the bounds
-	 */
-	public Rectangle getBounds() {
-		return new Rectangle(bounds);
-	}
-
 }

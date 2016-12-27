@@ -20,6 +20,7 @@
 		<module>midi.gui</module>
 		<module>midi.device</module>
 		<module>midi.pad</module>
+		<module>jsequencer</module>
 	</modules>
 	<dependencyManagement>
 		<dependencies>

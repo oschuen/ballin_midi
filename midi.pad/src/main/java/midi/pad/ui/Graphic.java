@@ -50,8 +50,7 @@ public class Graphic {
 	}
 
 	public void setPixel(final int x, final int y, final Color c) {
-		if (c != null && x >= 0 && y >= 0 && x < viewPort.width && y < viewPort.height
-				&& c != null) {
+		if (c != null && x >= 0 && y >= 0 && x < viewPort.width && y < viewPort.height) {
 			screen[viewPort.y + y][viewPort.x + x] = c;
 		}
 	}

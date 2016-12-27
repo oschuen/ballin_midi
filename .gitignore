@@ -1,7 +1,7 @@
-/.settings
-/target
-/.classpath
-/.project
-/.externalToolBuilders
-/pom.xml~
+.settings
+target
+.classpath
+.project
+.externalToolBuilders
+pom.xml~
 
