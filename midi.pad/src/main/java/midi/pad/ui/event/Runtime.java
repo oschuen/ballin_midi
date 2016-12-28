@@ -257,6 +257,12 @@ public class Runtime {
 		}
 	}
 
+	public void checkRuntimeContext() {
+		if (!inRuntimeThread) {
+			throw new RuntimeException("Function not called from RuntTimeContext");
+		}
+	}
+
 	private class DrawRunnable implements Runnable {
 		private Future<?> future;
 		private final Runnable runner;

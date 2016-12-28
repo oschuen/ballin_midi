@@ -13,7 +13,7 @@
  * if not, write to the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, 
  * Boston, MA 02110, USA 
  * 
- * @since 27.12.2016
+ * @since 28.12.2016
  * @version 1.0
  * @author oliver
  */
@@ -21,60 +21,35 @@ package midi.pad.ui.widgets;
 
 import static midi.pad.ui.event.Runtime.getRuntime;
 
-import java.util.concurrent.TimeUnit;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
-import midi.device.launchpad.Font;
 import midi.pad.ui.Color;
 import midi.pad.ui.Graphic;
 import midi.pad.ui.Widget;
 import midi.pad.ui.event.PadEvent;
+import midi.pad.ui.event.PadEvent.EVENT_TYPE;
 
 /**
  * @author oliver
  *
  */
-public class TextField extends Widget {
-
-	private final String text;
-	private int offset = 0;
-	private Runnable looper = null;
+public class NumberPad extends Widget {
+	private final int maxValue;
+	private int currentValue = 0;
 	private final Runnable finishRunner;
+	private final PropertyChangeListener listener;
 
-	public TextField(final int x, final int y, final String text, final Runnable finishRunner) {
-		this.text = " " + text.trim();
+	public NumberPad(final int x, final int y, final int maxValue, final int currentValue,
+			final Runnable finishRunner, final PropertyChangeListener listener) {
 		bounds.x = x;
 		bounds.y = y;
-		bounds.height = 8;
-		bounds.width = 8;
+		bounds.height = 4;
+		bounds.width = 3;
+		this.maxValue = maxValue;
+		this.currentValue = currentValue;
 		this.finishRunner = finishRunner;
-		start();
-	}
-
-	public void start() {
-		offset = 0;
-		getRuntime().checkRuntimeContext();
-		stop();
-		looper = new Runnable() {
-			@Override
-			public void run() {
-				if (offset < text.length() * 6) {
-					offset++;
-				} else {
-					stop();
-					getRuntime().schedule(finishRunner);
-				}
-				getRuntime().invalidate();
-			}
-		};
-		getRuntime().scheduleWithFixedDelay(looper, 75, 75, TimeUnit.MILLISECONDS);
-	}
-
-	public void stop() {
-		getRuntime().checkRuntimeContext();
-		if (looper != null) {
-			getRuntime().stop(looper);
-			looper = null;
-		}
+		this.listener = listener;
 	}
 
 	/*
@@ -84,12 +59,9 @@ public class TextField extends Widget {
 	 */
 	@Override
 	public void paint(final Graphic g) {
-		final int mask[] = Font.getBitmap(text, offset);
-		for (int y = 0; y < 8; y++) {
-			for (int x = 0; x < 8; x++) {
-				g.setPixel(x, y, ((mask[y] & (0x01 << x)) > 0) ? Color.FULL_GREEN : Color.BLACK);
-			}
-		}
+		g.fill(Color.FULL_YELLOW);
+		g.setPixel(0, 3, Color.RED);
+		g.setPixel(2, 3, Color.GREEN);
 	}
 
 	/*
@@ -99,6 +71,30 @@ public class TextField extends Widget {
 	 */
 	@Override
 	public boolean padEventOccured(final PadEvent event) {
+		final int oldValue = currentValue;
+		if (event != null && EVENT_TYPE.RELEASED.equals(event.getEventType())) {
+			if (event.getY() == 3) {
+				if (event.getX() == 0) {
+					currentValue = currentValue / 10;
+				} else if (event.getX() == 0) {
+					currentValue = currentValue * 10;
+				} else {
+					getRuntime().schedule(finishRunner);
+					return true;
+				}
+			} else {
+				currentValue = currentValue * 10 + 1 + (event.getY() - 2) * 3 + event.getX();
+			}
+			currentValue = Math.min(maxValue, currentValue);
+			listener.propertyChange(new PropertyChangeEvent(this, "value", oldValue, currentValue));
+		}
 		return true;
+	}
+
+	/**
+	 * @return the currentValue
+	 */
+	public int getCurrentValue() {
+		return currentValue;
 	}
 }

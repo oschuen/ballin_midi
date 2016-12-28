@@ -37,11 +37,14 @@ public class Sequencer {
 				System.exit(0);
 			}
 		};
-		// final Layer layer = new Layer();
-		// // layer.addWidget(new TextField(0, 0, "hallo Welt",
-		// finishRunnable));
-		//
-		// layer.addWidget(new YesButton(2, 2, finishRunnable));
-		screen.putLayer(4, new ConfirmDialog("Zufrieden ? ", finishRunnable, finishRunnable));
+		Runtime.getRuntime().schedule(new Runnable() {
+			@Override
+			public void run() {
+				screen.putLayer(4,
+						new ConfirmDialog("Zufrieden ?", finishRunnable, finishRunnable));
+
+			}
+		});
+
 	}
 }

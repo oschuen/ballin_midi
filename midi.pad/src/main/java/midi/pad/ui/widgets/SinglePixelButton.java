@@ -13,7 +13,7 @@
  * if not, write to the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, 
  * Boston, MA 02110, USA 
  * 
- * @since 27.12.2016
+ * @since 28.12.2016
  * @version 1.0
  * @author oliver
  */
@@ -26,10 +26,13 @@ import midi.pad.ui.Graphic;
  * @author oliver
  *
  */
-public class NoButton extends Button {
+public class SinglePixelButton extends Button {
+	final Color color;
 
-	public NoButton(final int x, final int y, final Runnable pressRunner) {
-		super(x, y, 4, 4, pressRunner);
+	public SinglePixelButton(final int x, final int y, final Color color,
+			final Runnable pressRunner) {
+		super(x, y, 1, 1, pressRunner);
+		this.color = color;
 	}
 
 	/*
@@ -39,14 +42,6 @@ public class NoButton extends Button {
 	 */
 	@Override
 	public void paint(final Graphic g) {
-		g.fill(Color.BLACK);
-		g.setPixel(0, 0, Color.FULL_RED);
-		g.setPixel(1, 1, Color.FULL_RED);
-		g.setPixel(2, 2, Color.FULL_RED);
-		g.setPixel(3, 3, Color.FULL_RED);
-		g.setPixel(3, 0, Color.FULL_RED);
-		g.setPixel(2, 1, Color.FULL_RED);
-		g.setPixel(1, 2, Color.FULL_RED);
-		g.setPixel(0, 3, Color.FULL_RED);
+		g.setPixel(0, 0, color);
 	}
 }

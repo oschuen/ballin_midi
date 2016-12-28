@@ -19,28 +19,17 @@
  */
 package midi.pad.ui.widgets;
 
-import static midi.pad.ui.event.Runtime.getRuntime;
-
 import midi.pad.ui.Color;
 import midi.pad.ui.Graphic;
-import midi.pad.ui.Widget;
-import midi.pad.ui.event.PadEvent;
-import midi.pad.ui.event.PadEvent.EVENT_TYPE;
 
 /**
  * @author oliver
  *
  */
-public class YesButton extends Widget {
-
-	private final Runnable pressRunner;
+public class YesButton extends Button {
 
 	public YesButton(final int x, final int y, final Runnable pressRunner) {
-		bounds.x = x;
-		bounds.y = y;
-		bounds.width = 4;
-		bounds.height = 4;
-		this.pressRunner = pressRunner;
+		super(x, y, 4, 4, pressRunner);
 	}
 
 	/*
@@ -57,18 +46,4 @@ public class YesButton extends Widget {
 		g.setPixel(3, 1, Color.FULL_GREEN);
 		g.setPixel(3, 0, Color.FULL_GREEN);
 	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see midi.pad.ui.Widget#padEventOccured(midi.pad.ui.event.PadEvent)
-	 */
-	@Override
-	public boolean padEventOccured(final PadEvent event) {
-		if (event != null && EVENT_TYPE.RELEASED.equals(event.getEventType())) {
-			getRuntime().schedule(pressRunner);
-		}
-		return true;
-	}
-
 }

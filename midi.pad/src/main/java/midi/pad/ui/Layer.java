@@ -40,7 +40,8 @@ public class Layer extends Widget {
 	 */
 	@Override
 	public void paint(final Graphic g) {
-		for (final Widget widget : widgets) {
+		for (int i = widgets.size() - 1; i >= 0; i--) {
+			final Widget widget = widgets.get(i);
 			final Graphic subG = g.create(widget.getX(), widget.getY(), widget.getWidth(),
 					widget.getHeight());
 			widget.paint(subG);

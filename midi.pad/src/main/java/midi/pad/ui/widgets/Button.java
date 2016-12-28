@@ -13,23 +13,34 @@
  * if not, write to the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, 
  * Boston, MA 02110, USA 
  * 
- * @since 27.12.2016
+ * @since 28.12.2016
  * @version 1.0
  * @author oliver
  */
 package midi.pad.ui.widgets;
 
-import midi.pad.ui.Color;
+import static midi.pad.ui.event.Runtime.getRuntime;
+
 import midi.pad.ui.Graphic;
+import midi.pad.ui.Widget;
+import midi.pad.ui.event.PadEvent;
+import midi.pad.ui.event.PadEvent.EVENT_TYPE;
 
 /**
  * @author oliver
  *
  */
-public class NoButton extends Button {
+public abstract class Button extends Widget {
 
-	public NoButton(final int x, final int y, final Runnable pressRunner) {
-		super(x, y, 4, 4, pressRunner);
+	private final Runnable pressRunner;
+
+	public Button(final int x, final int y, final int width, final int height,
+			final Runnable pressRunner) {
+		bounds.x = x;
+		bounds.y = y;
+		bounds.width = width;
+		bounds.height = height;
+		this.pressRunner = pressRunner;
 	}
 
 	/*
@@ -38,15 +49,19 @@ public class NoButton extends Button {
 	 * @see midi.pad.ui.Widget#paint(midi.pad.ui.Graphic)
 	 */
 	@Override
-	public void paint(final Graphic g) {
-		g.fill(Color.BLACK);
-		g.setPixel(0, 0, Color.FULL_RED);
-		g.setPixel(1, 1, Color.FULL_RED);
-		g.setPixel(2, 2, Color.FULL_RED);
-		g.setPixel(3, 3, Color.FULL_RED);
-		g.setPixel(3, 0, Color.FULL_RED);
-		g.setPixel(2, 1, Color.FULL_RED);
-		g.setPixel(1, 2, Color.FULL_RED);
-		g.setPixel(0, 3, Color.FULL_RED);
+	public abstract void paint(Graphic g);
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see midi.pad.ui.Widget#padEventOccured(midi.pad.ui.event.PadEvent)
+	 */
+	@Override
+	public boolean padEventOccured(final PadEvent event) {
+		if (event != null && EVENT_TYPE.RELEASED.equals(event.getEventType())) {
+			getRuntime().schedule(pressRunner);
+		}
+		return true;
 	}
+
 }
