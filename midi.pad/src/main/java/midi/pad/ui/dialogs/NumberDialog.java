@@ -13,25 +13,36 @@
  * if not, write to the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, 
  * Boston, MA 02110, USA 
  * 
- * @since 27.12.2016
+ * @since 28.12.2016
  * @version 1.0
  * @author oliver
  */
 package midi.pad.ui.dialogs;
 
-import midi.pad.ui.widgets.NoButton;
-import midi.pad.ui.widgets.YesButton;
+import midi.pad.ui.Color;
+import midi.pad.ui.widgets.NumberPad;
+import midi.pad.ui.widgets.SinglePixelButton;
 
 /**
  * @author oliver
  *
  */
-public class ConfirmDialog extends HintDialog {
+public class NumberDialog extends HintDialog {
 
-	public ConfirmDialog(final String question, final Runnable confirmRunner,
-			final Runnable regretRunner) {
-		super(question);
-		setWidgets(new YesButton(4, 4, confirmRunner), new NoButton(0, 4, regretRunner));
+	private final NumberPad numberPad;
+
+	public NumberDialog(final String question, final int maxValue, final int currentValue,
+			final Runnable confirmRunner) {
+		super(question + " " + Integer.toString(currentValue));
+		numberPad = new NumberPad(5, 3, maxValue, currentValue, confirmRunner, new Runnable() {
+			@Override
+			public void run() {
+				extraHint(Integer.toString(numberPad.getCurrentValue()));
+			}
+		});
+		setWidgets(new SinglePixelButton(7, 7, Color.LOW_AMBER, () -> {
+			extraHint(question);
+		}), numberPad);
 		start();
 	}
 }

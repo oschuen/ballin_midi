@@ -21,9 +21,6 @@ package midi.pad.ui.widgets;
 
 import static midi.pad.ui.event.Runtime.getRuntime;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-
 import midi.pad.ui.Color;
 import midi.pad.ui.Graphic;
 import midi.pad.ui.Widget;
@@ -38,18 +35,19 @@ public class NumberPad extends Widget {
 	private final int maxValue;
 	private int currentValue = 0;
 	private final Runnable finishRunner;
-	private final PropertyChangeListener listener;
+	private final Runnable valueRunner;
+	private static boolean callValueRunner = true;
 
 	public NumberPad(final int x, final int y, final int maxValue, final int currentValue,
-			final Runnable finishRunner, final PropertyChangeListener listener) {
+			final Runnable finishRunner, final Runnable valueRunner) {
 		bounds.x = x;
 		bounds.y = y;
-		bounds.height = 4;
+		bounds.height = 5;
 		bounds.width = 3;
 		this.maxValue = maxValue;
 		this.currentValue = currentValue;
 		this.finishRunner = finishRunner;
-		this.listener = listener;
+		this.valueRunner = valueRunner;
 	}
 
 	/*
@@ -62,6 +60,8 @@ public class NumberPad extends Widget {
 		g.fill(Color.FULL_YELLOW);
 		g.setPixel(0, 3, Color.RED);
 		g.setPixel(2, 3, Color.GREEN);
+		g.setPixel(0, 4, Color.LOW_AMBER);
+		g.setPixel(2, 4, Color.GREEN);
 	}
 
 	/*
@@ -71,22 +71,32 @@ public class NumberPad extends Widget {
 	 */
 	@Override
 	public boolean padEventOccured(final PadEvent event) {
-		final int oldValue = currentValue;
 		if (event != null && EVENT_TYPE.RELEASED.equals(event.getEventType())) {
-			if (event.getY() == 3) {
+			if (event.getY() == 4) {
+				if (event.getX() == 0) {
+					callValueRunner = !callValueRunner;
+				} else if (event.getX() == 1) {
+					getRuntime().schedule(valueRunner);
+				} else {
+					getRuntime().schedule(finishRunner);
+					return true;
+				}
+			} else if (event.getY() == 3) {
 				if (event.getX() == 0) {
 					currentValue = currentValue / 10;
-				} else if (event.getX() == 0) {
+				} else if (event.getX() == 1) {
 					currentValue = currentValue * 10;
 				} else {
 					getRuntime().schedule(finishRunner);
 					return true;
 				}
 			} else {
-				currentValue = currentValue * 10 + 1 + (event.getY() - 2) * 3 + event.getX();
+				currentValue = currentValue * 10 + 1 + (2 - event.getY()) * 3 + event.getX();
 			}
 			currentValue = Math.min(maxValue, currentValue);
-			listener.propertyChange(new PropertyChangeEvent(this, "value", oldValue, currentValue));
+			if (callValueRunner) {
+				getRuntime().schedule(valueRunner);
+			}
 		}
 		return true;
 	}

@@ -20,7 +20,7 @@
 package jsequencer;
 
 import midi.pad.ui.Screen;
-import midi.pad.ui.dialogs.ConfirmDialog;
+import midi.pad.ui.dialogs.NumberDialog;
 import midi.pad.ui.event.Runtime;
 
 /**
@@ -41,7 +41,9 @@ public class Sequencer {
 			@Override
 			public void run() {
 				screen.putLayer(4,
-						new ConfirmDialog("Zufrieden ?", finishRunnable, finishRunnable));
+						// new ConfirmDialog("Zufrieden ?", finishRunnable,
+						// finishRunnable));
+						new NumberDialog("Program", 127, 0, finishRunnable));
 
 			}
 		});
