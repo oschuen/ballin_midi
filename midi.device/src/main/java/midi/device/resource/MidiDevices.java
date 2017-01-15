@@ -26,8 +26,8 @@ import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Single resource for all Receiver and Transmission devices
@@ -37,7 +37,7 @@ import org.apache.logging.log4j.Logger;
 public final class MidiDevices {
 	private static MidiDevice devRecv[];
 	private static MidiDevice devTrans[];
-	private static final Logger logger = LogManager.getLogger(MidiDevices.class);
+	private static final Logger logger = LoggerFactory.getLogger(MidiDevices.class);
 
 	static {
 		try {

@@ -41,8 +41,8 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import midi.device.resource.MidiDevices;
 
@@ -80,7 +80,7 @@ public class ConfigDialog extends JDialog {
 
 	private boolean result = false;
 
-	private static final Logger logger = LogManager.getLogger(ConfigDialog.class);
+	private static final Logger logger = LoggerFactory.getLogger(ConfigDialog.class);
 
 	public ConfigDialog(final Frame owner, final boolean modal) {
 		super(owner, modal);

@@ -19,15 +19,15 @@
  */
 package jaccompaniment.filter;
 
-import jaccompaniment.chord.ChordRecognizer;
-
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import jaccompaniment.chord.ChordRecognizer;
 
 /**
  * Midi Through device that forwads all midi commands from one Transmitter to
@@ -43,7 +43,7 @@ public class MidiThroughFilter implements Receiver {
 	private boolean midiThrough = true;
 	private boolean filterChord = true;
 
-	private static final Logger logger = LogManager.getLogger(MidiThroughFilter.class);
+	private static final Logger logger = LoggerFactory.getLogger(MidiThroughFilter.class);
 
 	/**
 	 * @param receiver
@@ -128,18 +128,18 @@ public class MidiThroughFilter implements Receiver {
 	public void setFilterChord(final boolean filterChord) {
 		this.filterChord = filterChord;
 	}
-	
+
 	/**
 	 * Mutes all Sounds played
 	 */
 	public void panic() {
 		try {
-			for (int i = 0; i < 16; ++i){
+			for (int i = 0; i < 16; ++i) {
 				final ShortMessage msg = new ShortMessage();
-				msg.setMessage(ShortMessage.CONTROL_CHANGE, i, 123, 0);	
+				msg.setMessage(ShortMessage.CONTROL_CHANGE, i, 123, 0);
 				receiver.send(msg, -1);
 			}
-		} catch (InvalidMidiDataException e) {
+		} catch (final InvalidMidiDataException e) {
 			logger.error("Panic Failed", e);
 		}
 	}

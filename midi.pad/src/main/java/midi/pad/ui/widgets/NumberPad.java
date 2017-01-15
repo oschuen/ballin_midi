@@ -1,17 +1,17 @@
 /**
  * Copyright (C) 2016 Oliver Schünemann
  * 
- * This program is free software; you can redistribute it and/or modify it under the terms of the 
- * GNU General Public License as published by the Free Software Foundation; either version 2 of 
- * the License, or (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
- * See the GNU General Public License for more details. 
- * 
- * You should have received a copy of the GNU General Public License along with this program; 
- * if not, write to the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, 
- * Boston, MA 02110, USA 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  * 
  * @since 28.12.2016
  * @version 1.0
@@ -21,9 +21,11 @@ package midi.pad.ui.widgets;
 
 import static midi.pad.ui.event.Runtime.getRuntime;
 
+import jmidi.gui.model.IntegerModel;
 import midi.pad.ui.Color;
 import midi.pad.ui.Graphic;
 import midi.pad.ui.Widget;
+import midi.pad.ui.event.Event;
 import midi.pad.ui.event.PadEvent;
 import midi.pad.ui.event.PadEvent.EVENT_TYPE;
 
@@ -32,11 +34,21 @@ import midi.pad.ui.event.PadEvent.EVENT_TYPE;
  *
  */
 public class NumberPad extends Widget {
-	private final int maxValue;
-	private int currentValue = 0;
 	private final Runnable finishRunner;
 	private final Runnable valueRunner;
 	private static boolean callValueRunner = true;
+	private final IntegerModel model;
+
+	public NumberPad(final int x, final int y, final IntegerModel model,
+			final Runnable finishRunner, final Runnable valueRunner) {
+		bounds.x = x;
+		bounds.y = y;
+		bounds.height = 5;
+		bounds.width = 3;
+		this.finishRunner = finishRunner;
+		this.valueRunner = valueRunner;
+		this.model = model;
+	}
 
 	public NumberPad(final int x, final int y, final int maxValue, final int currentValue,
 			final Runnable finishRunner, final Runnable valueRunner) {
@@ -44,10 +56,9 @@ public class NumberPad extends Widget {
 		bounds.y = y;
 		bounds.height = 5;
 		bounds.width = 3;
-		this.maxValue = maxValue;
-		this.currentValue = currentValue;
 		this.finishRunner = finishRunner;
 		this.valueRunner = valueRunner;
+		model = new IntegerModel(0, maxValue, currentValue);
 	}
 
 	/*
@@ -67,33 +78,35 @@ public class NumberPad extends Widget {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see midi.pad.ui.Widget#padEventOccured(midi.pad.ui.event.PadEvent)
+	 * @see midi.pad.ui.Widget#eventOccured(midi.pad.ui.event.Event)
 	 */
 	@Override
-	public boolean padEventOccured(final PadEvent event) {
-		if (event != null && EVENT_TYPE.RELEASED.equals(event.getEventType())) {
-			if (event.getY() == 4) {
-				if (event.getX() == 0) {
+	public boolean eventOccured(final Event event) {
+		if (event != null && EVENT_TYPE.PAD_RELEASED.equals(event.getEventType())) {
+			final PadEvent padEvent = PadEvent.getEvent(event);
+			int currentValue = model.getValue();
+			if (padEvent.getY() == 4) {
+				if (padEvent.getX() == 0) {
 					callValueRunner = !callValueRunner;
-				} else if (event.getX() == 1) {
+				} else if (padEvent.getX() == 1) {
 					getRuntime().schedule(valueRunner);
 				} else {
 					getRuntime().schedule(finishRunner);
 					return true;
 				}
-			} else if (event.getY() == 3) {
-				if (event.getX() == 0) {
+			} else if (padEvent.getY() == 3) {
+				if (padEvent.getX() == 0) {
 					currentValue = currentValue / 10;
-				} else if (event.getX() == 1) {
+				} else if (padEvent.getX() == 1) {
 					currentValue = currentValue * 10;
 				} else {
 					getRuntime().schedule(finishRunner);
 					return true;
 				}
 			} else {
-				currentValue = currentValue * 10 + 1 + (2 - event.getY()) * 3 + event.getX();
+				currentValue = currentValue * 10 + 1 + (2 - padEvent.getY()) * 3 + padEvent.getX();
 			}
-			currentValue = Math.min(maxValue, currentValue);
+			model.setValue(currentValue);
 			if (callValueRunner) {
 				getRuntime().schedule(valueRunner);
 			}
@@ -105,6 +118,6 @@ public class NumberPad extends Widget {
 	 * @return the currentValue
 	 */
 	public int getCurrentValue() {
-		return currentValue;
+		return model.getValue();
 	}
 }

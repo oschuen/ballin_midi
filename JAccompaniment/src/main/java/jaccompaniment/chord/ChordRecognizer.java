@@ -32,8 +32,8 @@ import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This Recognizer is able to identify chord presses on a keyboard in the
@@ -51,7 +51,7 @@ public class ChordRecognizer implements Receiver {
 	private final Recognizer recognizer = new Recognizer();
 	private final Lock lock = new ReentrantLock();
 
-	private static final Logger logger = LogManager.getLogger(ChordRecognizer.class);
+	private static final Logger logger = LoggerFactory.getLogger(ChordRecognizer.class);
 
 	/**
 	 * Constructor defining the client of the recognizer

@@ -1,17 +1,17 @@
 /**
  * Copyright (C) 2016 Oliver Schünemann
  * 
- * This program is free software; you can redistribute it and/or modify it under the terms of the 
- * GNU General Public License as published by the Free Software Foundation; either version 2 of 
- * the License, or (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
- * See the GNU General Public License for more details. 
- * 
- * You should have received a copy of the GNU General Public License along with this program; 
- * if not, write to the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, 
- * Boston, MA 02110, USA 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  * 
  * @since 27.12.2016
  * @version 1.0
@@ -19,8 +19,9 @@
  */
 package jsequencer;
 
+import jsequencer.ui.dialog.setting.LooperConfigDialog;
+import midi.loop.config.ChannelConfig;
 import midi.pad.ui.Screen;
-import midi.pad.ui.dialogs.NumberDialog;
 import midi.pad.ui.event.Runtime;
 
 /**
@@ -30,6 +31,7 @@ import midi.pad.ui.event.Runtime;
 public class Sequencer {
 	public static void main(final String[] args) {
 		final Screen screen = Runtime.getRuntime().getScreen();
+		final ChannelConfig config = new ChannelConfig();
 		final Runnable finishRunnable = new Runnable() {
 
 			@Override
@@ -40,10 +42,11 @@ public class Sequencer {
 		Runtime.getRuntime().schedule(new Runnable() {
 			@Override
 			public void run() {
-				screen.putLayer(4,
+				screen.putLayer(3,
 						// new ConfirmDialog("Zufrieden ?", finishRunnable,
 						// finishRunnable));
-						new NumberDialog("Program", 127, 0, finishRunnable));
+						// new NumberDialog("Program", 127, 0, finishRunnable));
+						new LooperConfigDialog("Track 1", config));
 
 			}
 		});

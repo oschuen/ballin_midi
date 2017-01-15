@@ -25,8 +25,8 @@ import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jmidi.gui.group.LoopPanel.Instrument;
 
@@ -88,7 +88,7 @@ public class Percussion {
 	private String pattern[] = new String[] {};
 	private String accent = "";
 	private int factor = 127;
-	private static final Logger logger = LogManager.getLogger(Percussion.class);
+	private static final Logger logger = LoggerFactory.getLogger(Percussion.class);
 
 	/**
 	 * Constructor defining the midi receiver the percussion shall use and which

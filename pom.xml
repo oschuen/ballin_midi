@@ -11,6 +11,7 @@
 	<properties>
 		<JAVA_VERSION>1.8</JAVA_VERSION>
 		<midi.gui.version>0.0.1</midi.gui.version>
+		<midi.gui.model.version>0.0.1</midi.gui.model.version>
 		<midi.device.version>0.0.1</midi.device.version>
 		<midi.pad.version>0.0.1</midi.pad.version>
 	</properties>
@@ -18,9 +19,11 @@
 	<modules>
 		<module>JAccompaniment</module>
 		<module>midi.gui</module>
+		<module>midi.gui.model</module>
 		<module>midi.device</module>
 		<module>midi.pad</module>
 		<module>jsequencer</module>
+		<module>midi.loop</module>
 	</modules>
 	<dependencyManagement>
 		<dependencies>
@@ -35,20 +38,25 @@
 				<scope>test</scope>
 				<version>4.12</version>
 			</dependency>
-			<dependency>
-				<groupId>org.apache.logging.log4j</groupId>
-				<artifactId>log4j-api</artifactId>
-				<version>2.1</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.logging.log4j</groupId>
-				<artifactId>log4j-core</artifactId>
-				<version>2.1</version>
-			</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.7.22</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+			<version>1.7.22</version>
+		</dependency>
 			<dependency>
 				<groupId>de.yamap</groupId>
 				<artifactId>midi.gui</artifactId>
 				<version>${midi.gui.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>de.yamap</groupId>
+				<artifactId>midi.gui.model</artifactId>
+				<version>${midi.gui.model.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>de.yamap</groupId>
@@ -145,6 +153,7 @@
 						<aggregate>true</aggregate>
 						<show>private</show>
 						<nohelp>true</nohelp>
+						<additionalparam>-Xdoclint:none</additionalparam>
 					</configuration>
 				</plugin>
 			</plugins>

@@ -25,8 +25,8 @@ import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jaccompaniment.chord.ChordRecognizer.ChordListener;
 import jmidi.gui.group.LoopPanel.Instrument;
@@ -52,7 +52,7 @@ public class Guitar implements ChordListener {
 	private Integer lostBeat = null;
 	private int looseActiveChordBeats = -1;
 
-	private static final Logger logger = LogManager.getLogger(Guitar.class);
+	private static final Logger logger = LoggerFactory.getLogger(Guitar.class);
 
 	/**
 	 * Each String is defined as a single instrument.

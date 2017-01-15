@@ -1,17 +1,17 @@
 /**
  * Copyright (C) 2016 Oliver Schünemann
  * 
- * This program is free software; you can redistribute it and/or modify it under the terms of the 
- * GNU General Public License as published by the Free Software Foundation; either version 2 of 
- * the License, or (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
- * See the GNU General Public License for more details. 
- * 
- * You should have received a copy of the GNU General Public License along with this program; 
- * if not, write to the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, 
- * Boston, MA 02110, USA 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  * 
  * @since 27.12.2016
  * @version 1.0
@@ -47,7 +47,7 @@ public class PadReceiver implements Receiver {
 	}
 
 	private void handleNoteOn(final int key) {
-		padEvent(key, EVENT_TYPE.PRESSED);
+		padEvent(key, EVENT_TYPE.PAD_PRESSED);
 		stopRunner(key);
 		final Runnable newRunner = new HoldRunnable(key);
 		holdMap.put(Integer.valueOf(key), newRunner);
@@ -57,7 +57,7 @@ public class PadReceiver implements Receiver {
 
 	private void handleNoteOff(final int key) {
 		stopRunner(key);
-		padEvent(key, EVENT_TYPE.RELEASED);
+		padEvent(key, EVENT_TYPE.PAD_RELEASED);
 	}
 
 	private void stopRunner(final int key) {
@@ -75,7 +75,7 @@ public class PadReceiver implements Receiver {
 				getRuntime().schedule(new Runnable() {
 					@Override
 					public void run() {
-						screen.padEventOccured(new PadEvent(eventType, x, y));
+						screen.eventOccured(new PadEvent(eventType, x, y));
 					}
 				});
 			}
@@ -123,7 +123,7 @@ public class PadReceiver implements Receiver {
 		 */
 		@Override
 		public void run() {
-			padEvent(key, EVENT_TYPE.HOLD);
+			padEvent(key, EVENT_TYPE.PAD_HOLD);
 		}
 	}
 }

@@ -1,17 +1,17 @@
 /**
  * Copyright (C) 2016 Oliver Schünemann
  * 
- * This program is free software; you can redistribute it and/or modify it under the terms of the 
- * GNU General Public License as published by the Free Software Foundation; either version 2 of 
- * the License, or (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
- * See the GNU General Public License for more details. 
- * 
- * You should have received a copy of the GNU General Public License along with this program; 
- * if not, write to the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, 
- * Boston, MA 02110, USA 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  * 
  * @since 28.12.2016
  * @version 1.0
@@ -19,7 +19,9 @@
  */
 package midi.pad.ui.dialogs;
 
+import jmidi.gui.model.IntegerModel;
 import midi.pad.ui.Color;
+import midi.pad.ui.widgets.EatAllEventsField;
 import midi.pad.ui.widgets.NumberPad;
 import midi.pad.ui.widgets.SinglePixelButton;
 
@@ -33,8 +35,13 @@ public class NumberDialog extends HintDialog {
 
 	public NumberDialog(final String question, final int maxValue, final int currentValue,
 			final Runnable confirmRunner) {
-		super(question + " " + Integer.toString(currentValue));
-		numberPad = new NumberPad(5, 3, maxValue, currentValue, confirmRunner, new Runnable() {
+		this(question, new IntegerModel(0, maxValue, currentValue), confirmRunner);
+	}
+
+	public NumberDialog(final String question, final IntegerModel model,
+			final Runnable confirmRunner) {
+		super(question + " " + Integer.toString(model.getValue()));
+		numberPad = new NumberPad(5, 3, model, confirmRunner, new Runnable() {
 			@Override
 			public void run() {
 				extraHint(Integer.toString(numberPad.getCurrentValue()));
@@ -42,7 +49,11 @@ public class NumberDialog extends HintDialog {
 		});
 		setWidgets(new SinglePixelButton(7, 7, Color.LOW_AMBER, () -> {
 			extraHint(question);
-		}), numberPad);
+		}), numberPad, new EatAllEventsField(0, 0, 8, 8));
 		start();
+	}
+
+	public int getValue() {
+		return numberPad.getCurrentValue();
 	}
 }
