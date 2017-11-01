@@ -109,7 +109,6 @@ public class Beat implements ChordListener {
 				stopFuture.cancel(false);
 			}
 			final long rate = 60000000000l / bpm / division;
-			;
 			stopFuture = service.scheduleAtFixedRate(new Runnable() {
 				@Override
 				public void run() {

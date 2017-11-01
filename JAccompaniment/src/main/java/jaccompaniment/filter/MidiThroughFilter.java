@@ -82,6 +82,13 @@ public class MidiThroughFilter implements Receiver {
 					receiver.send(shortMessage, -1);
 				}
 				break;
+			case ShortMessage.PITCH_BEND:
+				break;
+			case ShortMessage.CONTROL_CHANGE:
+				if (shortMessage.getData1() != 1) {
+					receiver.send(shortMessage, -1);
+				}
+				break;
 			default:
 				receiver.send(shortMessage, -1);
 			}

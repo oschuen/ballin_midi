@@ -195,6 +195,11 @@ public class ChordRecognizer implements Receiver {
 				chord7 |= 1 << ((majorNote + 7) % 12);
 				chord7 |= 1 << ((majorNote + 10) % 12);
 				chordMap.put(Integer.valueOf(chord7), majorNames[i] + "7");
+				int chord7sus4 = 1 << (majorNote % 12);
+				chord7sus4 |= 1 << ((majorNote + 5) % 12);
+				chord7sus4 |= 1 << ((majorNote + 7) % 12);
+				chord7sus4 |= 1 << ((majorNote + 10) % 12);
+				chordMap.put(Integer.valueOf(chord7sus4), majorNames[i] + "7sus4");
 				int mChord7 = 1 << (majorNote % 12);
 				mChord7 |= 1 << ((majorNote + 3) % 12);
 				mChord7 |= 1 << ((majorNote + 7) % 12);
@@ -217,6 +222,11 @@ public class ChordRecognizer implements Receiver {
 				chord7 |= 1 << ((subNote + 7) % 12);
 				chord7 |= 1 << ((subNote + 10) % 12);
 				chordMap.put(Integer.valueOf(chord7), subNames[i] + "7");
+				int chord7sus4 = 1 << (subNote % 12);
+				chord7sus4 |= 1 << ((subNote + 5) % 12);
+				chord7sus4 |= 1 << ((subNote + 7) % 12);
+				chord7sus4 |= 1 << ((subNote + 10) % 12);
+				chordMap.put(Integer.valueOf(chord7sus4), subNames[i] + "7sus4");
 				int mChord7 = 1 << (subNote % 12);
 				mChord7 |= 1 << ((subNote + 3) % 12);
 				mChord7 |= 1 << ((subNote + 7) % 12);

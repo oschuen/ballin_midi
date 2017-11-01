@@ -29,7 +29,8 @@ public class ChannelConfig {
 	private int midiOut;
 	private int reverb;
 	private int choir;
-	private int velocity;
+	private int channel;
+	private boolean changed;
 
 	/**
 	 * @return the bank
@@ -43,7 +44,10 @@ public class ChannelConfig {
 	 *            the bank to set
 	 */
 	public void setBank(final int bank) {
-		this.bank = bank;
+		if (this.bank != bank) {
+			this.bank = bank;
+			changed = true;
+		}
 	}
 
 	/**
@@ -58,7 +62,10 @@ public class ChannelConfig {
 	 *            the program to set
 	 */
 	public void setProgram(final int program) {
-		this.program = program;
+		if (this.program != program) {
+			this.program = program;
+			changed = true;
+		}
 	}
 
 	/**
@@ -73,7 +80,10 @@ public class ChannelConfig {
 	 *            the midiOut to set
 	 */
 	public void setMidiOut(final int midiOut) {
-		this.midiOut = midiOut;
+		if (this.midiOut != midiOut) {
+			this.midiOut = midiOut;
+			changed = true;
+		}
 	}
 
 	/**
@@ -88,7 +98,10 @@ public class ChannelConfig {
 	 *            the reverb to set
 	 */
 	public void setReverb(final int reverb) {
-		this.reverb = reverb;
+		if (this.reverb != reverb) {
+			this.reverb = reverb;
+			changed = true;
+		}
 	}
 
 	/**
@@ -103,21 +116,34 @@ public class ChannelConfig {
 	 *            the choir to set
 	 */
 	public void setChoir(final int choir) {
-		this.choir = choir;
+		if (this.choir != choir) {
+			this.choir = choir;
+			changed = true;
+		}
 	}
 
 	/**
-	 * @return the velocity
+	 * @return the channel
 	 */
-	public int getVelocity() {
-		return velocity;
+	public int getChannel() {
+		return channel;
 	}
 
 	/**
-	 * @param velocity
-	 *            the velocity to set
+	 * @param channel
+	 *            the channel to set
 	 */
-	public void setVelocity(final int velocity) {
-		this.velocity = velocity;
+	public void setChannel(final int channel) {
+		if (this.channel != channel) {
+			this.channel = channel;
+			changed = true;
+		}
+	}
+
+	/**
+	 * @return the changed
+	 */
+	public boolean isChanged() {
+		return changed;
 	}
 }

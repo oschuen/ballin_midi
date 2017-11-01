@@ -40,8 +40,8 @@ public class LooperConfigDialog extends HintDialog {
 
 	private enum MODE {
 
-		BANK("Bank", 255), PROGRAM("Program", 127), MIDIOUT("Midi Out", 3), REVERB("Reverb",
-				120), CHOIR("Choir", 100), VELOCITY("Velocity", 127);
+		BANK("Bank", 255), PROGRAM("Program", 127), MIDIOUT("Midi Out", 3), CHANNEL("Channel",
+				15), REVERB("Reverb", 120), CHOIR("Choir", 100);
 
 		private MODE(final String hint, final int max) {
 			this.hint = hint;
@@ -74,9 +74,9 @@ public class LooperConfigDialog extends HintDialog {
 	public LooperConfigDialog(final String hint, final ChannelConfig config) {
 		super(hint);
 		this.config = config;
-		setWidgets(getButton(0, 0, MODE.MIDIOUT), getButton(0, 1, MODE.BANK),
-				getButton(0, 2, MODE.PROGRAM), getButton(0, 3, MODE.REVERB),
-				getButton(0, 4, MODE.CHOIR), getButton(0, 5, MODE.VELOCITY));
+		setWidgets(getButton(0, 2, MODE.MIDIOUT), getButton(1, 2, Color.FULL_AMBER, MODE.CHANNEL),
+				getButton(2, 2, MODE.BANK), getButton(3, 2, Color.RED, MODE.PROGRAM),
+				getButton(4, 2, MODE.REVERB), getButton(5, 2, MODE.CHOIR));
 		start();
 	}
 
@@ -84,10 +84,17 @@ public class LooperConfigDialog extends HintDialog {
 		return new SinglePixelButton(x, y, Color.FULL_GREEN, new ConfigureRunnable(mode));
 	}
 
+	private SinglePixelButton getButton(final int x, final int y, final Color color,
+			final MODE mode) {
+		return new SinglePixelButton(x, y, color, new ConfigureRunnable(mode));
+	}
+
 	private int getValue(final ChannelConfig config, final MODE mode) {
 		switch (mode) {
 		case BANK:
 			return config.getBank();
+		case CHANNEL:
+			return config.getChannel();
 		case CHOIR:
 			return config.getChoir();
 		case MIDIOUT:
@@ -96,8 +103,6 @@ public class LooperConfigDialog extends HintDialog {
 			return config.getProgram();
 		case REVERB:
 			return config.getReverb();
-		case VELOCITY:
-			return config.getVelocity();
 		default:
 			logger.error("Unkown mode: " + mode.name());
 			return 0;
@@ -108,6 +113,9 @@ public class LooperConfigDialog extends HintDialog {
 		switch (mode) {
 		case BANK:
 			config.setBank(Math.max(mode.getMax(), value));
+			break;
+		case CHANNEL:
+			config.setChannel(Math.max(mode.getMax(), value));
 			break;
 		case CHOIR:
 			config.setChoir(Math.max(mode.getMax(), value));
@@ -120,9 +128,6 @@ public class LooperConfigDialog extends HintDialog {
 			break;
 		case REVERB:
 			config.setReverb(Math.max(mode.getMax(), value));
-			break;
-		case VELOCITY:
-			config.setVelocity(Math.max(mode.getMax(), value));
 			break;
 		default:
 			logger.error("Unkown mode: " + mode.name());

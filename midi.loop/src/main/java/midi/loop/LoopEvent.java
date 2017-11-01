@@ -29,50 +29,23 @@ import java.util.List;
 public class LoopEvent {
 
 	public static enum COMMAND {
-		NONE, NOTE_ON, NOTE_OFF
+		NOTE_ON, NOTE_OFF
 	};
 
 	private final List<Integer> notes = new ArrayList<>();
-	private String name = "C";
-	private boolean isChord = false;
-	private boolean accent = false;
+	private int velocity = 127;
 
-	private COMMAND command = COMMAND.NONE;
+	private COMMAND command = COMMAND.NOTE_ON;
 
 	public LoopEvent() {
 		super();
 	}
 
-	/**
-	 * @return the name
-	 */
-	public String getName() {
-		return name;
-	}
-
-	/**
-	 * @param name
-	 *            the name to set
-	 */
-	public LoopEvent setName(final String name) {
-		this.name = name;
-		return this;
-	}
-
-	/**
-	 * @return the isChord
-	 */
-	public boolean isChord() {
-		return isChord;
-	}
-
-	/**
-	 * @param isChord
-	 *            the isChord to set
-	 */
-	public LoopEvent setChord(final boolean isChord) {
-		this.isChord = isChord;
-		return this;
+	public LoopEvent(final COMMAND command, final int velocity, final List<Integer> notes) {
+		super();
+		this.command = command;
+		this.velocity = velocity;
+		this.notes.addAll(notes);
 	}
 
 	/**
@@ -90,37 +63,17 @@ public class LoopEvent {
 	}
 
 	/**
-	 * @param command
-	 *            the command to set
+	 * @return the velocity
 	 */
-	public LoopEvent setCommand(final COMMAND command) {
-		this.command = command;
-		return this;
+	public int getVelocity() {
+		return velocity;
 	}
 
-	/**
-	 * @return the accent
-	 */
-	public boolean isAccent() {
-		return accent;
+	public LoopEvent asOffEvent() {
+		return new LoopEvent(COMMAND.NOTE_OFF, velocity, notes);
 	}
 
-	/**
-	 * @param accent
-	 *            the accent to set
-	 */
-	public LoopEvent setAccent(final boolean accent) {
-		this.accent = accent;
-		return this;
-	}
-
-	/**
-	 * @param notes
-	 *            the notes to set
-	 */
-	public LoopEvent setNotes(final List<Integer> notes) {
-		this.notes.clear();
-		this.notes.addAll(notes);
-		return this;
+	public LoopEvent asOnEvent() {
+		return new LoopEvent(COMMAND.NOTE_ON, velocity, notes);
 	}
 }

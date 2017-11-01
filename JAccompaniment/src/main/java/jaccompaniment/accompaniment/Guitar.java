@@ -122,7 +122,21 @@ public class Guitar implements ChordListener {
 
 		A7(new int[] { -1, 0, 2, 0, 2, 0 }),
 
-		B7(new int[] { -1, 2, 4, 2, 4, 2 }),
+		B7(new int[] { -1, 2, 1, 2, 0, 2 }),
+
+		C7sus4(new int[] { -1, 3, 3, 3, 1, 0 }),
+
+		D7sus4(new int[] { -1, -1, 0, 2, 1, 3 }),
+
+		E7sus4(new int[] { 0, 2, 0, 2, 0, 0 }),
+
+		F7sus4(new int[] { 1, 3, 1, 3, 1, 1 }),
+
+		G7sus4(new int[] { 3, 3, 0, 0, 1, 1 }),
+
+		A7sus4(new int[] { -1, 0, 2, 0, 3, 0 }),
+
+		B7sus4(new int[] { -1, 2, 2, 2, 0, 2 }),
 
 		Cm(new int[] { -1, 3, 5, 5, 4, 3 }),
 
@@ -159,6 +173,22 @@ public class Guitar implements ChordListener {
 		Db7(new int[] { -1, 4, 6, 4, 6, 4 }),
 
 		Dbm7(new int[] { -1, 4, 6, 4, 5, 4 }),
+
+		Cm7sus4(new int[] { -1, 3, 3, 0, 0, 3 }),
+
+		Dm7sus4(new int[] { -1, -1, 0, 0, 2, 3 }),
+
+		Em7sus4(new int[] { 0, 0, 1, 2, 0, 0 }),
+
+		Fm7sus4(new int[] { 1, 1, 2, 3, 1, 1 }),
+
+		Gm7sus4(new int[] { 3, 3, 4, 5, 3, 3 }),
+
+		Am7sus4(new int[] { -1, 0, 0, 1, 3, 0 }),
+
+		Bm7sus4(new int[] { -1, 2, 2, 3, 0, 0 }),
+
+		Db7sus4(new int[] { -1, 4, 4, 4, 2, 2 }),
 
 		Eb(new int[] { -1, -1, 1, 3, 4, 3 }),
 
