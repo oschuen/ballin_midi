@@ -33,6 +33,10 @@
 			<groupId>de.yamap</groupId>
 			<artifactId>midi.gui.model</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>de.yamap</groupId>
+			<artifactId>midi.loop</artifactId>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
