@@ -135,12 +135,12 @@ public class Beat {
 		 */
 		@Override
 		public void run() {
-			System.out.println("NExt beat");
 			beat++;
 			if (bpm != currentBpm) {
 				currentBpm = bpm;
 				beatStart = System.nanoTime() - (minute * beat / currentBpm);
 			}
+			System.out.println("Next beat " + beat * BEAT_DIVISION);
 			publishBeat(beat * BEAT_DIVISION);
 		}
 	}
