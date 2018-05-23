@@ -70,10 +70,14 @@ public class LoopEvent {
 	}
 
 	public LoopEvent asOffEvent() {
-		return new LoopEvent(COMMAND.NOTE_OFF, velocity, notes);
+		return new LoopEvent(COMMAND.NOTE_OFF, 0, notes);
 	}
 
 	public LoopEvent asOnEvent() {
 		return new LoopEvent(COMMAND.NOTE_ON, velocity, notes);
+	}
+
+	public LoopEvent asWeightedEvent(final int velocity) {
+		return new LoopEvent(command, this.velocity * velocity / 127, notes);
 	}
 }

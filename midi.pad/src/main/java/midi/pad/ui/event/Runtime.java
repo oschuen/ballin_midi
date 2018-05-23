@@ -49,7 +49,7 @@ public class Runtime {
 	private Transmitter transmitter = null;
 	private Receiver receiver = null;
 	private static boolean checkConfiguration = true;
-	private static String defaultDevice = "Mini [hw:5,0,0]";
+	private static String defaultDevice = "Mini [hw:3,0,0]";
 	private static long flashPeriod = 500;
 	private boolean inRuntimeThread = false;
 	private final Receiver inputReceiver = new PadReceiver(screen);

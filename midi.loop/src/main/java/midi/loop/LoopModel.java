@@ -33,7 +33,9 @@ public class LoopModel {
 	private int quarterPerPage = 4;
 	private int numberOfPages = 1;
 	private int quarterDivision = 4;
-	private LoopEvent[] events = new LoopEvent[quarterPerPage * numberOfPages * quarterDivision];
+	private int steps = quarterPerPage * numberOfPages * quarterDivision;
+	private int velocity = 127;
+	private LoopEvent[] events = new LoopEvent[steps];
 	private final Lock lock = new ReentrantLock();
 
 	/**
@@ -100,9 +102,9 @@ public class LoopModel {
 	}
 
 	private void adaptSize() {
-		final int newSize = quarterPerPage * numberOfPages * quarterDivision;
-		if (newSize > events.length) {
-			final LoopEvent[] newEvents = new LoopEvent[newSize];
+		steps = quarterPerPage * numberOfPages * quarterDivision;
+		if (steps > events.length) {
+			final LoopEvent[] newEvents = new LoopEvent[steps];
 			System.arraycopy(events, 0, newEvents, 0, events.length);
 			events = newEvents;
 		}
@@ -112,8 +114,7 @@ public class LoopModel {
 		lock.lock();
 		try {
 			final long division = Beat.BEAT_DIVISION / quarterDivision;
-			events[(int) ((beat / division)
-					% (quarterPerPage * numberOfPages * quarterDivision))] = event;
+			events[(int) ((beat / division) % steps)] = event;
 		} finally {
 			lock.unlock();
 		}
@@ -124,13 +125,52 @@ public class LoopModel {
 		try {
 			final long division = Beat.BEAT_DIVISION / quarterDivision;
 			if (beat % (division) == 0) {
-				final int step = (int) ((beat / division)
-						% (quarterPerPage * numberOfPages * quarterDivision));
-				return Optional.ofNullable(events[step]);
+				final int step = (int) ((beat / division) % (steps));
+				return Optional.ofNullable(events[step])
+						.map(event -> event.asWeightedEvent(velocity));
 			}
 		} finally {
 			lock.unlock();
 		}
 		return Optional.empty();
+	}
+
+	public void setStepEvent(final LoopEvent event, final int step) {
+		lock.lock();
+		try {
+			if (step >= 0) {
+				events[step % steps] = event;
+			}
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	public Optional<LoopEvent> getStepEvent(final int step) {
+		lock.lock();
+		try {
+			if (step >= 0) {
+				return Optional.ofNullable(events[step % steps])
+						.map(event -> event.asWeightedEvent(velocity));
+			}
+		} finally {
+			lock.unlock();
+		}
+		return Optional.empty();
+	}
+
+	/**
+	 * @return the velocity
+	 */
+	public int getVelocity() {
+		return velocity;
+	}
+
+	/**
+	 * @param velocity
+	 *            the velocity to set
+	 */
+	public void setVelocity(final int velocity) {
+		this.velocity = Math.max(0, Math.min(127, velocity));
 	}
 }
