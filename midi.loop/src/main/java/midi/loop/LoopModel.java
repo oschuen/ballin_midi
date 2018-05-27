@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import jmidi.gui.model.IntegerModel;
 import midi.loop.beat.Beat;
 
 /**
@@ -34,9 +35,27 @@ public class LoopModel {
 	private int numberOfPages = 1;
 	private int quarterDivision = 4;
 	private int steps = quarterPerPage * numberOfPages * quarterDivision;
-	private int velocity = 127;
+	private final IntegerModel velocity = new IntegerModel(0, 127, 127);
 	private LoopEvent[] events = new LoopEvent[steps];
 	private final Lock lock = new ReentrantLock();
+	private long division = Beat.BEAT_DIVISION / quarterDivision;
+	private final Effect standardEffect = new Effect() {
+
+		@Override
+		public LoopEvent apply(final LoopEvent t) {
+			return t;
+		}
+	};
+	private Effect effect = standardEffect;
+
+	public LoopModel() {
+		super();
+	}
+
+	public LoopModel(final Effect effect) {
+		super();
+		this.effect = effect;
+	}
 
 	/**
 	 * @return the quarterPerPage
@@ -95,6 +114,7 @@ public class LoopModel {
 		lock.lock();
 		try {
 			this.quarterDivision = quarterDivision;
+			division = Beat.BEAT_DIVISION / quarterDivision;
 			adaptSize();
 		} finally {
 			lock.unlock();
@@ -113,7 +133,6 @@ public class LoopModel {
 	public void setEvent(final LoopEvent event, final long beat) {
 		lock.lock();
 		try {
-			final long division = Beat.BEAT_DIVISION / quarterDivision;
 			events[(int) ((beat / division) % steps)] = event;
 		} finally {
 			lock.unlock();
@@ -121,16 +140,9 @@ public class LoopModel {
 	}
 
 	public Optional<LoopEvent> getEvent(final long beat) {
-		lock.lock();
-		try {
-			final long division = Beat.BEAT_DIVISION / quarterDivision;
-			if (beat % (division) == 0) {
-				final int step = (int) ((beat / division) % (steps));
-				return Optional.ofNullable(events[step])
-						.map(event -> event.asWeightedEvent(velocity));
-			}
-		} finally {
-			lock.unlock();
+		if (beat % (division) == 0) {
+			final int step = (int) ((beat / division) % (steps));
+			return getStepEvent(step);
 		}
 		return Optional.empty();
 	}
@@ -151,7 +163,7 @@ public class LoopModel {
 		try {
 			if (step >= 0) {
 				return Optional.ofNullable(events[step % steps])
-						.map(event -> event.asWeightedEvent(velocity));
+						.map(event -> event.asWeightedEvent(velocity.getValue())).map(effect);
 			}
 		} finally {
 			lock.unlock();
@@ -163,7 +175,7 @@ public class LoopModel {
 	 * @return the velocity
 	 */
 	public int getVelocity() {
-		return velocity;
+		return velocity.getValue();
 	}
 
 	/**
@@ -171,6 +183,22 @@ public class LoopModel {
 	 *            the velocity to set
 	 */
 	public void setVelocity(final int velocity) {
-		this.velocity = Math.max(0, Math.min(127, velocity));
+		this.velocity.setValue(velocity);
+	}
+
+	public IntegerModel getVelocityModel() {
+		return velocity;
+	}
+
+	/**
+	 * @param effect
+	 *            the effect to set
+	 */
+	public void setEffect(final Effect effect) {
+		if (effect == null) {
+			this.effect = standardEffect;
+		} else {
+			this.effect = effect;
+		}
 	}
 }

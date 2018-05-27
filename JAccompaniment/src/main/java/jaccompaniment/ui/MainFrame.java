@@ -64,11 +64,11 @@ import jaccompaniment.filter.MidiThroughFilter;
 import jaccompaniment.resource.Beat;
 import jaccompaniment.resource.Beat.BeatListener;
 import jmidi.gui.group.LoopPanel;
-import jmidi.gui.group.LoopPanel.Instrument;
 import jmidi.gui.model.IntegerModel.ValueObserver;
 import jmidi.gui.widget.TriggerButton;
 import jmidi.gui.widget.ValuePanel;
 import midi.device.resource.MidiDevices;
+import midi.instrument.Instrument;
 
 /**
  * Main application frame
@@ -99,17 +99,15 @@ public class MainFrame extends JFrame {
 
 	private static final String LAST_FILE_KEY = "last file";
 
-	private final static LoopPanel.Instrument percussionInstruments[] = Percussion.PercussionInstrument
+	private final static Instrument percussionInstruments[] = Percussion.PercussionInstrument
 			.values();
 
-	private final static LoopPanel.Instrument guitarInstruments[] = Guitar.GuitarInstrument
-			.values();
+	private final static Instrument guitarInstruments[] = Guitar.GuitarInstrument.values();
 
-	private final static LoopPanel.Instrument allInstruments[];
+	private final static Instrument allInstruments[];
 
 	static {
-		allInstruments = new LoopPanel.Instrument[percussionInstruments.length
-				+ guitarInstruments.length];
+		allInstruments = new Instrument[percussionInstruments.length + guitarInstruments.length];
 		System.arraycopy(percussionInstruments, 0, allInstruments, 0, percussionInstruments.length);
 		System.arraycopy(guitarInstruments, 0, allInstruments, percussionInstruments.length,
 				guitarInstruments.length);

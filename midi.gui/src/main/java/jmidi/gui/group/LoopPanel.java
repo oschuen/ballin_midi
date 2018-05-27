@@ -41,6 +41,7 @@ import jmidi.gui.model.IntegerModel.ValueObserver;
 import jmidi.gui.widget.PageSelector;
 import jmidi.gui.widget.PatternPanel;
 import jmidi.gui.widget.ValuePanel;
+import midi.instrument.Instrument;
 
 /**
  * Panel for editing loop Pattern and velocities
@@ -49,12 +50,6 @@ import jmidi.gui.widget.ValuePanel;
  */
 @SuppressWarnings({ "serial", "PMD.AvoidInstantiatingObjectsInLoops" })
 public class LoopPanel extends JPanel {
-	public static interface Instrument {
-		@Override
-		public String toString();
-
-		public String name();
-	}
 
 	public static final Instrument ACCENT = new Instrument() {
 

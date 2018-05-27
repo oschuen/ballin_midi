@@ -28,7 +28,7 @@ import javax.sound.midi.ShortMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jmidi.gui.group.LoopPanel.Instrument;
+import midi.instrument.Instrument;
 
 /**
  * Percussion configured for GM standard drum map
