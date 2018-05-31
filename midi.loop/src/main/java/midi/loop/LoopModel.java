@@ -39,13 +39,10 @@ public class LoopModel {
 	private LoopEvent[] events = new LoopEvent[steps];
 	private final Lock lock = new ReentrantLock();
 	private long division = Beat.BEAT_DIVISION / quarterDivision;
-	private final Effect standardEffect = new Effect() {
-
-		@Override
-		public LoopEvent apply(final LoopEvent t) {
-			return t;
-		}
+	private final Effect standardEffect = (event) -> {
+		return event;
 	};
+
 	private Effect effect = standardEffect;
 
 	public LoopModel() {

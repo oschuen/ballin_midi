@@ -25,6 +25,7 @@ import java.util.Optional;
 
 import midi.instrument.Instrument;
 import midi.loop.LoopEvent;
+import midi.loop.LoopEvent.COMMAND;
 import midi.loop.LoopModel;
 
 /**
@@ -38,8 +39,12 @@ public class PercussionModel {
 
 	public PercussionModel() {
 		accent = new LoopModel();
-		for (final Instrument instrument : PercussionInstrument.values()) {
-			tomsMap.put(instrument, new LoopModel());
+		for (final PercussionInstrument instrument : PercussionInstrument.values()) {
+			final LoopModel model = new LoopModel();
+			model.setEffect((event) -> {
+				return new LoopEvent(event.getCommand(), event.getVelocity(), instrument.tone);
+			});
+			tomsMap.put(instrument, model);
 		}
 		setNumberOfPages(accent.getNumberOfPages());
 		setQuarterDivision(accent.getQuarterDivision());
@@ -97,12 +102,17 @@ public class PercussionModel {
 		return accent;
 	}
 
-	public Optional<LoopEvent> getAccentEvent(final long beat) {
-		return accent.getEvent(beat);
+	private LoopEvent modifyAccentEvent(final Optional<LoopEvent> event) {
+		return event.map(ev -> new LoopEvent(COMMAND.NOTE_ON, 127, 0))
+				.orElse(new LoopEvent(COMMAND.NOTE_ON, accent.getVelocity(), 0));
 	}
 
-	public Optional<LoopEvent> getAccentStepEvent(final int step) {
-		return accent.getStepEvent(step);
+	public LoopEvent getAccentEvent(final long beat) {
+		return modifyAccentEvent(accent.getEvent(beat));
+	}
+
+	public LoopEvent getAccentStepEvent(final int step) {
+		return modifyAccentEvent(accent.getStepEvent(step));
 	}
 
 	public Optional<LoopEvent> getEvent(final Instrument instrument, final long beat) {

@@ -29,7 +29,9 @@ import org.slf4j.LoggerFactory;
 import midi.instrument.model.PercussionModel;
 import midi.instrument.model.PercussionModel.PercussionInstrument;
 import midi.loop.LoopEvent;
+import midi.loop.LoopEvent.COMMAND;
 import midi.loop.LoopModel;
+import midi.loop.beat.Beat;
 import midi.loop.beat.Beat.BeatListener;
 
 /**
@@ -78,12 +80,43 @@ public class Percussion implements BeatListener {
 	 */
 	@Override
 	public void accept(final long beat) {
-		// TODO Auto-generated method stub
+		final long division = Beat.BEAT_DIVISION / model.getQuarterDivision();
+		if (beat % (division) == 0) {
+			final long steps = model.getQuarterDivision() * model.getQuarterPerPage()
+					* model.getNumberOfPages();
+			final int step = (int) ((beat / division) % (steps));
+			step(step);
+		}
+	}
 
+	private void playEvent(final LoopEvent event) {
+		try {
+			for (final Integer note : event.getNotes()) {
+				final ShortMessage msg = new ShortMessage();
+				if (event.getCommand() == COMMAND.NOTE_ON) {
+					msg.setMessage(ShortMessage.NOTE_ON, channel, note, 0);
+				} else {
+					msg.setMessage(ShortMessage.NOTE_OFF, channel, note, 0);
+				}
+				receiver.send(msg, -1);
+			}
+		} catch (final InvalidMidiDataException e) {
+			logger.error("Can't play Notes", e);
+		}
 	}
 
 	public void step(final int step) {
-
+		final int accent = model.getAccentStepEvent(step).getVelocity() * velocity / 127;
+		for (int ii = 0; ii < loopModel.length && ii < lastPlayed.length; ++ii) {
+			final int i = ii;
+			if (lastPlayed[i] != null) {
+				playEvent(lastPlayed[i]);
+			}
+			loopModel[i].getStepEvent(step).ifPresent(event -> {
+				playEvent(event.asWeightedEvent(accent));
+				lastPlayed[i] = event.asOffEvent();
+			});
+		}
 	}
 
 	/**

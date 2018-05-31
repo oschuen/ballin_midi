@@ -20,6 +20,7 @@
 package midi.loop;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -46,6 +47,13 @@ public class LoopEvent {
 		this.command = command;
 		this.velocity = velocity;
 		this.notes.addAll(notes);
+	}
+
+	public LoopEvent(final COMMAND command, final int velocity, final Integer... notes) {
+		super();
+		this.command = command;
+		this.velocity = velocity;
+		this.notes.addAll(Arrays.asList(notes));
 	}
 
 	/**
