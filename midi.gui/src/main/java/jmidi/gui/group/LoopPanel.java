@@ -37,11 +37,15 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import javax.swing.JPanel;
 
+import jmidi.gui.model.IntegerModel;
 import jmidi.gui.model.IntegerModel.ValueObserver;
+import jmidi.gui.widget.OldPatternPanel;
 import jmidi.gui.widget.PageSelector;
 import jmidi.gui.widget.PatternPanel;
 import jmidi.gui.widget.ValuePanel;
 import midi.instrument.Instrument;
+import midi.instrument.model.PercussionModel;
+import midi.loop.LoopModel;
 
 /**
  * Panel for editing loop Pattern and velocities
@@ -84,9 +88,9 @@ public class LoopPanel extends JPanel {
 	private static final int pageSelHeight = 20;
 	private static final int margin = 3;
 
-	public LoopPanel(final Instrument set[]) {
+	public LoopPanel(final PercussionModel model, final Instrument set[]) {
 		super();
-		int i = 0;
+		int i = 1;
 		final List<Instrument> instruments = new ArrayList<>();
 		instruments.add(ACCENT);
 		instruments.addAll(Arrays.asList(set));
@@ -108,15 +112,34 @@ public class LoopPanel extends JPanel {
 		pageSelector.setBounds(margin, margin, width - 2 * margin, pageSelHeight);
 		add(pageSelector);
 
-		for (final Instrument instrument : instruments) {
-			final ValuePanel velocityPanel = new ValuePanel();
-			velocityPanel.setBounds(margin,
-					2 * margin + pageSelHeight + i * (ValuePanel.height + margin), ValuePanel.width,
-					ValuePanel.height);
-			velocityPanel.setLabel(instrument.toString());
-			velocityPanel.setMaxValue(127);
-			velocityPanel.setMinValue(1);
-			velocityPanel.setValue(100);
+		final ValuePanel accentVelociyPanel = createVelocityPanel(0, ACCENT,
+				model.getAccentModel().getVelocityModel());
+		add(accentVelociyPanel);
+		velocityMap.put(ACCENT, accentVelociyPanel);
+		accentVelociyPanel.addValueObserver(new ValueObserver() {
+			@Override
+			public void valueChanged(final int newValue) {
+				fireActionEvent(
+						new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "VOLUME CHANGED"));
+			}
+		});
+		final PatternPanel accentPanel = createPatternPanel(0, model.getAccentModel());
+		add(accentPanel);
+		beatPanel = accentPanel;
+		patternMap.put(ACCENT, accentPanel);
+		accentPanel.addPropertyChangeListener(new PropertyChangeListener() {
+
+			@Override
+			public void propertyChange(final PropertyChangeEvent evt) {
+				fireActionEvent(
+						new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "PATTERN CHANGED"));
+			}
+		});
+
+		for (final Instrument instrument : PercussionModel.PercussionInstrument.values()) {
+			final ValuePanel velocityPanel = createVelocityPanel(i, instrument,
+					model.getLoopModel(instrument).get().getVelocityModel());
+
 			add(velocityPanel);
 			velocityMap.put(instrument, velocityPanel);
 			velocityPanel.addValueObserver(new ValueObserver() {
@@ -127,10 +150,8 @@ public class LoopPanel extends JPanel {
 				}
 			});
 
-			final PatternPanel patternPanel = new PatternPanel();
-			patternPanel.setBounds(2 * margin + ValuePanel.width,
-					2 * margin + pageSelHeight + i * (ValuePanel.height + margin),
-					width - 3 * margin - ValuePanel.width, PatternPanel.patHeight);
+			final PatternPanel patternPanel = createPatternPanel(i,
+					model.getLoopModel(instrument).get());
 			add(patternPanel);
 			patternMap.put(instrument, patternPanel);
 			patternPanel.addPropertyChangeListener(new PropertyChangeListener() {
@@ -141,11 +162,30 @@ public class LoopPanel extends JPanel {
 							new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "PATTERN CHANGED"));
 				}
 			});
-			if (i == 0) {
-				beatPanel = patternPanel;
-			}
 			++i;
 		}
+	}
+
+	private PatternPanel createPatternPanel(final int line, final LoopModel model) {
+		final PatternPanel patternPanel = new PatternPanel(model);
+		patternPanel.setBounds(2 * margin + ValuePanel.width,
+				2 * margin + pageSelHeight + line * (ValuePanel.height + margin),
+				width - 3 * margin - ValuePanel.width, OldPatternPanel.patHeight);
+		return patternPanel;
+	}
+
+	private ValuePanel createVelocityPanel(final int line, final Instrument instrument,
+			final IntegerModel model) {
+		final ValuePanel velocityPanel = new ValuePanel();
+		velocityPanel.setBounds(margin,
+				2 * margin + pageSelHeight + line * (ValuePanel.height + margin), ValuePanel.width,
+				ValuePanel.height);
+		velocityPanel.setLabel(instrument.toString());
+		velocityPanel.setMaxValue(127);
+		velocityPanel.setMinValue(1);
+		velocityPanel.setValue(100);
+
+		return velocityPanel;
 	}
 
 	public String getPattern(final Instrument instrument) {

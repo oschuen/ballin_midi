@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 Oliver Schünemann
+ * Copyright (C) 2015 Oliver Schünemann
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * 
- * @since 01.06.2018
+ * @since 14.11.2015
  * @version 1.0
  * @author oliver
  */
@@ -24,47 +24,36 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 
 import jmidi.gui.Component;
-import midi.loop.LoopEvent;
-import midi.loop.LoopEvent.COMMAND;
-import midi.loop.LoopModel;
 
 /**
+ * Panel for editing a single loop Pattern
+ * 
  * @author oliver
- *
  */
 @SuppressWarnings("serial")
-public class PatternPanel extends Component {
+public class OldPatternPanel extends Component {
+	private String pattern = "                ";
 	public static final int patHeight = 26;
 	public int patWidth = 25;
 	public int taktDistance = patWidth;
 	public int taktWidth = 4 * patWidth + taktDistance;
 	private int beat = -1;
 
+	private int quarterPerPage = 4;
+	private int numberOfPages = 1;
 	private int currentPage = 0;
-	private final LoopModel model;
+	private int quarterDivision = 4;
 
-	public PatternPanel(final LoopModel model) {
+	public OldPatternPanel() {
 		super();
 		super.setBackground(Color.DARK_GRAY);
-		this.model = model;
 	}
 
 	/**
 	 * @return the pattern
 	 */
 	public String getPattern() {
-
-		final int steps = model.getQuarterPerPage() * model.getQuarterDivision()
-				* model.getNumberOfPages();
-		final StringBuilder builder = new StringBuilder(steps);
-		for (int i = 0; i < steps; ++i) {
-			if (model.getStepEvent(i).isPresent()) {
-				builder.append("X");
-			} else {
-				builder.append(" ");
-			}
-		}
-		return builder.toString();
+		return pattern;
 	}
 
 	/**
@@ -72,14 +61,9 @@ public class PatternPanel extends Component {
 	 *            the pattern to set
 	 */
 	public void setPattern(final String pattern) {
-		final int steps = model.getQuarterPerPage() * model.getQuarterDivision()
-				* model.getNumberOfPages();
-		for (int i = 0; i < steps && i < pattern.length(); ++i) {
-			if (pattern.charAt(i) == ' ') {
-				model.setStepEvent(null, i);
-			} else {
-				model.setStepEvent(new LoopEvent(COMMAND.NOTE_ON, 127, 0), i);
-			}
+		if (!this.pattern.equals(pattern)) {
+			this.pattern = pattern;
+			checkPatternLength();
 		}
 	}
 
@@ -91,10 +75,6 @@ public class PatternPanel extends Component {
 	@Override
 	public void paintComponent(final Graphics g) {
 		final int width = getWidth();
-		final int quarterPerPage = model.getQuarterPerPage();
-		final int quarterDivision = model.getQuarterDivision();
-		final int numberOfPages = model.getNumberOfPages();
-
 		final int numberOfFields = quarterPerPage * quarterDivision + quarterPerPage - 1;
 		patWidth = width / numberOfFields;
 		taktWidth = patWidth * (quarterDivision + 1);
@@ -108,12 +88,12 @@ public class PatternPanel extends Component {
 
 			final Color inactiveColor = beatBox ? Color.LIGHT_GRAY : Color.GRAY;
 			final Color activeColor = beatBox ? Color.WHITE : Color.GREEN;
-			if (model.getStepEvent(step).isPresent()) {
-				g.setColor(activeColor);
-				g.fill3DRect(offset + i * patWidth, 0, patWidth, getHeight(), true);
-			} else {
+			if (pattern.charAt(step) == ' ') {
 				g.setColor(inactiveColor);
 				g.fill3DRect(offset + i * patWidth, 0, patWidth, getHeight(), false);
+			} else {
+				g.setColor(activeColor);
+				g.fill3DRect(offset + i * patWidth, 0, patWidth, getHeight(), true);
 			}
 		}
 	}
@@ -125,7 +105,7 @@ public class PatternPanel extends Component {
 	 */
 	@Override
 	public Dimension getPreferredSize() {
-		return new Dimension(taktWidth * model.getQuarterPerPage(), patHeight);
+		return new Dimension(taktWidth * quarterPerPage, patHeight);
 	}
 
 	public void setBeat(final int beat) {
@@ -142,39 +122,48 @@ public class PatternPanel extends Component {
 	public void mousePressed(final int x, final int y) {
 		final int takt = x / taktWidth;
 		final int subTakt = (x % taktWidth) / patWidth;
-		final int quarterPerPage = model.getQuarterPerPage();
-		final int quarterDivision = model.getQuarterDivision();
 
-		final int step = takt * quarterDivision + subTakt
+		final int pos = takt * quarterDivision + subTakt
 				+ currentPage * quarterPerPage * quarterDivision;
-		if (model.getStepEvent(step).isPresent()) {
-			model.setStepEvent(null, step);
-		} else {
-			model.setStepEvent(new LoopEvent(COMMAND.NOTE_ON, 127, 0), step);
+		String insert = " ";
+		if (pos >= 0 && pos < pattern.length() && 0 <= subTakt && subTakt < quarterDivision) {
+			if (pattern.charAt(pos) == ' ') {
+				insert = "X";
+			}
+			pattern = pattern.substring(0, pos) + insert + pattern.substring(pos + 1);
+			repaint();
 		}
 		repaint();
+		firePropertyChange("pattern", null, pattern);
+	}
+
+	private void checkPatternLength() {
+		while (pattern.length() < numberOfPages * quarterPerPage * quarterDivision) {
+			pattern = pattern + " ";
+		}
 	}
 
 	/**
 	 * @return the quaterPerPage
 	 */
 	public int getQuarterPerPage() {
-		return model.getQuarterPerPage();
+		return quarterPerPage;
 	}
 
 	/**
 	 * @param quaterPerPage
 	 *            the quaterPerPage to set
 	 */
-	public void setQuaterPerPage(final int quarterPerPage) {
-		model.setQuarterPerPage(quarterPerPage);
+	public void setQuaterPerPage(final int quaterPerPage) {
+		quarterPerPage = quaterPerPage;
+		checkPatternLength();
 	}
 
 	/**
 	 * @return the numberOfPages
 	 */
 	public int getNumberOfPages() {
-		return model.getNumberOfPages();
+		return numberOfPages;
 	}
 
 	/**
@@ -182,7 +171,8 @@ public class PatternPanel extends Component {
 	 *            the numberOfPages to set
 	 */
 	public void setNumberOfPages(final int numberOfPages) {
-		model.setNumberOfPages(numberOfPages);
+		this.numberOfPages = numberOfPages;
+		checkPatternLength();
 	}
 
 	/**
@@ -204,7 +194,7 @@ public class PatternPanel extends Component {
 	 * @return the quarterDivision
 	 */
 	public int getQuarterDivision() {
-		return model.getQuarterDivision();
+		return quarterDivision;
 	}
 
 	/**
@@ -212,7 +202,7 @@ public class PatternPanel extends Component {
 	 *            the quarterDivision to set
 	 */
 	public void setQuarterDivision(final int quarterDivision) {
-		model.setQuarterDivision(quarterDivision);
+		this.quarterDivision = quarterDivision;
+		checkPatternLength();
 	}
-
 }

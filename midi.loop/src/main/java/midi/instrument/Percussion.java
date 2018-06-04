@@ -42,22 +42,31 @@ public class Percussion implements BeatListener {
 
 	private final Receiver receiver;
 	private final int channel;
-	private final PercussionModel model;
+	private PercussionModel model;
 	private static final Logger logger = LoggerFactory.getLogger(Percussion.class);
 	private int velocity = 127;
 	final PercussionInstrument instruments[] = PercussionInstrument.values();
 	final LoopEvent[] lastPlayed = new LoopEvent[instruments.length];
 	final LoopModel[] loopModel = new LoopModel[instruments.length];
 
-	public Percussion(final Receiver receiver, final int channel, final PercussionModel model) {
+	private final PercussionModel defaultModel = new PercussionModel();
+
+	public Percussion(final Receiver receiver, final int channel) {
 		super();
 		this.receiver = receiver;
 		this.channel = channel;
-		this.model = model;
+		model = defaultModel;
 		for (final PercussionInstrument percussionInstrument : instruments) {
 			loopModel[percussionInstrument.ordinal()] = model.getLoopModel(percussionInstrument)
 					.get();
 		}
+	}
+
+	/**
+	 * Close the Accompaniment and release resources.
+	 */
+	public void close() {
+		receiver.close();
 	}
 
 	/**
@@ -94,7 +103,7 @@ public class Percussion implements BeatListener {
 			for (final Integer note : event.getNotes()) {
 				final ShortMessage msg = new ShortMessage();
 				if (event.getCommand() == COMMAND.NOTE_ON) {
-					msg.setMessage(ShortMessage.NOTE_ON, channel, note, 0);
+					msg.setMessage(ShortMessage.NOTE_ON, channel, note, event.getVelocity());
 				} else {
 					msg.setMessage(ShortMessage.NOTE_OFF, channel, note, 0);
 				}
@@ -132,5 +141,24 @@ public class Percussion implements BeatListener {
 	 */
 	public void setVelocity(final int velocity) {
 		this.velocity = velocity;
+	}
+
+	/**
+	 * @return the model
+	 */
+	public PercussionModel getModel() {
+		return model;
+	}
+
+	/**
+	 * @param model
+	 *            the model to set
+	 */
+	public void setModel(final PercussionModel model) {
+		if (model == null) {
+			this.model = defaultModel;
+		} else {
+			this.model = model;
+		}
 	}
 }

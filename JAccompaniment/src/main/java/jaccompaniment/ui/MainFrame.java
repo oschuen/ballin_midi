@@ -57,7 +57,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jaccompaniment.accompaniment.Guitar;
-import jaccompaniment.accompaniment.Percussion;
 import jaccompaniment.chord.ChordRecognizer;
 import jaccompaniment.chord.ChordRecognizer.ChordListener;
 import jaccompaniment.filter.MidiThroughFilter;
@@ -69,6 +68,8 @@ import jmidi.gui.widget.TriggerButton;
 import jmidi.gui.widget.ValuePanel;
 import midi.device.resource.MidiDevices;
 import midi.instrument.Instrument;
+import midi.instrument.Percussion;
+import midi.instrument.model.PercussionModel;
 
 /**
  * Main application frame
@@ -90,6 +91,7 @@ public class MainFrame extends JFrame {
 	private BeatListener beatListener = null;
 	private final JTabbedPane tabbedPane;
 	private final LoopPanel loopPanel[] = new LoopPanel[panelCount];
+	private final PercussionModel[] percussionModel = new PercussionModel[panelCount];
 	private final ValuePanel masterVelocityPanel;
 	private final ValuePanel bpmPanel;
 	private final ValuePanel quarterPanel;
@@ -99,7 +101,7 @@ public class MainFrame extends JFrame {
 
 	private static final String LAST_FILE_KEY = "last file";
 
-	private final static Instrument percussionInstruments[] = Percussion.PercussionInstrument
+	private final static Instrument percussionInstruments[] = PercussionModel.PercussionInstrument
 			.values();
 
 	private final static Instrument guitarInstruments[] = Guitar.GuitarInstrument.values();
@@ -154,7 +156,8 @@ public class MainFrame extends JFrame {
 		contentPane.add(tabbedPane);
 
 		for (int i = 0; i < loopPanel.length; ++i) {
-			loopPanel[i] = new LoopPanel(allInstruments);
+			percussionModel[i] = new PercussionModel();
+			loopPanel[i] = new LoopPanel(percussionModel[i], allInstruments);
 			tabbedPane.add("F" + (1 + i), loopPanel[i]);
 			tabbedPane.setBackground(Color.DARK_GRAY);
 			tabbedPane.setBackgroundAt(0, Color.DARK_GRAY);
@@ -553,7 +556,7 @@ public class MainFrame extends JFrame {
 			public void nextBeat(final int beat) {
 				try {
 					if (percussion != null) {
-						percussion.beat(beat);
+						percussion.step(beat);
 					}
 					if (guitar != null) {
 						guitar.beat(beat);
@@ -580,20 +583,7 @@ public class MainFrame extends JFrame {
 	private void copyLoopPanelInfo() {
 		final int masterVelocity = masterVelocityPanel.getValue();
 		final LoopPanel selectedPanel = loopPanel[tabbedPane.getSelectedIndex()];
-		final String newPercussionPattern[] = new String[percussionInstruments.length];
-		final int newPercussionVelocity[] = new int[percussionInstruments.length];
-		final String accent = selectedPanel.getPattern(LoopPanel.ACCENT);
-		final int factor = selectedPanel.getVelocity(LoopPanel.ACCENT);
-
-		for (int i = 0; i < newPercussionPattern.length; ++i) {
-			newPercussionPattern[i] = selectedPanel.getPattern(percussionInstruments[i]);
-			newPercussionVelocity[i] = masterVelocity
-					* selectedPanel.getVelocity(percussionInstruments[i]) / 127;
-		}
-		if (percussion != null) {
-			percussion.setPattern(accent, newPercussionPattern);
-			percussion.setVelocity(factor, newPercussionVelocity);
-		}
+		percussion.setModel(percussionModel[tabbedPane.getSelectedIndex()]);
 
 		final String newGuitarPattern[] = new String[guitarInstruments.length];
 		final int newGuitarVelocity[] = new int[guitarInstruments.length];

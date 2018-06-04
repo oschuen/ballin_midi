@@ -41,12 +41,26 @@ public class ValuePanel extends Component {
 	public static final int valueWidth = 80;
 	public static final int width = labelWidth + valueWidth;
 	public static final int height = 26;
-	private final IntegerModel model = new IntegerModel(Integer.MIN_VALUE, Integer.MAX_VALUE, 0);
+	private final IntegerModel model;
 	private int pressValue;
 
 	public ValuePanel() {
 		super();
 		super.setBackground(Color.DARK_GRAY);
+		model = new IntegerModel(Integer.MIN_VALUE, Integer.MAX_VALUE, 0);
+		model.addValueObserver(new ValueObserver() {
+
+			@Override
+			public void valueChanged(final int newValue) {
+				repaint();
+			}
+		});
+	}
+
+	public ValuePanel(final IntegerModel model) {
+		super();
+		super.setBackground(Color.DARK_GRAY);
+		this.model = model;
 		model.addValueObserver(new ValueObserver() {
 
 			@Override
