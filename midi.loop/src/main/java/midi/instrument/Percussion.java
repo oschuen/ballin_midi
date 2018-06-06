@@ -19,6 +19,8 @@
  */
 package midi.instrument;
 
+import java.util.Optional;
+
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
@@ -29,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import midi.instrument.model.PercussionModel;
 import midi.instrument.model.PercussionModel.PercussionInstrument;
 import midi.loop.LoopEvent;
-import midi.loop.LoopEvent.COMMAND;
 import midi.loop.LoopModel;
 import midi.loop.beat.Beat;
 import midi.loop.beat.Beat.BeatListener;
@@ -98,33 +99,19 @@ public class Percussion implements BeatListener {
 		}
 	}
 
-	private void playEvent(final LoopEvent event) {
-		try {
-			for (final Integer note : event.getNotes()) {
-				final ShortMessage msg = new ShortMessage();
-				if (event.getCommand() == COMMAND.NOTE_ON) {
-					msg.setMessage(ShortMessage.NOTE_ON, channel, note, event.getVelocity());
-				} else {
-					msg.setMessage(ShortMessage.NOTE_OFF, channel, note, 0);
-				}
-				receiver.send(msg, -1);
-			}
-		} catch (final InvalidMidiDataException e) {
-			logger.error("Can't play Notes", e);
-		}
-	}
-
 	public void step(final int step) {
 		final int accent = model.getAccentStepEvent(step).getVelocity() * velocity / 127;
-		for (int ii = 0; ii < loopModel.length && ii < lastPlayed.length; ++ii) {
-			final int i = ii;
-			if (lastPlayed[i] != null) {
-				playEvent(lastPlayed[i]);
-			}
-			loopModel[i].getStepEvent(step).ifPresent(event -> {
-				playEvent(event.asWeightedEvent(accent));
-				lastPlayed[i] = event.asOffEvent();
-			});
+		for (int i = 0; i < instruments.length; i++) {
+			final int var = i; 
+			Optional<LoopEvent> event = loopModel[i].getStepEvent(step);
+			event.ifPresent(it -> {
+				try {
+					it.asWeightedEvent(accent).playEvent(receiver, channel);
+				} catch (InvalidMidiDataException e) {
+					logger.error("Couldn't play event", e);
+				}
+				lastPlayed[var] = it.asOffEvent();
+				});
 		}
 	}
 
@@ -160,5 +147,9 @@ public class Percussion implements BeatListener {
 		} else {
 			this.model = model;
 		}
+		for (final PercussionInstrument percussionInstrument : instruments) {
+			loopModel[percussionInstrument.ordinal()] = this.model.getLoopModel(percussionInstrument)
+					.get();
+		}		
 	}
 }

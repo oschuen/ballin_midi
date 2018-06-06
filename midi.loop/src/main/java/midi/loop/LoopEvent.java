@@ -23,6 +23,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.Receiver;
+import javax.sound.midi.ShortMessage;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * @author oliver
  *
@@ -37,6 +44,8 @@ public class LoopEvent {
 	private int velocity = 127;
 
 	private COMMAND command = COMMAND.NOTE_ON;
+	
+	private static final Logger logger = LoggerFactory.getLogger(LoopEvent.class);
 
 	public LoopEvent() {
 		super();
@@ -76,6 +85,20 @@ public class LoopEvent {
 	public int getVelocity() {
 		return velocity;
 	}
+	
+	public void playEvent(Receiver receiver, int channel) throws InvalidMidiDataException {
+		for (Integer tone : notes) {
+			final ShortMessage msg = new ShortMessage();
+			if (command == COMMAND.NOTE_OFF) {
+				msg.setMessage(ShortMessage.NOTE_OFF, channel, tone, 0);
+				
+				
+			} else {
+				msg.setMessage(ShortMessage.NOTE_ON, channel, tone, velocity);
+			}
+			receiver.send(msg, -1);
+		}
+	}
 
 	public LoopEvent asOffEvent() {
 		return new LoopEvent(COMMAND.NOTE_OFF, 0, notes);
@@ -87,5 +110,13 @@ public class LoopEvent {
 
 	public LoopEvent asWeightedEvent(final int velocity) {
 		return new LoopEvent(command, this.velocity * velocity / 127, notes);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "LoopEvent [command=" + command + ", velocity=" + velocity + ", notes=" + notes + "]";
 	}
 }
