@@ -176,7 +176,7 @@ public class LoopPanel extends JPanel {
 
 	private ValuePanel createVelocityPanel(final int line, final Instrument instrument,
 			final IntegerModel model) {
-		final ValuePanel velocityPanel = new ValuePanel();
+		final ValuePanel velocityPanel = new ValuePanel(model);
 		velocityPanel.setBounds(margin,
 				2 * margin + pageSelHeight + line * (ValuePanel.height + margin), ValuePanel.width,
 				ValuePanel.height);

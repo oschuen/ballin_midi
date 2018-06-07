@@ -584,6 +584,7 @@ public class MainFrame extends JFrame {
 		final int masterVelocity = masterVelocityPanel.getValue();
 		final LoopPanel selectedPanel = loopPanel[tabbedPane.getSelectedIndex()];
 		percussion.setModel(percussionModel[tabbedPane.getSelectedIndex()]);
+		percussion.setVelocity(masterVelocity);
 
 		final String newGuitarPattern[] = new String[guitarInstruments.length];
 		final int newGuitarVelocity[] = new int[guitarInstruments.length];
@@ -648,6 +649,10 @@ public class MainFrame extends JFrame {
 		divisionPanel.setValue(Integer.parseInt(props.getProperty(DIVISION_KEY, "4")));
 
 		for (int i = 0; i < loopPanel.length; ++i) {
+			loopPanel[i].setNumberOfPages(pagePanel.getValue());
+			loopPanel[i].setQuarterPerPage(quarterPanel.getValue());
+			loopPanel[i].setQuarterDivision(divisionPanel.getValue());
+			
 			loopPanel[i].setVelocity(LoopPanel.ACCENT, Integer.parseInt(props
 					.getProperty("P" + i + "_" + LoopPanel.ACCENT.name() + VELOCITY_KEY, "127")));
 			loopPanel[i].setPattern(LoopPanel.ACCENT, props
@@ -670,9 +675,6 @@ public class MainFrame extends JFrame {
 				loopPanel[i].setPattern(instrument, pattern);
 				loopPanel[i].setVelocity(instrument, velocity);
 			}
-			loopPanel[i].setNumberOfPages(pagePanel.getValue());
-			loopPanel[i].setQuarterPerPage(quarterPanel.getValue());
-			loopPanel[i].setQuarterDivision(divisionPanel.getValue());
 		}
 		bpmPanel.setValue(Integer.parseInt(props.getProperty(BPM_KEY, "120")));
 		masterVelocityPanel.setValue(Integer.parseInt(props.getProperty(MASTER_KEY, "60")));

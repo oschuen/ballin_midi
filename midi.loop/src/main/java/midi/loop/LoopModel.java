@@ -180,6 +180,7 @@ public class LoopModel {
 	 *            the velocity to set
 	 */
 	public void setVelocity(final int velocity) {
+		
 		this.velocity.setValue(velocity);
 	}
 
