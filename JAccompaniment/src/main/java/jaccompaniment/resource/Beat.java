@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import jaccompaniment.chord.ChordRecognizer.ChordListener;
+import midi.chord.ChordRecognizer.ChordListener;
 
 /**
  * Produces a beat of one-sixteenth steps that correspond to the configured bpm
@@ -143,7 +143,7 @@ public class Beat implements ChordListener {
 	/**
 	 * starts at syncstart the beat when chord is recognized
 	 * 
-	 * @see jaccompaniment.chord.ChordRecognizer.ChordListener#newChord(java.lang.String)
+	 * @see midi.chord.ChordRecognizer.ChordListener#newChord(java.lang.String)
 	 */
 	@Override
 	public void newChord(final String chord) {

@@ -57,8 +57,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jaccompaniment.accompaniment.Guitar;
-import jaccompaniment.chord.ChordRecognizer;
-import jaccompaniment.chord.ChordRecognizer.ChordListener;
 import jaccompaniment.filter.MidiThroughFilter;
 import jaccompaniment.resource.Beat;
 import jaccompaniment.resource.Beat.BeatListener;
@@ -66,6 +64,8 @@ import jmidi.gui.group.LoopPanel;
 import jmidi.gui.model.IntegerModel.ValueObserver;
 import jmidi.gui.widget.TriggerButton;
 import jmidi.gui.widget.ValuePanel;
+import midi.chord.ChordRecognizer;
+import midi.chord.ChordRecognizer.ChordListener;
 import midi.device.resource.MidiDevices;
 import midi.instrument.Instrument;
 import midi.instrument.Percussion;

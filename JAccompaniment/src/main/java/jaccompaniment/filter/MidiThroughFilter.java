@@ -27,7 +27,7 @@ import javax.sound.midi.ShortMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jaccompaniment.chord.ChordRecognizer;
+import midi.chord.ChordRecognizer;
 
 /**
  * Midi Through device that forwads all midi commands from one Transmitter to

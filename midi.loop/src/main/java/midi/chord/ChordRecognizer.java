@@ -17,7 +17,7 @@
  * @version 1.0
  * @author oliver
  */
-package jaccompaniment.chord;
+package midi.chord;
 
 import java.util.HashMap;
 import java.util.Map;

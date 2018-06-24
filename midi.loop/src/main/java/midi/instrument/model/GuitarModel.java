@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2015 Oliver Schünemann
+ * Copyright (C) 2018 Oliver Schünemann
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,46 +13,54 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * 
- * @since 12.11.2015
+ * @since 20.05.2018
  * @version 1.0
  * @author oliver
  */
-package jaccompaniment.accompaniment;
+package midi.instrument.model;
 
 import java.util.Arrays;
-
-import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.Receiver;
-import javax.sound.midi.ShortMessage;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import midi.chord.ChordRecognizer.ChordListener;
 import midi.instrument.Instrument;
+import midi.instrument.model.PercussionModel.PercussionInstrument;
+import midi.loop.LoopEvent;
+import midi.loop.LoopEvent.COMMAND;
+import midi.loop.LoopModel;
 
 /**
- * Guitar accompaniment playing picking patterns. Pattern must be provided for
- * bass, G, B and E String in one-sixteenth resolution.
- * 
  * @author oliver
+ *
  */
-public class Guitar implements ChordListener {
+public class GuitarModel implements ChordListener {
 
-	private final Receiver receiver;
-	private final int channel;
-	private Chord activeChord = null;
+	private final LoopModel accent;
+	private final Map<Instrument, LoopModel> tomsMap = new HashMap<>();
+	private static final Logger logger = LoggerFactory.getLogger(GuitarModel.class);
+	private Optional<Chord> activeChord = null;
 
-	private String pattern[];
-	private int velocity[];
-	private int lastBaseTone = -1;
-	private int lastGTone = -1;
-	private int lastBTone = -1;
-	private int lastETone = -1;
-	private Integer lostBeat = null;
-	private int looseActiveChordBeats = -1;
+	public GuitarModel() {
+		accent = new LoopModel();
+		for (final PercussionInstrument instrument : PercussionInstrument.values()) {
+			final LoopModel model = new LoopModel();
+			tomsMap.put(instrument, model);
+		}
 
-	private static final Logger logger = LoggerFactory.getLogger(Guitar.class);
+		tomsMap.get(GuitarInstrument.BASS_STRING).setEffect(event -> {
+			return activeChord.map(chord -> {
+				return new LoopEvent(event.getCommand(), event.getVelocity(), chord.getBaseTone());
+			}).orElse(null);
+		});
+		setNumberOfPages(accent.getNumberOfPages());
+		setQuarterDivision(accent.getQuarterDivision());
+		setQuarterPerPage(accent.getQuarterPerPage());
+	}
 
 	/**
 	 * Each String is defined as a single instrument.
@@ -81,11 +89,125 @@ public class Guitar implements ChordListener {
 		}
 	}
 
+	public Optional<LoopModel> getLoopModel(final Instrument instrument) {
+		return Optional.ofNullable(tomsMap.get(instrument));
+	}
+
+	public LoopModel getAccentModel() {
+		return accent;
+	}
+
+	private LoopEvent modifyAccentEvent(final Optional<LoopEvent> event) {
+		return event.map(ev -> new LoopEvent(COMMAND.NOTE_ON, 127, 0))
+				.orElse(new LoopEvent(COMMAND.NOTE_ON, accent.getVelocity(), 0));
+	}
+
+	public LoopEvent getAccentEvent(final long beat) {
+		return modifyAccentEvent(accent.getEvent(beat));
+	}
+
+	public LoopEvent getAccentStepEvent(final int step) {
+		return modifyAccentEvent(accent.getStepEvent(step));
+	}
+
+	public Optional<LoopEvent> getEvent(final Instrument instrument, final long beat) {
+		final LoopModel model = tomsMap.get(instrument);
+		if (model == null) {
+			return Optional.empty();
+		}
+		return model.getEvent(beat);
+	}
+
+	public Optional<LoopEvent> getStepEvent(final Instrument instrument, final int step) {
+		final LoopModel model = tomsMap.get(instrument);
+		if (model == null) {
+			return Optional.empty();
+		}
+		return model.getStepEvent(step);
+	}
+
 	/**
-	 * Close the Accompaniment and release resources.
+	 * @return
+	 * @see midi.loop.LoopModel#getQuarterPerPage()
 	 */
-	public void close() {
-		receiver.close();
+	public int getQuarterPerPage() {
+		return accent.getQuarterPerPage();
+	}
+
+	/**
+	 * @param quarterPerPage
+	 * @see midi.loop.LoopModel#setQuarterPerPage(int)
+	 */
+	public void setQuarterPerPage(final int quarterPerPage) {
+		accent.setQuarterPerPage(quarterPerPage);
+		for (final LoopModel model : tomsMap.values()) {
+			model.setQuarterPerPage(quarterPerPage);
+		}
+	}
+
+	/**
+	 * @return
+	 * @see midi.loop.LoopModel#getNumberOfPages()
+	 */
+	public int getNumberOfPages() {
+		return accent.getNumberOfPages();
+	}
+
+	/**
+	 * @param numberOfPages
+	 * @see midi.loop.LoopModel#setNumberOfPages(int)
+	 */
+	public void setNumberOfPages(final int numberOfPages) {
+		accent.setNumberOfPages(numberOfPages);
+		for (final LoopModel model : tomsMap.values()) {
+			model.setNumberOfPages(numberOfPages);
+		}
+	}
+
+	/**
+	 * @return
+	 * @see midi.loop.LoopModel#getQuarterDivision()
+	 */
+	public int getQuarterDivision() {
+		return accent.getQuarterDivision();
+	}
+
+	/**
+	 * @param quarterDivision
+	 * @see midi.loop.LoopModel#setQuarterDivision(int)
+	 */
+	public void setQuarterDivision(final int quarterDivision) {
+		accent.setQuarterDivision(quarterDivision);
+		for (final LoopModel model : tomsMap.values()) {
+			model.setQuarterDivision(quarterDivision);
+		}
+	}
+
+	/**
+	 * @param chord
+	 *            that shall be played. the currently played tone is finished
+	 *            and the new tone for the chord is played
+	 */
+	@Override
+	public void newChord(final String chord) {
+		try {
+			final Chord temp = Chord.valueOf(chord);
+			if (temp != null) {
+				activeChord = Optional.ofNullable(temp);
+			}
+		} catch (final Throwable thr) {
+			logger.error("Set chord failed", thr);
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see jaccompaniment.chord.ChordRecognizer.ChordListener#noChord()
+	 */
+	@Override
+	public void noChord() {
+		activeChord = Optional.empty();
 	}
 
 	/**
@@ -276,149 +398,6 @@ public class Guitar implements ChordListener {
 		 */
 		public int getETone() {
 			return baseMidi[5] + fret[5];
-		}
-	}
-
-	/**
-	 * Constructor defining the midi receiver the guitar shall use and which
-	 * channel. The GM instrument must be configured correctly at the
-	 * synthesizer
-	 * 
-	 * @param receiver
-	 *            midi receiver where the midi commands shall be send to
-	 * @param channel
-	 *            where a guitar is defined. Preferred GM Midi number 24
-	 */
-	public Guitar(final Receiver receiver, final int channel) {
-		this.receiver = receiver;
-		this.channel = channel;
-
-		final GuitarInstrument instruments[] = GuitarInstrument.values();
-		velocity = new int[instruments.length];
-		for (int i = 0; i < instruments.length; i++) {
-			velocity[i] = 127;
-		}
-	}
-
-	/**
-	 * @param chord
-	 *            that shall be played. the currently played tone is finished
-	 *            and the new tone for the chord is played
-	 */
-	@Override
-	public void newChord(final String chord) {
-		try {
-			final Chord temp = Chord.valueOf(chord);
-			final Integer lostBeat = this.lostBeat;
-			if (temp != null) {
-				looseActiveChordBeats = -1;
-				activeChord = temp;
-				if (lostBeat != null) {
-					beat(lostBeat.intValue());
-				}
-			}
-		} catch (final Throwable thr) {
-			logger.error("Set chord failed", thr);
-		}
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see jaccompaniment.chord.ChordRecognizer.ChordListener#noChord()
-	 */
-	@Override
-	public void noChord() {
-		looseActiveChordBeats = 2;
-	}
-
-	/**
-	 * picks one string
-	 * 
-	 * @param pattern
-	 *            for the string
-	 * @param beat
-	 *            which beat is currently active
-	 * @param tone
-	 *            of the string
-	 * @param lastTone
-	 *            last tone that was picked on that string
-	 * @param velocity
-	 *            of the picking
-	 * @return if string is picked the new tone otherwise the lastTone
-	 * @throws InvalidMidiDataException
-	 *             when receiver can't handle command
-	 */
-	private int playString(final String pattern, final int beat, final int tone, final int lastTone,
-			final int velocity) throws InvalidMidiDataException {
-		final ShortMessage msg = new ShortMessage();
-		final char baseChar = pattern.charAt(beat % pattern.length());
-		if (baseChar == ' ') {
-			return lastTone;
-		} else {
-			if (lastTone >= 0) {
-				msg.setMessage(ShortMessage.NOTE_OFF, channel, lastTone, 0);
-				receiver.send(msg, -1);
-			}
-			msg.setMessage(ShortMessage.NOTE_ON, channel, tone, velocity);
-			receiver.send(msg, -1);
-			return tone;
-		}
-	}
-
-	/**
-	 * @param beat
-	 *            number of one-sixteenth tone that has to be played next
-	 * @throws InvalidMidiDataException
-	 *             when beat couldn't process by midi system for whatever reason
-	 */
-	public void beat(final int beat) throws InvalidMidiDataException {
-		looseActiveChordBeats = looseActiveChordBeats > 0 ? looseActiveChordBeats - 1 : -1;
-		if (looseActiveChordBeats == 0) {
-			looseActiveChordBeats = -1;
-			activeChord = null;
-		}
-		if (activeChord == null) {
-			lostBeat = Integer.valueOf(beat);
-		} else {
-			lostBeat = null;
-			lastBaseTone = playString(pattern[0], beat, activeChord.getBaseTone(), lastBaseTone,
-					velocity[0]);
-			lastGTone = playString(pattern[1], beat, activeChord.getGTone(), lastGTone,
-					velocity[1]);
-			lastBTone = playString(pattern[2], beat, activeChord.getBTone(), lastBTone,
-					velocity[2]);
-			lastETone = playString(pattern[3], beat, activeChord.getETone(), lastETone,
-					velocity[3]);
-		}
-	}
-
-	/**
-	 * @param pattern
-	 *            the pattern to set for the 4 Strings
-	 */
-	public void setPattern(final String[] pattern) {
-		this.pattern = Arrays.copyOf(pattern, pattern.length);
-	}
-
-	/**
-	 * @param velocity
-	 *            the velocity to set for each String
-	 */
-	public void setVelocity(final int[] velocity) {
-		this.velocity = Arrays.copyOf(velocity, velocity.length);
-	}
-
-	/**
-	 * Mutes all Sounds played
-	 */
-	public void panic() {
-		try {
-			final ShortMessage msg = new ShortMessage();
-			msg.setMessage(ShortMessage.CONTROL_CHANGE, channel, 123, 0);
-			receiver.send(msg, -1);
-		} catch (final InvalidMidiDataException e) {
-			logger.error("Panic Failed", e);
 		}
 	}
 }
