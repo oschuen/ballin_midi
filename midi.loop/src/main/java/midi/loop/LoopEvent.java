@@ -44,7 +44,7 @@ public class LoopEvent {
 	private int velocity = 127;
 
 	private COMMAND command = COMMAND.NOTE_ON;
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(LoopEvent.class);
 
 	public LoopEvent() {
@@ -85,14 +85,14 @@ public class LoopEvent {
 	public int getVelocity() {
 		return velocity;
 	}
-	
-	public void playEvent(Receiver receiver, int channel) throws InvalidMidiDataException {
-		for (Integer tone : notes) {
+
+	public void playEvent(final Receiver receiver, final int channel)
+			throws InvalidMidiDataException {
+		for (final Integer tone : notes) {
 			final ShortMessage msg = new ShortMessage();
 			if (command == COMMAND.NOTE_OFF) {
 				msg.setMessage(ShortMessage.NOTE_OFF, channel, tone, 0);
-				
-				
+
 			} else {
 				msg.setMessage(ShortMessage.NOTE_ON, channel, tone, velocity);
 			}
@@ -112,11 +112,14 @@ public class LoopEvent {
 		return new LoopEvent(command, this.velocity * velocity / 127, notes);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
 	public String toString() {
-		return "LoopEvent [command=" + command + ", velocity=" + velocity + ", notes=" + notes + "]";
+		return "LoopEvent [command=" + command + ", velocity=" + velocity + ", notes=" + notes
+				+ "]";
 	}
 }

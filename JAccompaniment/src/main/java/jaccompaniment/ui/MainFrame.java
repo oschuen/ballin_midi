@@ -39,7 +39,6 @@ import java.io.FileOutputStream;
 import java.util.Properties;
 import java.util.prefs.Preferences;
 
-import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Transmitter;
@@ -56,7 +55,7 @@ import javax.swing.event.ChangeListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jaccompaniment.accompaniment.Guitar;
+//import jaccompaniment.accompaniment.Guitar;
 import jaccompaniment.filter.MidiThroughFilter;
 import jaccompaniment.resource.Beat;
 import jaccompaniment.resource.Beat.BeatListener;
@@ -67,8 +66,10 @@ import jmidi.gui.widget.ValuePanel;
 import midi.chord.ChordRecognizer;
 import midi.chord.ChordRecognizer.ChordListener;
 import midi.device.resource.MidiDevices;
+import midi.instrument.Guitar;
 import midi.instrument.Instrument;
 import midi.instrument.Percussion;
+import midi.instrument.model.GuitarModel;
 import midi.instrument.model.PercussionModel;
 
 /**
@@ -92,6 +93,7 @@ public class MainFrame extends JFrame {
 	private final JTabbedPane tabbedPane;
 	private final LoopPanel loopPanel[] = new LoopPanel[panelCount];
 	private final PercussionModel[] percussionModel = new PercussionModel[panelCount];
+	private final GuitarModel[] guitarModel = new GuitarModel[panelCount];
 	private final ValuePanel masterVelocityPanel;
 	private final ValuePanel bpmPanel;
 	private final ValuePanel quarterPanel;
@@ -104,7 +106,7 @@ public class MainFrame extends JFrame {
 	private final static Instrument percussionInstruments[] = PercussionModel.PercussionInstrument
 			.values();
 
-	private final static Instrument guitarInstruments[] = Guitar.GuitarInstrument.values();
+	private final static Instrument guitarInstruments[] = GuitarModel.GuitarInstrument.values();
 
 	private final static Instrument allInstruments[];
 
@@ -157,7 +159,8 @@ public class MainFrame extends JFrame {
 
 		for (int i = 0; i < loopPanel.length; ++i) {
 			percussionModel[i] = new PercussionModel();
-			loopPanel[i] = new LoopPanel(percussionModel[i], allInstruments);
+			guitarModel[i] = new GuitarModel();
+			loopPanel[i] = new LoopPanel(percussionModel[i], guitarModel[i], allInstruments);
 			tabbedPane.add("F" + (1 + i), loopPanel[i]);
 			tabbedPane.setBackground(Color.DARK_GRAY);
 			tabbedPane.setBackgroundAt(0, Color.DARK_GRAY);
@@ -513,13 +516,13 @@ public class MainFrame extends JFrame {
 				@Override
 				public void newChord(final String chord) {
 					beat.newChord(chord);
-					guitar.newChord(chord);
+					guitarModel[tabbedPane.getSelectedIndex()].newChord(chord);
 				}
 
 				@Override
 				public void noChord() {
 					beat.noChord();
-					guitar.noChord();
+					guitarModel[tabbedPane.getSelectedIndex()].noChord();
 				}
 
 			});
@@ -554,18 +557,14 @@ public class MainFrame extends JFrame {
 		beatListener = new BeatListener() {
 			@Override
 			public void nextBeat(final int beat) {
-				try {
-					if (percussion != null) {
-						percussion.step(beat);
-					}
-					if (guitar != null) {
-						guitar.beat(beat);
-					}
-					loopPanel[tabbedPane.getSelectedIndex()].nextBeat(beat);
-					Toolkit.getDefaultToolkit().sync();
-				} catch (final InvalidMidiDataException e) {
-					logger.error(e.getMessage(), e);
+				if (percussion != null) {
+					percussion.step(beat);
 				}
+				if (guitar != null) {
+					guitar.step(beat);
+				}
+				loopPanel[tabbedPane.getSelectedIndex()].nextBeat(beat);
+				Toolkit.getDefaultToolkit().sync();
 			}
 		};
 		beat.addBeatListener(beatListener);
@@ -582,9 +581,12 @@ public class MainFrame extends JFrame {
 
 	private void copyLoopPanelInfo() {
 		final int masterVelocity = masterVelocityPanel.getValue();
-		final LoopPanel selectedPanel = loopPanel[tabbedPane.getSelectedIndex()];
-		percussion.setModel(percussionModel[tabbedPane.getSelectedIndex()]);
+		final int index = tabbedPane.getSelectedIndex();
+		final LoopPanel selectedPanel = loopPanel[index];
+		percussion.setModel(percussionModel[index]);
 		percussion.setVelocity(masterVelocity);
+		guitar.setModel(guitarModel[index]);
+		guitar.setVelocity(masterVelocity);
 
 		final String newGuitarPattern[] = new String[guitarInstruments.length];
 		final int newGuitarVelocity[] = new int[guitarInstruments.length];
@@ -594,8 +596,8 @@ public class MainFrame extends JFrame {
 					/ 127;
 		}
 		if (guitar != null) {
-			guitar.setPattern(newGuitarPattern);
-			guitar.setVelocity(newGuitarVelocity);
+			// guitar.setPattern(newGuitarPattern);
+			// guitar.setVelocity(newGuitarVelocity);
 		}
 		repaint();
 	}
@@ -652,7 +654,7 @@ public class MainFrame extends JFrame {
 			loopPanel[i].setNumberOfPages(pagePanel.getValue());
 			loopPanel[i].setQuarterPerPage(quarterPanel.getValue());
 			loopPanel[i].setQuarterDivision(divisionPanel.getValue());
-			
+
 			loopPanel[i].setVelocity(LoopPanel.ACCENT, Integer.parseInt(props
 					.getProperty("P" + i + "_" + LoopPanel.ACCENT.name() + VELOCITY_KEY, "127")));
 			loopPanel[i].setPattern(LoopPanel.ACCENT, props

@@ -44,6 +44,7 @@ import jmidi.gui.widget.PageSelector;
 import jmidi.gui.widget.PatternPanel;
 import jmidi.gui.widget.ValuePanel;
 import midi.instrument.Instrument;
+import midi.instrument.model.GuitarModel;
 import midi.instrument.model.PercussionModel;
 import midi.loop.LoopModel;
 
@@ -88,7 +89,8 @@ public class LoopPanel extends JPanel {
 	private static final int pageSelHeight = 20;
 	private static final int margin = 3;
 
-	public LoopPanel(final PercussionModel model, final Instrument set[]) {
+	public LoopPanel(final PercussionModel model, final GuitarModel gModel,
+			final Instrument set[]) {
 		super();
 		int i = 1;
 		final List<Instrument> instruments = new ArrayList<>();
@@ -152,6 +154,34 @@ public class LoopPanel extends JPanel {
 
 			final PatternPanel patternPanel = createPatternPanel(i,
 					model.getLoopModel(instrument).get());
+			add(patternPanel);
+			patternMap.put(instrument, patternPanel);
+			patternPanel.addPropertyChangeListener(new PropertyChangeListener() {
+
+				@Override
+				public void propertyChange(final PropertyChangeEvent evt) {
+					fireActionEvent(
+							new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "PATTERN CHANGED"));
+				}
+			});
+			++i;
+		}
+		for (final Instrument instrument : GuitarModel.GuitarInstrument.values()) {
+			final ValuePanel velocityPanel = createVelocityPanel(i, instrument,
+					gModel.getLoopModel(instrument).get().getVelocityModel());
+
+			add(velocityPanel);
+			velocityMap.put(instrument, velocityPanel);
+			velocityPanel.addValueObserver(new ValueObserver() {
+				@Override
+				public void valueChanged(final int newValue) {
+					fireActionEvent(
+							new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "VOLUME CHANGED"));
+				}
+			});
+
+			final PatternPanel patternPanel = createPatternPanel(i,
+					gModel.getLoopModel(instrument).get());
 			add(patternPanel);
 			patternMap.put(instrument, patternPanel);
 			patternPanel.addPropertyChangeListener(new PropertyChangeListener() {

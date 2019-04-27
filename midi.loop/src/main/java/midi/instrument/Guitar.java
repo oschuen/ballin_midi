@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 Oliver Schünemann
+ * Copyright (C) 2015 Oliver Schünemann
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * 
- * @since 21.05.2018
+ * @since 12.11.2015
  * @version 1.0
  * @author oliver
  */
@@ -28,36 +28,38 @@ import javax.sound.midi.ShortMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import midi.instrument.model.PercussionModel;
-import midi.instrument.model.PercussionModel.PercussionInstrument;
+import midi.instrument.model.GuitarModel;
+import midi.instrument.model.GuitarModel.GuitarInstrument;
 import midi.loop.LoopEvent;
 import midi.loop.LoopModel;
 import midi.loop.beat.Beat;
 import midi.loop.beat.Beat.BeatListener;
 
 /**
+ * Guitar accompaniment playing picking patterns. Pattern must be provided for
+ * bass, G, B and E String in one-sixteenth resolution.
+ * 
  * @author oliver
- *
  */
-public class Percussion implements BeatListener {
+public class Guitar implements BeatListener {
 
 	private final Receiver receiver;
 	private final int channel;
-	private PercussionModel model;
+	private GuitarModel model;
 	private static final Logger logger = LoggerFactory.getLogger(Percussion.class);
 	private int velocity = 127;
-	public final PercussionInstrument instruments[] = PercussionInstrument.values();
+	final GuitarInstrument instruments[] = GuitarInstrument.values();
 	final LoopEvent[] lastPlayed = new LoopEvent[instruments.length];
 	final LoopModel[] loopModel = new LoopModel[instruments.length];
 
-	private final PercussionModel defaultModel = new PercussionModel();
+	private final GuitarModel defaultModel = new GuitarModel();
 
-	public Percussion(final Receiver receiver, final int channel) {
+	public Guitar(final Receiver receiver, final int channel) {
 		super();
 		this.receiver = receiver;
 		this.channel = channel;
 		model = defaultModel;
-		for (final PercussionInstrument percussionInstrument : instruments) {
+		for (final GuitarInstrument percussionInstrument : instruments) {
 			loopModel[percussionInstrument.ordinal()] = model.getLoopModel(percussionInstrument)
 					.get();
 		}
@@ -133,7 +135,7 @@ public class Percussion implements BeatListener {
 	/**
 	 * @return the model
 	 */
-	public PercussionModel getModel() {
+	public GuitarModel getModel() {
 		return model;
 	}
 
@@ -141,15 +143,14 @@ public class Percussion implements BeatListener {
 	 * @param model
 	 *            the model to set
 	 */
-	public void setModel(final PercussionModel model) {
+	public void setModel(final GuitarModel model) {
 		if (model == null) {
 			this.model = defaultModel;
 		} else {
 			this.model = model;
 		}
-		for (final PercussionInstrument percussionInstrument : instruments) {
-			loopModel[percussionInstrument.ordinal()] = this.model
-					.getLoopModel(percussionInstrument).get();
+		for (final GuitarInstrument guitarInstrument : instruments) {
+			loopModel[guitarInstrument.ordinal()] = this.model.getLoopModel(guitarInstrument).get();
 		}
 	}
 }

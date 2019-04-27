@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import midi.chord.ChordRecognizer.ChordListener;
 import midi.instrument.Instrument;
-import midi.instrument.model.PercussionModel.PercussionInstrument;
 import midi.loop.LoopEvent;
 import midi.loop.LoopEvent.COMMAND;
 import midi.loop.LoopModel;
@@ -41,21 +40,36 @@ import midi.loop.LoopModel;
 public class GuitarModel implements ChordListener {
 
 	private final LoopModel accent;
-	private final Map<Instrument, LoopModel> tomsMap = new HashMap<>();
+	private final Map<Instrument, LoopModel> stringMap = new HashMap<>();
 	private static final Logger logger = LoggerFactory.getLogger(GuitarModel.class);
-	private Optional<Chord> activeChord = null;
+	private Optional<Chord> activeChord = Optional.empty();
 
 	public GuitarModel() {
 		accent = new LoopModel();
-		for (final PercussionInstrument instrument : PercussionInstrument.values()) {
+		for (final GuitarInstrument instrument : GuitarInstrument.values()) {
 			final LoopModel model = new LoopModel();
-			tomsMap.put(instrument, model);
+			stringMap.put(instrument, model);
 		}
 
-		tomsMap.get(GuitarInstrument.BASS_STRING).setEffect(event -> {
+		stringMap.get(GuitarInstrument.BASS_STRING).setEffect(event -> {
 			return activeChord.map(chord -> {
 				return new LoopEvent(event.getCommand(), event.getVelocity(), chord.getBaseTone());
-			}).orElse(null);
+			}).orElse(new LoopEvent(COMMAND.NOTE_OFF, 0, 0));
+		});
+		stringMap.get(GuitarInstrument.G_STRING).setEffect(event -> {
+			return activeChord.map(chord -> {
+				return new LoopEvent(event.getCommand(), event.getVelocity(), chord.getGTone());
+			}).orElse(new LoopEvent(COMMAND.NOTE_OFF, 0, 0));
+		});
+		stringMap.get(GuitarInstrument.B_STRING).setEffect(event -> {
+			return activeChord.map(chord -> {
+				return new LoopEvent(event.getCommand(), event.getVelocity(), chord.getBTone());
+			}).orElse(new LoopEvent(COMMAND.NOTE_OFF, 0, 0));
+		});
+		stringMap.get(GuitarInstrument.E_STRING).setEffect(event -> {
+			return activeChord.map(chord -> {
+				return new LoopEvent(event.getCommand(), event.getVelocity(), chord.getETone());
+			}).orElse(new LoopEvent(COMMAND.NOTE_OFF, 0, 0));
 		});
 		setNumberOfPages(accent.getNumberOfPages());
 		setQuarterDivision(accent.getQuarterDivision());
@@ -90,7 +104,7 @@ public class GuitarModel implements ChordListener {
 	}
 
 	public Optional<LoopModel> getLoopModel(final Instrument instrument) {
-		return Optional.ofNullable(tomsMap.get(instrument));
+		return Optional.ofNullable(stringMap.get(instrument));
 	}
 
 	public LoopModel getAccentModel() {
@@ -111,7 +125,7 @@ public class GuitarModel implements ChordListener {
 	}
 
 	public Optional<LoopEvent> getEvent(final Instrument instrument, final long beat) {
-		final LoopModel model = tomsMap.get(instrument);
+		final LoopModel model = stringMap.get(instrument);
 		if (model == null) {
 			return Optional.empty();
 		}
@@ -119,7 +133,7 @@ public class GuitarModel implements ChordListener {
 	}
 
 	public Optional<LoopEvent> getStepEvent(final Instrument instrument, final int step) {
-		final LoopModel model = tomsMap.get(instrument);
+		final LoopModel model = stringMap.get(instrument);
 		if (model == null) {
 			return Optional.empty();
 		}
@@ -140,7 +154,7 @@ public class GuitarModel implements ChordListener {
 	 */
 	public void setQuarterPerPage(final int quarterPerPage) {
 		accent.setQuarterPerPage(quarterPerPage);
-		for (final LoopModel model : tomsMap.values()) {
+		for (final LoopModel model : stringMap.values()) {
 			model.setQuarterPerPage(quarterPerPage);
 		}
 	}
@@ -159,7 +173,7 @@ public class GuitarModel implements ChordListener {
 	 */
 	public void setNumberOfPages(final int numberOfPages) {
 		accent.setNumberOfPages(numberOfPages);
-		for (final LoopModel model : tomsMap.values()) {
+		for (final LoopModel model : stringMap.values()) {
 			model.setNumberOfPages(numberOfPages);
 		}
 	}
@@ -178,7 +192,7 @@ public class GuitarModel implements ChordListener {
 	 */
 	public void setQuarterDivision(final int quarterDivision) {
 		accent.setQuarterDivision(quarterDivision);
-		for (final LoopModel model : tomsMap.values()) {
+		for (final LoopModel model : stringMap.values()) {
 			model.setQuarterDivision(quarterDivision);
 		}
 	}
@@ -192,9 +206,7 @@ public class GuitarModel implements ChordListener {
 	public void newChord(final String chord) {
 		try {
 			final Chord temp = Chord.valueOf(chord);
-			if (temp != null) {
-				activeChord = Optional.ofNullable(temp);
-			}
+			activeChord = Optional.ofNullable(temp);
 		} catch (final Throwable thr) {
 			logger.error("Set chord failed", thr);
 		}
