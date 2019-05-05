@@ -54,22 +54,22 @@ public class GuitarModel implements ChordListener {
 		stringMap.get(GuitarInstrument.BASS_STRING).setEffect(event -> {
 			return activeChord.map(chord -> {
 				return new LoopEvent(event.getCommand(), event.getVelocity(), chord.getBaseTone());
-			}).orElse(new LoopEvent(COMMAND.NOTE_OFF, 0, 0));
+			}).orElse(new LoopEvent(COMMAND.IGNORE, 0, 0));
 		});
 		stringMap.get(GuitarInstrument.G_STRING).setEffect(event -> {
 			return activeChord.map(chord -> {
 				return new LoopEvent(event.getCommand(), event.getVelocity(), chord.getGTone());
-			}).orElse(new LoopEvent(COMMAND.NOTE_OFF, 0, 0));
+			}).orElse(new LoopEvent(COMMAND.IGNORE, 0, 0));
 		});
 		stringMap.get(GuitarInstrument.B_STRING).setEffect(event -> {
 			return activeChord.map(chord -> {
 				return new LoopEvent(event.getCommand(), event.getVelocity(), chord.getBTone());
-			}).orElse(new LoopEvent(COMMAND.NOTE_OFF, 0, 0));
+			}).orElse(new LoopEvent(COMMAND.IGNORE, 0, 0));
 		});
 		stringMap.get(GuitarInstrument.E_STRING).setEffect(event -> {
 			return activeChord.map(chord -> {
 				return new LoopEvent(event.getCommand(), event.getVelocity(), chord.getETone());
-			}).orElse(new LoopEvent(COMMAND.NOTE_OFF, 0, 0));
+			}).orElse(new LoopEvent(COMMAND.IGNORE, 0, 0));
 		});
 		setNumberOfPages(accent.getNumberOfPages());
 		setQuarterDivision(accent.getQuarterDivision());

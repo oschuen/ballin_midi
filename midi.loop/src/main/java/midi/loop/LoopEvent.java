@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 public class LoopEvent {
 
 	public static enum COMMAND {
-		NOTE_ON, NOTE_OFF
+		NOTE_ON, NOTE_OFF, IGNORE
 	};
 
 	private final List<Integer> notes = new ArrayList<>();
@@ -88,15 +88,19 @@ public class LoopEvent {
 
 	public void playEvent(final Receiver receiver, final int channel)
 			throws InvalidMidiDataException {
-		for (final Integer tone : notes) {
-			final ShortMessage msg = new ShortMessage();
-			if (command == COMMAND.NOTE_OFF) {
-				msg.setMessage(ShortMessage.NOTE_OFF, channel, tone, 0);
-
-			} else {
-				msg.setMessage(ShortMessage.NOTE_ON, channel, tone, velocity);
+		if (command != COMMAND.IGNORE) {
+			for (final Integer tone : notes) {
+				final ShortMessage msg = new ShortMessage();
+				if (command == COMMAND.NOTE_OFF) {
+					msg.setMessage(ShortMessage.NOTE_OFF, channel, tone, 0);
+				} else {
+					msg.setMessage(ShortMessage.NOTE_ON, channel, tone, velocity);
+				}
+				receiver.send(msg, -1);
 			}
-			receiver.send(msg, -1);
+		}
+		if (logger.isDebugEnabled()) {
+			logger.debug(toString());
 		}
 	}
 
@@ -119,7 +123,7 @@ public class LoopEvent {
 	 */
 	@Override
 	public String toString() {
-		return "LoopEvent [command=" + command + ", velocity=" + velocity + ", notes=" + notes
-				+ "]";
+		return "LoopEvent [command=" + command.name() + ", velocity=" + velocity + ", notes="
+				+ notes + "]";
 	}
 }
