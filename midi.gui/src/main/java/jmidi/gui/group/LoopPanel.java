@@ -39,7 +39,6 @@ import javax.swing.JPanel;
 
 import jmidi.gui.model.IntegerModel;
 import jmidi.gui.model.IntegerModel.ValueObserver;
-import jmidi.gui.widget.OldPatternPanel;
 import jmidi.gui.widget.PageSelector;
 import jmidi.gui.widget.PatternPanel;
 import jmidi.gui.widget.ValuePanel;
@@ -200,7 +199,7 @@ public class LoopPanel extends JPanel {
 		final PatternPanel patternPanel = new PatternPanel(model);
 		patternPanel.setBounds(2 * margin + ValuePanel.width,
 				2 * margin + pageSelHeight + line * (ValuePanel.height + margin),
-				width - 3 * margin - ValuePanel.width, OldPatternPanel.patHeight);
+				width - 3 * margin - ValuePanel.width, PatternPanel.patHeight);
 		return patternPanel;
 	}
 

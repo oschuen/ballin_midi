@@ -107,20 +107,8 @@ public class PercussionModel {
 				.orElse(new LoopEvent(COMMAND.NOTE_ON, accent.getVelocity(), 0));
 	}
 
-	public LoopEvent getAccentEvent(final long beat) {
-		return modifyAccentEvent(accent.getEvent(beat));
-	}
-
 	public LoopEvent getAccentStepEvent(final int step) {
 		return modifyAccentEvent(accent.getStepEvent(step));
-	}
-
-	public Optional<LoopEvent> getEvent(final Instrument instrument, final long beat) {
-		final LoopModel model = tomsMap.get(instrument);
-		if (model == null) {
-			return Optional.empty();
-		}
-		return model.getEvent(beat);
 	}
 
 	public Optional<LoopEvent> getStepEvent(final Instrument instrument, final int step) {
