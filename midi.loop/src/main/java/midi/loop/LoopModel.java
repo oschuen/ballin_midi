@@ -24,7 +24,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import jmidi.gui.model.IntegerModel;
-import midi.loop.beat.Beat;
 
 /**
  * @author oliver
@@ -38,7 +37,6 @@ public class LoopModel {
 	private final IntegerModel velocity = new IntegerModel(0, 127, 127);
 	private LoopEvent[] events = new LoopEvent[steps];
 	private final Lock lock = new ReentrantLock();
-	private long division = Beat.BEAT_DIVISION / quarterDivision;
 	private final Effect standardEffect = (event) -> {
 		return event;
 	};
@@ -111,7 +109,6 @@ public class LoopModel {
 		lock.lock();
 		try {
 			this.quarterDivision = quarterDivision;
-			division = Beat.BEAT_DIVISION / quarterDivision;
 			adaptSize();
 		} finally {
 			lock.unlock();
@@ -125,23 +122,6 @@ public class LoopModel {
 			System.arraycopy(events, 0, newEvents, 0, events.length);
 			events = newEvents;
 		}
-	}
-
-	public void setEvent(final LoopEvent event, final long beat) {
-		lock.lock();
-		try {
-			events[(int) ((beat / division) % steps)] = event;
-		} finally {
-			lock.unlock();
-		}
-	}
-
-	public Optional<LoopEvent> getEvent(final long beat) {
-		if (beat % (division) == 0) {
-			final int step = (int) ((beat / division) % (steps));
-			return getStepEvent(step);
-		}
-		return Optional.empty();
 	}
 
 	public void setStepEvent(final LoopEvent event, final int step) {

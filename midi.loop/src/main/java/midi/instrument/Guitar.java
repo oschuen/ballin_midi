@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import midi.instrument.model.GuitarModel;
 import midi.instrument.model.GuitarModel.GuitarInstrument;
 import midi.loop.LoopEvent;
+import midi.loop.LoopEvent.COMMAND;
 import midi.loop.LoopModel;
 import midi.loop.beat.Beat;
 import midi.loop.beat.Beat.BeatListener;
@@ -51,6 +52,8 @@ public class Guitar implements BeatListener {
 	final GuitarInstrument instruments[] = GuitarInstrument.values();
 	final LoopEvent[] lastPlayed = new LoopEvent[instruments.length];
 	final LoopModel[] loopModel = new LoopModel[instruments.length];
+	final int[] lostStep = new int[instruments.length];
+	final long[] lostTime = new long[instruments.length];
 
 	private final GuitarModel defaultModel = new GuitarModel();
 
@@ -60,8 +63,7 @@ public class Guitar implements BeatListener {
 		this.channel = channel;
 		model = defaultModel;
 		for (final GuitarInstrument percussionInstrument : instruments) {
-			loopModel[percussionInstrument.ordinal()] = model.getLoopModel(percussionInstrument)
-					.get();
+			loopModel[percussionInstrument.ordinal()] = model.getLoopModel(percussionInstrument).get();
 		}
 	}
 
@@ -94,8 +96,7 @@ public class Guitar implements BeatListener {
 	public void accept(final long beat) {
 		final long division = Beat.BEAT_DIVISION / model.getQuarterDivision();
 		if (beat % (division) == 0) {
-			final long steps = model.getQuarterDivision() * model.getQuarterPerPage()
-					* model.getNumberOfPages();
+			final long steps = model.getQuarterDivision() * model.getQuarterPerPage() * model.getNumberOfPages();
 			final int step = (int) ((beat / division) % (steps));
 			step(step);
 		}
@@ -105,15 +106,52 @@ public class Guitar implements BeatListener {
 		final int accent = model.getAccentStepEvent(step).getVelocity() * velocity / 127;
 		for (int i = 0; i < instruments.length; i++) {
 			final int var = i;
-			final Optional<LoopEvent> event = loopModel[i].getStepEvent(step);
-			event.ifPresent(it -> {
-				try {
-					it.asWeightedEvent(accent).playEvent(receiver, channel);
-				} catch (final InvalidMidiDataException e) {
-					logger.error("Couldn't play event", e);
+			if (lostTime[var] > 0 && i == 0) {
+				logger.info("lostCount {}", lostTime[var]);
+			}
+			final Optional<LoopEvent> optEvent = loopModel[i].getStepEvent(step);
+			if (optEvent.isPresent()) {
+				LoopEvent event = optEvent.get();
+				if (COMMAND.IGNORE == event.getCommand()) {
+					lostStep[var] = step;
+					lostTime[var] = 2;
+					if (var == 0) {
+						logger.info("Remember {}", step);
+					}
+				} else {
+					lostTime[var] = 0;
+					try {
+						event.asWeightedEvent(accent).playEvent(receiver, channel);
+					} catch (final InvalidMidiDataException e) {
+						logger.error("Couldn't play event", e);
+					}
+					lastPlayed[var] = event.asOffEvent();
 				}
-				lastPlayed[var] = it.asOffEvent();
-			});
+			} else {
+				final int lStep;
+				if (lostTime[i] > 0) {
+					lStep = lostStep[i];
+					lostTime[i] = lostTime[i] - 1;
+					if (var == 0) {
+						logger.info("Restore {}", lStep);
+					}
+				} else {
+					lStep = step;
+					lostTime[i] = 0;
+				}
+				final Optional<LoopEvent> event = loopModel[i].getStepEvent(lStep);
+				event.ifPresent(it -> {
+					if (COMMAND.IGNORE != it.getCommand()) {
+						try {
+							it.asWeightedEvent(accent).playEvent(receiver, channel);
+						} catch (final InvalidMidiDataException e) {
+							logger.error("Couldn't play event", e);
+						}
+						lastPlayed[var] = it.asOffEvent();
+						lostTime[var] = 0;
+					}
+				});
+			}
 		}
 	}
 
