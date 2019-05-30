@@ -19,9 +19,18 @@
  */
 package jsequencer;
 
+import javax.sound.midi.MidiDevice;
+import javax.sound.midi.MidiUnavailableException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jsequencer.ui.screen.DrumLoopLayer;
-import midi.loop.LoopModel;
+import midi.device.resource.MidiDevices;
+import midi.instrument.Percussion;
+import midi.instrument.model.PercussionModel;
 import midi.loop.beat.Beat;
+import midi.loop.beat.Beat.BeatListener;
 import midi.loop.config.ChannelConfig;
 import midi.pad.ui.Screen;
 import midi.pad.ui.event.Runtime;
@@ -31,9 +40,26 @@ import midi.pad.ui.event.Runtime;
  *
  */
 public class Sequencer {
-	public static void main(final String[] args) {
+	private static final Logger logger = LoggerFactory.getLogger(Sequencer.class);
+
+	public static void main(final String[] args) throws MidiUnavailableException {
 		final Screen screen = Runtime.getRuntime().getScreen();
 		final ChannelConfig config = new ChannelConfig();
+		final Percussion percussion;
+		final PercussionModel model = new PercussionModel();
+
+		final MidiDevice percussionDevice = MidiDevices
+				.secureGetReceiverDevice("VirMIDI [hw:4,0,2]");
+		if (percussionDevice == null) {
+			logger.error("Percussion Device not found");
+			return;
+		} else {
+			if (!percussionDevice.isOpen()) {
+				percussionDevice.open();
+			}
+			percussion = new Percussion(percussionDevice.getReceiver(), 9);
+		}
+
 		final Runnable finishRunnable = new Runnable() {
 
 			@Override
@@ -43,10 +69,18 @@ public class Sequencer {
 		};
 		final Beat beat = new Beat();
 		beat.start();
+		percussion.setModel(model);
+		beat.addBeatListener(new BeatListener() {
+
+			@Override
+			public void accept(final long beat) {
+				percussion.accept(beat);
+			}
+		});
 		Runtime.getRuntime().schedule(new Runnable() {
 			@Override
 			public void run() {
-				final DrumLoopLayer layer = new DrumLoopLayer(new LoopModel());
+				final DrumLoopLayer layer = new DrumLoopLayer(model);
 				beat.addBeatListener(layer);
 				screen.putLayer(3,
 						// new ConfirmDialog("Zufrieden ?", finishRunnable,

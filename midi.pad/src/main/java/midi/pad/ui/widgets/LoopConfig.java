@@ -47,7 +47,7 @@ public class LoopConfig extends Widget implements BeatListener {
 	private int quarterDivision = 4;
 	private int holdPage = 0;
 	private int holdQuarter = 0;
-	private boolean hold = false;
+	private boolean hold = true;
 	private boolean holding = false;
 	private final Runnable fixRunnable;
 	private final Runnable changeRunnable;
@@ -129,7 +129,7 @@ public class LoopConfig extends Widget implements BeatListener {
 		final int quarter = (int) ((beat / division / quarterDivision) % quarterPerPage);
 		for (int i = 0; i < numberOfPages; ++i) {
 			if (hold && i == holdPage && i == page) {
-				g.setPixel(i, 0, Color.LOW_GREEN);
+				g.setPixel(i, 0, Color.FULL_RED);
 			} else if (hold && i == holdPage) {
 				g.setPixel(i, 0, Color.FULL_RED);
 			} else if (i == page) {
@@ -140,7 +140,7 @@ public class LoopConfig extends Widget implements BeatListener {
 		}
 		for (int i = 0; i < quarterPerPage; ++i) {
 			if (hold && i == holdQuarter && i == quarter) {
-				g.setPixel(i, 1, Color.LOW_GREEN);
+				g.setPixel(i, 1, Color.FULL_RED);
 			} else if (hold && i == holdQuarter) {
 				g.setPixel(i, 1, Color.FULL_RED);
 			} else if (i == quarter) {
@@ -190,8 +190,9 @@ public class LoopConfig extends Widget implements BeatListener {
 				holdPage = padEvent.getX();
 				hold = true;
 				getRuntime().schedule(fixRunnable);
-			} else if (padEvent.getY() == 1 && padEvent.getX() < quarterPerPage) {
+			} else if (hold && padEvent.getY() == 1 && padEvent.getX() < quarterPerPage) {
 				holdQuarter = padEvent.getX();
+				getRuntime().schedule(fixRunnable);
 			}
 		}
 		return true;
