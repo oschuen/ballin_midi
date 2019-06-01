@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2016 Oliver Schünemann
+ * Copyright (C) 2019 Oliver Schünemann
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -11,62 +11,31 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License.ree Software Foundation, Inc., 51 Franklin St, Fifth Floor, 
- * Boston, MA 02110, USA 
+ * limitations under the License.
  * 
- * @since 06.11.2016
+ * @since 01.06.2019
  * @version 1.0
  * @author oliver
  */
 package midi.pad.ui.event;
 
-import java.awt.Rectangle;
-
-public class PadEvent implements Event {
-
-	public static enum EVENT_TYPE implements EventType {
-		PAD_PRESSED, PAD_HOLD, PAD_RELEASED;
-	}
+/**
+ * @author oliver
+ *
+ */
+public class AbcButtonEvent implements Event {
 
 	private final EVENT_TYPE eventType;
-	private final int x;
 	private final int y;
 
-	public PadEvent(final EVENT_TYPE eventType, final int x, final int y) {
+	public static enum EVENT_TYPE implements EventType {
+		ABC_PRESSED, ABC_HOLD, ABC_RELEASED;
+	}
+
+	public AbcButtonEvent(final EVENT_TYPE eventType, final int y) {
 		super();
 		this.eventType = eventType;
-		this.x = x;
 		this.y = y;
-	}
-
-	/**
-	 * @return the eventType
-	 */
-	@Override
-	public EVENT_TYPE getEventType() {
-		return eventType;
-	}
-
-	/**
-	 * @return the x
-	 */
-	public int getX() {
-		return x;
-	}
-
-	/**
-	 * @return the y
-	 */
-	public int getY() {
-		return y;
-	}
-
-	public PadEvent translate(final Rectangle bounds) {
-		if (x >= bounds.x && x < bounds.x + bounds.width && y >= bounds.y
-				&& y < bounds.y + bounds.height) {
-			return new PadEvent(eventType, x - bounds.x, y - bounds.y);
-		}
-		return null;
 	}
 
 	/*
@@ -93,11 +62,28 @@ public class PadEvent implements Event {
 	/*
 	 * (non-Javadoc)
 	 * 
+	 * @see midi.pad.ui.event.Event#getEventType()
+	 */
+	@Override
+	public EventType getEventType() {
+		return eventType;
+	}
+
+	/**
+	 * @return the y
+	 */
+	public int getY() {
+		return y;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
 	public String toString() {
-		return "PadEvent [eventType=" + eventType + ", x=" + x + ", y=" + y + "]";
+		return "AbcButtonEvent [eventType=" + eventType + ", y=" + y + "]";
 	}
 
 }

@@ -39,6 +39,7 @@ import midi.pad.ui.event.PadEvent.EVENT_TYPE;
 public class PadReceiver implements Receiver {
 	private final Screen screen;
 	private final Map<Integer, Runnable> holdMap = new HashMap<>();
+	private final Map<Integer, Runnable> buttonHoldMap = new HashMap<>();
 	private static final long holdDelayTime = 1000;
 	private static final long holdRepeatTime = 500;
 
@@ -47,17 +48,52 @@ public class PadReceiver implements Receiver {
 	}
 
 	private void handleNoteOn(final int key) {
-		padEvent(key, EVENT_TYPE.PAD_PRESSED);
-		stopRunner(key);
-		final Runnable newRunner = new HoldRunnable(key);
-		holdMap.put(Integer.valueOf(key), newRunner);
-		getRuntime().scheduleWithFixedDelay(newRunner, holdDelayTime, holdRepeatTime,
-				TimeUnit.MILLISECONDS);
+		final int x = key % 16;
+		final int y = key / 16;
+		if (y < 8) {
+			final Runnable newRunner;
+			stopRunner(key);
+			if (x < 8) {
+				padEvent(x, y, EVENT_TYPE.PAD_PRESSED);
+				newRunner = new HoldRunnable(x, y);
+			} else {
+				abcButtonEvent(y, AbcButtonEvent.EVENT_TYPE.ABC_PRESSED);
+				newRunner = new AbcHoldRunnable(y);
+			}
+			holdMap.put(Integer.valueOf(key), newRunner);
+			getRuntime().scheduleWithFixedDelay(newRunner, holdDelayTime, holdRepeatTime,
+					TimeUnit.MILLISECONDS);
+		}
 	}
 
 	private void handleNoteOff(final int key) {
 		stopRunner(key);
-		padEvent(key, EVENT_TYPE.PAD_RELEASED);
+		final int x = key % 16;
+		final int y = key / 16;
+		if (y < 8) {
+			if (x < 8) {
+				padEvent(x, y, EVENT_TYPE.PAD_RELEASED);
+			} else {
+				abcButtonEvent(y, AbcButtonEvent.EVENT_TYPE.ABC_RELEASED);
+			}
+		}
+	}
+
+	private void handleControlOn(final int key) {
+		final int x = key % 8;
+		final Runnable newRunner;
+		stopNumRunner(key);
+		numButtonEvent(x, NumButtonEvent.EVENT_TYPE.NUM_PRESSED);
+		newRunner = new NumHoldRunnable(x);
+		buttonHoldMap.put(Integer.valueOf(key), newRunner);
+		getRuntime().scheduleWithFixedDelay(newRunner, holdDelayTime, holdRepeatTime,
+				TimeUnit.MILLISECONDS);
+	}
+
+	private void handleControlOff(final int key) {
+		final int x = key % 8;
+		stopNumRunner(key);
+		numButtonEvent(x, NumButtonEvent.EVENT_TYPE.NUM_RELEASED);
 	}
 
 	private void stopRunner(final int key) {
@@ -67,19 +103,38 @@ public class PadReceiver implements Receiver {
 		}
 	}
 
-	private void padEvent(final int key, final PadEvent.EVENT_TYPE eventType) {
-		final int x = key % 16;
-		final int y = key / 16;
-		if (y < 8) {
-			if (x < 8) {
-				getRuntime().schedule(new Runnable() {
-					@Override
-					public void run() {
-						screen.eventOccured(new PadEvent(eventType, x, y));
-					}
-				});
-			}
+	private void stopNumRunner(final int x) {
+		final Runnable currentRunner = buttonHoldMap.remove(Integer.valueOf(x));
+		if (currentRunner != null) {
+			getRuntime().stop(currentRunner);
 		}
+	}
+
+	private void padEvent(final int x, final int y, final PadEvent.EVENT_TYPE eventType) {
+		getRuntime().schedule(new Runnable() {
+			@Override
+			public void run() {
+				screen.eventOccured(new PadEvent(eventType, x, y));
+			}
+		});
+	}
+
+	private void abcButtonEvent(final int y, final AbcButtonEvent.EVENT_TYPE eventType) {
+		getRuntime().schedule(new Runnable() {
+			@Override
+			public void run() {
+				screen.eventOccured(new AbcButtonEvent(eventType, y));
+			}
+		});
+	}
+
+	private void numButtonEvent(final int x, final NumButtonEvent.EVENT_TYPE eventType) {
+		getRuntime().schedule(new Runnable() {
+			@Override
+			public void run() {
+				screen.eventOccured(new NumButtonEvent(eventType, x));
+			}
+		});
 	}
 
 	@Override
@@ -97,6 +152,13 @@ public class PadReceiver implements Receiver {
 			case ShortMessage.NOTE_OFF:
 				handleNoteOff(shortMessage.getData1());
 				break;
+			case ShortMessage.CONTROL_CHANGE:
+				if (shortMessage.getData2() > 0) {
+					handleControlOn(shortMessage.getData1());
+				} else {
+					handleControlOff(shortMessage.getData1());
+				}
+
 			default:
 			}
 		}
@@ -109,11 +171,13 @@ public class PadReceiver implements Receiver {
 	}
 
 	private class HoldRunnable implements Runnable {
-		private final int key;
+		private final int x;
+		private final int y;
 
-		public HoldRunnable(final int key) {
+		public HoldRunnable(final int x, final int y) {
 			super();
-			this.key = key;
+			this.x = x;
+			this.y = y;
 		}
 
 		/*
@@ -123,7 +187,45 @@ public class PadReceiver implements Receiver {
 		 */
 		@Override
 		public void run() {
-			padEvent(key, EVENT_TYPE.PAD_HOLD);
+			padEvent(x, y, EVENT_TYPE.PAD_HOLD);
+		}
+	}
+
+	private class AbcHoldRunnable implements Runnable {
+		private final int y;
+
+		public AbcHoldRunnable(final int y) {
+			super();
+			this.y = y;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see java.lang.Runnable#run()
+		 */
+		@Override
+		public void run() {
+			abcButtonEvent(y, AbcButtonEvent.EVENT_TYPE.ABC_HOLD);
+		}
+	}
+
+	private class NumHoldRunnable implements Runnable {
+		private final int x;
+
+		public NumHoldRunnable(final int x) {
+			super();
+			this.x = x;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see java.lang.Runnable#run()
+		 */
+		@Override
+		public void run() {
+			numButtonEvent(x, NumButtonEvent.EVENT_TYPE.NUM_HOLD);
 		}
 	}
 }

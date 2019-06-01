@@ -131,9 +131,9 @@ public class LoopConfig extends Widget implements BeatListener {
 			if (hold && i == holdPage && i == page) {
 				g.setPixel(i, 0, Color.FULL_RED);
 			} else if (hold && i == holdPage) {
-				g.setPixel(i, 0, Color.FULL_RED);
+				g.setPixel(i, 0, Color.RED);
 			} else if (i == page) {
-				g.setPixel(i, 0, Color.FULL_GREEN);
+				g.setPixel(i, 0, Color.GREEN);
 			} else {
 				g.setPixel(i, 0, Color.LOW_AMBER);
 			}
@@ -142,9 +142,9 @@ public class LoopConfig extends Widget implements BeatListener {
 			if (hold && i == holdQuarter && i == quarter) {
 				g.setPixel(i, 1, Color.FULL_RED);
 			} else if (hold && i == holdQuarter) {
-				g.setPixel(i, 1, Color.FULL_RED);
+				g.setPixel(i, 1, Color.RED);
 			} else if (i == quarter) {
-				g.setPixel(i, 1, Color.FULL_GREEN);
+				g.setPixel(i, 1, Color.GREEN);
 			} else {
 				g.setPixel(i, 1, Color.LOW_AMBER);
 			}

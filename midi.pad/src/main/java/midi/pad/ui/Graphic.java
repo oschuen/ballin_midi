@@ -29,7 +29,7 @@ public class Graphic {
 
 	private final Rectangle viewPort = new Rectangle();
 
-	private final Color screen[][];
+	private final Color[][] screen;
 
 	private final int WIDTH = 8;
 	private final int HEIGHT = 8;
@@ -41,6 +41,7 @@ public class Graphic {
 		viewPort.width = WIDTH;
 		viewPort.height = HEIGHT;
 		fill(Color.TRANSPARENT);
+
 	}
 
 	private Graphic(final Color screen[][], final int x, final int y, final int width,

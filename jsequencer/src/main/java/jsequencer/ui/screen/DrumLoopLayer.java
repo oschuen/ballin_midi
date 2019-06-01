@@ -65,10 +65,12 @@ public class DrumLoopLayer extends HintDialog implements BeatListener {
 
 			@Override
 			public void run() {
-				System.out.println("Fix Runnable");
 				looper.setHold(config.isHold());
 				looper.setHoldPage(config.getHoldPage());
 				looper.setHoldQuarter(config.getHoldQuarter());
+				accent.setHold(config.isHold());
+				accent.setHoldPage(config.getHoldPage());
+				accent.setHoldQuarter(config.getHoldQuarter());
 			}
 		});
 		selector = new InstrumentSelector(0, 3, 8, 2, PercussionModel.PercussionInstrument.values(),
@@ -101,6 +103,7 @@ public class DrumLoopLayer extends HintDialog implements BeatListener {
 	@Override
 	public void accept(final long beat) {
 		config.accept(beat);
+		accent.accept(beat);
 		looper.accept(beat);
 	}
 

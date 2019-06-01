@@ -28,15 +28,15 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.LongConsumer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * @author oliver
  *
  */
 public class Beat {
-
-	/**
-	 * 
-	 */
+	private static final Logger logger = LoggerFactory.getLogger(Beat.class);
 	public static final int BEAT_DIVISION = 60;
 	private int beat = 0;
 	private long beatStart = 0;
@@ -140,7 +140,7 @@ public class Beat {
 				currentBpm = bpm;
 				beatStart = System.nanoTime() - (minute * beat / currentBpm);
 			}
-			System.out.println("Next beat " + beat * BEAT_DIVISION);
+			logger.debug("Next beat {}", beat * BEAT_DIVISION);
 			publishBeat(beat * BEAT_DIVISION);
 		}
 	}

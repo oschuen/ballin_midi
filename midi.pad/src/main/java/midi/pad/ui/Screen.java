@@ -23,6 +23,9 @@ import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import midi.pad.ui.event.Event;
 
 /**
@@ -30,10 +33,23 @@ import midi.pad.ui.event.Event;
  *
  */
 public class Screen {
+	private static final Logger logger = LoggerFactory.getLogger(Screen.class);
 	private Layer[] layers = new Layer[0];
 	private Graphic[] graphics = new Graphic[0];
 	private boolean firstpage = true;
 	private boolean blink = true;
+	private final Color[] abcButton = new Color[8];
+	private final Color[] numberButton = new Color[8];
+
+	/**
+	 * 
+	 */
+	public Screen() {
+		for (int i = 0; i < abcButton.length; i++) {
+			abcButton[i] = Color.BLACK;
+			numberButton[i] = Color.BLACK;
+		}
+	}
 
 	public void draw(final Receiver receiver) {
 		try {
@@ -51,6 +67,20 @@ public class Screen {
 					msg.setMessage(0x92, 2, vel1, vel2);
 					receiver.send(msg, 0);
 				}
+			}
+			for (int i = 0; i < 4; i++) {
+				final int vel1 = abcButton[i * 2].getMidiValue();
+				final int vel2 = abcButton[i * 2 + 1].getMidiValue();
+				final ShortMessage msg = new ShortMessage();
+				msg.setMessage(0x92, 2, vel1, vel2);
+				receiver.send(msg, 0);
+			}
+			for (int i = 0; i < 4; i++) {
+				final int vel1 = numberButton[i * 2].getMidiValue();
+				final int vel2 = numberButton[i * 2 + 1].getMidiValue();
+				final ShortMessage msg = new ShortMessage();
+				msg.setMessage(0x92, 2, vel1, vel2);
+				receiver.send(msg, 0);
 			}
 
 			final ShortMessage toggleMsg = new ShortMessage();
@@ -108,10 +138,25 @@ public class Screen {
 	}
 
 	public void eventOccured(final Event event) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("Event occured ({})", event);
+		}
 		for (int i = layers.length - 1; i >= 0; --i) {
 			if (layers[i] != null && layers[i].eventOccured(event)) {
 				break;
 			}
+		}
+	}
+
+	public void setAbcButton(final int x, final Color color) {
+		if (color != null && x >= 0 && x <= abcButton.length) {
+			abcButton[x] = color;
+		}
+	}
+
+	public void setNumberButton(final int x, final Color color) {
+		if (color != null && x >= 0 && x <= numberButton.length) {
+			numberButton[x] = color;
 		}
 	}
 }
