@@ -47,7 +47,7 @@ public class Guitar implements BeatListener {
 	private final Receiver receiver;
 	private final int channel;
 	private GuitarModel model;
-	private static final Logger logger = LoggerFactory.getLogger(Percussion.class);
+	private static final Logger logger = LoggerFactory.getLogger(Guitar.class);
 	private int velocity = 127;
 	final GuitarInstrument instruments[] = GuitarInstrument.values();
 	final LoopEvent[] lastPlayed = new LoopEvent[instruments.length];
@@ -63,7 +63,8 @@ public class Guitar implements BeatListener {
 		this.channel = channel;
 		model = defaultModel;
 		for (final GuitarInstrument percussionInstrument : instruments) {
-			loopModel[percussionInstrument.ordinal()] = model.getLoopModel(percussionInstrument).get();
+			loopModel[percussionInstrument.ordinal()] = model.getLoopModel(percussionInstrument)
+					.get();
 		}
 	}
 
@@ -96,7 +97,8 @@ public class Guitar implements BeatListener {
 	public void accept(final long beat) {
 		final long division = Beat.BEAT_DIVISION / model.getQuarterDivision();
 		if (beat % (division) == 0) {
-			final long steps = model.getQuarterDivision() * model.getQuarterPerPage() * model.getNumberOfPages();
+			final long steps = model.getQuarterDivision() * model.getQuarterPerPage()
+					* model.getNumberOfPages();
 			final int step = (int) ((beat / division) % (steps));
 			step(step);
 		}
@@ -111,7 +113,7 @@ public class Guitar implements BeatListener {
 			}
 			final Optional<LoopEvent> optEvent = loopModel[i].getStepEvent(step);
 			if (optEvent.isPresent()) {
-				LoopEvent event = optEvent.get();
+				final LoopEvent event = optEvent.get();
 				if (COMMAND.IGNORE == event.getCommand()) {
 					lostStep[var] = step;
 					lostTime[var] = 2;

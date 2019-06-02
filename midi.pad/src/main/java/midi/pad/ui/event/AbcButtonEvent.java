@@ -55,8 +55,8 @@ public class AbcButtonEvent implements Event {
 				&& values[ordinal].equals(event.getEventType()));
 	}
 
-	public static PadEvent getEvent(final Event event) {
-		return (PadEvent) event;
+	public static AbcButtonEvent getEvent(final Event event) {
+		return (AbcButtonEvent) event;
 	}
 
 	/*

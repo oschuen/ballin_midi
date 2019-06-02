@@ -21,18 +21,24 @@ package jsequencer;
 
 import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiUnavailableException;
+import javax.sound.midi.Transmitter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jsequencer.ui.screen.DrumLoopLayer;
+import jsequencer.ui.screen.GuitarLoopLayer;
+import midi.chord.ChordRecognizer;
 import midi.device.resource.MidiDevices;
+import midi.instrument.Guitar;
 import midi.instrument.Percussion;
+import midi.instrument.model.GuitarModel;
 import midi.instrument.model.PercussionModel;
 import midi.loop.beat.Beat;
 import midi.loop.beat.Beat.BeatListener;
 import midi.loop.config.ChannelConfig;
 import midi.pad.ui.Screen;
+import midi.pad.ui.event.KeyBoardReceiver;
 import midi.pad.ui.event.Runtime;
 
 /**
@@ -42,14 +48,16 @@ import midi.pad.ui.event.Runtime;
 public class Sequencer {
 	private static final Logger logger = LoggerFactory.getLogger(Sequencer.class);
 
-	public static void main(final String[] args) throws MidiUnavailableException {
+	public static void mainPercussion(final String[] args) throws MidiUnavailableException {
 		final Screen screen = Runtime.getRuntime().getScreen();
 		final ChannelConfig config = new ChannelConfig();
 		final Percussion percussion;
 		final PercussionModel model = new PercussionModel();
+		final Transmitter transmitter;
 
 		final MidiDevice percussionDevice = MidiDevices
 				.secureGetReceiverDevice("VirMIDI [hw:4,0,2]");
+
 		if (percussionDevice == null) {
 			logger.error("Percussion Device not found");
 			return;
@@ -59,6 +67,14 @@ public class Sequencer {
 			}
 			percussion = new Percussion(percussionDevice.getReceiver(), 9);
 		}
+
+		final MidiDevice transmitterDevice = MidiDevices
+				.secureGetTransmitterDevice("VirMIDI [hw:4,2,0]");
+		if (!transmitterDevice.isOpen()) {
+			transmitterDevice.open();
+		}
+		transmitter = transmitterDevice.getTransmitter();
+		transmitter.setReceiver(new KeyBoardReceiver());
 
 		final Runnable finishRunnable = new Runnable() {
 
@@ -93,4 +109,67 @@ public class Sequencer {
 		});
 
 	}
+
+	/**
+	 * @param args
+	 */
+	private static void mainGuitar(final String[] args) throws MidiUnavailableException {
+		final Screen screen = Runtime.getRuntime().getScreen();
+		final ChannelConfig config = new ChannelConfig();
+		final Guitar guitar;
+		final GuitarModel model = new GuitarModel();
+		final ChordRecognizer recognizer = new ChordRecognizer(model);
+		final Transmitter transmitter;
+
+		final MidiDevice guitarDevice = MidiDevices.secureGetReceiverDevice("VirMIDI [hw:4,0,2]");
+
+		if (guitarDevice == null) {
+			logger.error("Percussion Device not found");
+			return;
+		} else {
+			if (!guitarDevice.isOpen()) {
+				guitarDevice.open();
+			}
+			guitar = new Guitar(guitarDevice.getReceiver(), 0);
+		}
+
+		final MidiDevice transmitterDevice = MidiDevices
+				.secureGetTransmitterDevice("VirMIDI [hw:4,0,2]");
+		if (!transmitterDevice.isOpen()) {
+			transmitterDevice.open();
+		}
+		transmitter = transmitterDevice.getTransmitter();
+		transmitter.setReceiver(recognizer);
+
+		final Beat beat = new Beat();
+		beat.start();
+		guitar.setModel(model);
+		beat.addBeatListener(new BeatListener() {
+
+			@Override
+			public void accept(final long beat) {
+				guitar.accept(beat);
+			}
+		});
+		Runtime.getRuntime().schedule(new Runnable() {
+			@Override
+			public void run() {
+				final GuitarLoopLayer layer = new GuitarLoopLayer(model);
+				beat.addBeatListener(layer);
+				screen.putLayer(3,
+						// new ConfirmDialog("Zufrieden ?", finishRunnable,
+						// finishRunnable));
+						// new NumberDialog("Program", 127, 0, finishRunnable));
+						// new LooperConfigDialog("Track 1", config));
+						layer);
+
+			}
+		});
+
+	}
+
+	public static void main(final String[] args) throws MidiUnavailableException {
+		mainGuitar(args);
+	}
+
 }

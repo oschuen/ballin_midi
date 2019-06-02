@@ -22,9 +22,11 @@ package midi.pad.ui;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import midi.pad.ui.event.Event;
 import midi.pad.ui.event.PadEvent;
+import midi.pad.ui.widgets.AbcControlButton;
 
 /**
  * @author oliver
@@ -117,5 +119,9 @@ public class Layer extends Widget {
 	 */
 	public void clearWidgets() {
 		widgets.clear();
+	}
+
+	public Optional<AbcControlButton> getAbcControlButton(final int y) {
+		return Optional.empty();
 	}
 }

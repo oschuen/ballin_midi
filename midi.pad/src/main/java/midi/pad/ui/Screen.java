@@ -19,6 +19,8 @@
  */
 package midi.pad.ui;
 
+import java.util.Optional;
+
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
@@ -26,7 +28,9 @@ import javax.sound.midi.ShortMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import midi.pad.ui.event.AbcButtonEvent;
 import midi.pad.ui.event.Event;
+import midi.pad.ui.event.PadEvent;
 
 /**
  * @author oliver
@@ -38,15 +42,13 @@ public class Screen {
 	private Graphic[] graphics = new Graphic[0];
 	private boolean firstpage = true;
 	private boolean blink = true;
-	private final Color[] abcButton = new Color[8];
 	private final Color[] numberButton = new Color[8];
 
 	/**
 	 * 
 	 */
 	public Screen() {
-		for (int i = 0; i < abcButton.length; i++) {
-			abcButton[i] = Color.BLACK;
+		for (int i = 0; i < numberButton.length; i++) {
 			numberButton[i] = Color.BLACK;
 		}
 	}
@@ -68,12 +70,27 @@ public class Screen {
 					receiver.send(msg, 0);
 				}
 			}
-			for (int i = 0; i < 4; i++) {
-				final int vel1 = abcButton[i * 2].getMidiValue();
-				final int vel2 = abcButton[i * 2 + 1].getMidiValue();
-				final ShortMessage msg = new ShortMessage();
-				msg.setMessage(0x92, 2, vel1, vel2);
-				receiver.send(msg, 0);
+			final Optional<Layer> topLayer = getTopLayer();
+			final byte blackMidiValue = Color.BLACK.getMidiValue();
+			if (topLayer.isPresent()) {
+				final Layer tLayer = topLayer.get();
+				for (int i = 0; i < 4; i++) {
+					final int vel1 = tLayer.getAbcControlButton(i * 2)
+							.map(b -> b.getColor().getMidiValue()).orElse(blackMidiValue);
+					final int vel2 = tLayer.getAbcControlButton(i * 2 + 1)
+							.map(b -> b.getColor().getMidiValue()).orElse(blackMidiValue);
+					final ShortMessage msg = new ShortMessage();
+					msg.setMessage(0x92, 2, vel1, vel2);
+					receiver.send(msg, 0);
+				}
+			} else {
+				for (int i = 0; i < 4; i++) {
+					final int vel1 = blackMidiValue;
+					final int vel2 = blackMidiValue;
+					final ShortMessage msg = new ShortMessage();
+					msg.setMessage(0x92, 2, vel1, vel2);
+					receiver.send(msg, 0);
+				}
 			}
 			for (int i = 0; i < 4; i++) {
 				final int vel1 = numberButton[i * 2].getMidiValue();
@@ -137,20 +154,29 @@ public class Screen {
 		}
 	}
 
+	private Optional<Layer> getTopLayer() {
+		for (int i = layers.length - 1; i >= 0; --i) {
+			if (layers[i] != null) {
+				return Optional.of(layers[i]);
+			}
+		}
+		return Optional.empty();
+	}
+
 	public void eventOccured(final Event event) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Event occured ({})", event);
 		}
-		for (int i = layers.length - 1; i >= 0; --i) {
-			if (layers[i] != null && layers[i].eventOccured(event)) {
-				break;
+		if (PadEvent.isEventOfThisType(event)) {
+			for (int i = layers.length - 1; i >= 0; --i) {
+				if (layers[i] != null && layers[i].eventOccured(event)) {
+					break;
+				}
 			}
-		}
-	}
-
-	public void setAbcButton(final int x, final Color color) {
-		if (color != null && x >= 0 && x <= abcButton.length) {
-			abcButton[x] = color;
+		} else if (AbcButtonEvent.isEventOfThisType(event)) {
+			final AbcButtonEvent abcEvent = AbcButtonEvent.getEvent(event);
+			getTopLayer().ifPresent(l -> l.getAbcControlButton(abcEvent.getY())
+					.ifPresent(b -> b.eventOccured(event)));
 		}
 	}
 

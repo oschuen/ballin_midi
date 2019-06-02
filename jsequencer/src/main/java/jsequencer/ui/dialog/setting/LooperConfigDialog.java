@@ -156,6 +156,5 @@ public class LooperConfigDialog extends HintDialog {
 				screen.removeLayer(4);
 			}));
 		}
-
 	}
 }
