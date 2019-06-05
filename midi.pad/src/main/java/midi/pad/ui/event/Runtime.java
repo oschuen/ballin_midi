@@ -20,8 +20,11 @@
 package midi.pad.ui.event;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -31,6 +34,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.sound.midi.MidiDevice;
+import javax.sound.midi.MidiMessage;
 import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.Transmitter;
@@ -53,6 +57,7 @@ public class Runtime {
 	private static long flashPeriod = 500;
 	private boolean inRuntimeThread = false;
 	private final Receiver inputReceiver = new PadReceiver(screen);
+	private final String DEV_NULL = "dev::null";
 
 	@SuppressWarnings("serial")
 	private static Map<String, Object> runtimeConfig = new HashMap<String, Object>() {
@@ -64,6 +69,7 @@ public class Runtime {
 	};
 
 	private final Map<String, Object> runningConfig = new HashMap<>();
+
 	private static Lock lock = new ReentrantLock();
 
 	private static Runtime singleton = null;
@@ -131,6 +137,48 @@ public class Runtime {
 		}
 	}
 
+	private Optional<DeviceReceiverTuple> getConfiguredDevice(String key) {
+		Object obj = runningConfig.get(key);
+		if (obj instanceof DeviceReceiverTuple) {
+			return Optional.of((DeviceReceiverTuple) obj);
+		}
+		return Optional.empty();
+	}
+
+	@SuppressWarnings("resource")
+	private Receiver getReceiver(String confKey) {
+		Receiver receiver = new NullReceiver();
+		lock.lock();
+		try {
+			final String outputDeviceName = getStringConfig(confKey, DEV_NULL);
+			Optional<DeviceReceiverTuple> devRecTuple = getConfiguredDevice(confKey);
+
+			if (devRecTuple.isPresent()) {
+				DeviceReceiverTuple tuple = devRecTuple.get();
+				if (tuple.getDeviceName().equals(outputDeviceName)) {
+					return tuple.getReceiver();
+				} else {
+					tuple.getReceiver().close();
+					runningConfig.remove(confKey);
+				}
+			}
+			if (outputDeviceName != null) {
+				final MidiDevice receiverDevice = MidiDevices.secureGetReceiverDevice(outputDeviceName);
+				if (!receiverDevice.isOpen()) {
+					receiverDevice.open();
+				}
+				receiver = receiverDevice.getReceiver();
+			}
+			runningConfig.put(confKey, new DeviceReceiverTuple(outputDeviceName, receiver));
+		} catch (final MidiUnavailableException mue) {
+			mue.printStackTrace();
+		} finally {
+			checkConfiguration = false;
+			lock.unlock();
+		}
+		return receiver;
+	}
+
 	private void innerSetConfig(final Map<String, Object> runtimeConfig) {
 		lock.lock();
 		try {
@@ -144,8 +192,7 @@ public class Runtime {
 				if (transmitter != null) {
 					transmitter.close();
 				}
-				final MidiDevice transmitterDevice = MidiDevices
-						.secureGetTransmitterDevice(inputDevice);
+				final MidiDevice transmitterDevice = MidiDevices.secureGetTransmitterDevice(inputDevice);
 				if (!transmitterDevice.isOpen()) {
 					transmitterDevice.open();
 				}
@@ -153,19 +200,7 @@ public class Runtime {
 				transmitter.setReceiver(inputReceiver);
 				runningConfig.put(CFG_INPUT_DEVICE, inputDevice);
 			}
-			final String outputDevice = getStringConfig(CFG_OUTPUT_DEVICE, defaultDevice);
-			if (!outputDevice.equals(runningConfig.get(CFG_OUTPUT_DEVICE))) {
-				if (receiver != null) {
-					receiver.close();
-				}
-				final MidiDevice receiverDevice = MidiDevices.secureGetReceiverDevice(outputDevice);
-				if (!receiverDevice.isOpen()) {
-					receiverDevice.open();
-				}
-				receiver = receiverDevice.getReceiver();
-				runningConfig.put(CFG_OUTPUT_DEVICE, outputDevice);
-			}
-
+			receiver = getReceiver(CFG_OUTPUT_DEVICE);
 		} catch (final MidiUnavailableException mue) {
 			mue.printStackTrace();
 		} finally {
@@ -227,8 +262,8 @@ public class Runtime {
 	 * @see java.util.concurrent.ScheduledExecutorService#scheduleAtFixedRate(java.lang.Runnable,
 	 *      long, long, java.util.concurrent.TimeUnit)
 	 */
-	public void scheduleAtFixedRate(final Runnable command, final long initialDelay,
-			final long period, final TimeUnit unit) {
+	public void scheduleAtFixedRate(final Runnable command, final long initialDelay, final long period,
+			final TimeUnit unit) {
 		final DrawRunnable runner = new DrawRunnable(command);
 		runnerMap.put(command, runner);
 		runner.setFuture(executor.scheduleAtFixedRate(runner, initialDelay, period, unit));
@@ -242,8 +277,8 @@ public class Runtime {
 	 * @see java.util.concurrent.ScheduledExecutorService#scheduleWithFixedDelay(java.lang.Runnable,
 	 *      long, long, java.util.concurrent.TimeUnit)
 	 */
-	public void scheduleWithFixedDelay(final Runnable command, final long initialDelay,
-			final long delay, final TimeUnit unit) {
+	public void scheduleWithFixedDelay(final Runnable command, final long initialDelay, final long delay,
+			final TimeUnit unit) {
 		final DrawRunnable runner = new DrawRunnable(command);
 		runnerMap.put(command, runner);
 		runner.setFuture(executor.scheduleWithFixedDelay(runner, initialDelay, delay, unit));
@@ -314,5 +349,98 @@ public class Runtime {
 	 */
 	public Screen getScreen() {
 		return screen;
+	}
+
+	public static class ReceiverDispatcher implements Receiver {
+		private final List<Receiver> receivers = new CopyOnWriteArrayList<>();
+		private Transmitter transmitter;
+
+		public ReceiverDispatcher(Transmitter transmitter) {
+			super();
+			this.transmitter = transmitter;
+			this.transmitter.setReceiver(this);
+		}
+
+		public void addReceiver(Receiver receiver) {
+			receivers.add(receiver);
+		}
+
+		public void removeReceiver(Receiver receiver) {
+			receivers.remove(receiver);
+		}
+
+		@Override
+		public void send(MidiMessage message, long timeStamp) {
+			for (Receiver receiver : receivers) {
+				receiver.send(message, timeStamp);
+			}
+		}
+
+		public Transmitter setTransmitter(Transmitter transmitter) {
+			Transmitter odTransmitter = this.transmitter;
+			if (odTransmitter != null) {
+				odTransmitter.setReceiver(new NullReceiver());
+			}
+			transmitter.setReceiver(this);
+			this.transmitter = transmitter;
+			return odTransmitter;
+		}
+
+		@Override
+		public void close() {
+			for (Receiver receiver : receivers) {
+				receiver.close();
+			}
+			this.transmitter.close();
+		}
+	}
+
+	private static class NullTransmitter implements Transmitter {
+		private Receiver receiver;
+
+		@Override
+		public void setReceiver(Receiver receiver) {
+			this.receiver = receiver;
+		}
+
+		@Override
+		public Receiver getReceiver() {
+			return receiver;
+		}
+
+		@Override
+		public void close() {
+		}
+	}
+
+	private static class NullReceiver implements Receiver {
+
+		@Override
+		public void send(MidiMessage message, long timeStamp) {
+		}
+
+		@Override
+		public void close() {
+		}
+	}
+
+	private class DeviceReceiverTuple {
+		private final String deviceName;
+		private final Receiver receiver;
+
+		public DeviceReceiverTuple(String deviceName, Receiver receiver) {
+			super();
+			this.deviceName = deviceName;
+			this.receiver = receiver;
+		}
+
+		public String getDeviceName() {
+			return deviceName;
+		}
+
+		public Receiver getReceiver() {
+			return receiver;
+		}
+
 	}
 }
