@@ -20,11 +20,9 @@
 package midi.pad.ui.event;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -137,8 +135,8 @@ public class Runtime {
 		}
 	}
 
-	private Optional<DeviceReceiverTuple> getConfiguredDevice(String key) {
-		Object obj = runningConfig.get(key);
+	private Optional<DeviceReceiverTuple> getConfiguredDevice(final String key) {
+		final Object obj = runningConfig.get(key);
 		if (obj instanceof DeviceReceiverTuple) {
 			return Optional.of((DeviceReceiverTuple) obj);
 		}
@@ -146,15 +144,15 @@ public class Runtime {
 	}
 
 	@SuppressWarnings("resource")
-	private Receiver getReceiver(String confKey) {
+	private Receiver getReceiver(final String confKey) {
 		Receiver receiver = new NullReceiver();
 		lock.lock();
 		try {
 			final String outputDeviceName = getStringConfig(confKey, DEV_NULL);
-			Optional<DeviceReceiverTuple> devRecTuple = getConfiguredDevice(confKey);
+			final Optional<DeviceReceiverTuple> devRecTuple = getConfiguredDevice(confKey);
 
 			if (devRecTuple.isPresent()) {
-				DeviceReceiverTuple tuple = devRecTuple.get();
+				final DeviceReceiverTuple tuple = devRecTuple.get();
 				if (tuple.getDeviceName().equals(outputDeviceName)) {
 					return tuple.getReceiver();
 				} else {
@@ -163,7 +161,8 @@ public class Runtime {
 				}
 			}
 			if (outputDeviceName != null) {
-				final MidiDevice receiverDevice = MidiDevices.secureGetReceiverDevice(outputDeviceName);
+				final MidiDevice receiverDevice = MidiDevices
+						.secureGetReceiverDevice(outputDeviceName);
 				if (!receiverDevice.isOpen()) {
 					receiverDevice.open();
 				}
@@ -192,7 +191,8 @@ public class Runtime {
 				if (transmitter != null) {
 					transmitter.close();
 				}
-				final MidiDevice transmitterDevice = MidiDevices.secureGetTransmitterDevice(inputDevice);
+				final MidiDevice transmitterDevice = MidiDevices
+						.secureGetTransmitterDevice(inputDevice);
 				if (!transmitterDevice.isOpen()) {
 					transmitterDevice.open();
 				}
@@ -262,8 +262,8 @@ public class Runtime {
 	 * @see java.util.concurrent.ScheduledExecutorService#scheduleAtFixedRate(java.lang.Runnable,
 	 *      long, long, java.util.concurrent.TimeUnit)
 	 */
-	public void scheduleAtFixedRate(final Runnable command, final long initialDelay, final long period,
-			final TimeUnit unit) {
+	public void scheduleAtFixedRate(final Runnable command, final long initialDelay,
+			final long period, final TimeUnit unit) {
 		final DrawRunnable runner = new DrawRunnable(command);
 		runnerMap.put(command, runner);
 		runner.setFuture(executor.scheduleAtFixedRate(runner, initialDelay, period, unit));
@@ -277,8 +277,8 @@ public class Runtime {
 	 * @see java.util.concurrent.ScheduledExecutorService#scheduleWithFixedDelay(java.lang.Runnable,
 	 *      long, long, java.util.concurrent.TimeUnit)
 	 */
-	public void scheduleWithFixedDelay(final Runnable command, final long initialDelay, final long delay,
-			final TimeUnit unit) {
+	public void scheduleWithFixedDelay(final Runnable command, final long initialDelay,
+			final long delay, final TimeUnit unit) {
 		final DrawRunnable runner = new DrawRunnable(command);
 		runnerMap.put(command, runner);
 		runner.setFuture(executor.scheduleWithFixedDelay(runner, initialDelay, delay, unit));
@@ -351,55 +351,11 @@ public class Runtime {
 		return screen;
 	}
 
-	public static class ReceiverDispatcher implements Receiver {
-		private final List<Receiver> receivers = new CopyOnWriteArrayList<>();
-		private Transmitter transmitter;
-
-		public ReceiverDispatcher(Transmitter transmitter) {
-			super();
-			this.transmitter = transmitter;
-			this.transmitter.setReceiver(this);
-		}
-
-		public void addReceiver(Receiver receiver) {
-			receivers.add(receiver);
-		}
-
-		public void removeReceiver(Receiver receiver) {
-			receivers.remove(receiver);
-		}
-
-		@Override
-		public void send(MidiMessage message, long timeStamp) {
-			for (Receiver receiver : receivers) {
-				receiver.send(message, timeStamp);
-			}
-		}
-
-		public Transmitter setTransmitter(Transmitter transmitter) {
-			Transmitter odTransmitter = this.transmitter;
-			if (odTransmitter != null) {
-				odTransmitter.setReceiver(new NullReceiver());
-			}
-			transmitter.setReceiver(this);
-			this.transmitter = transmitter;
-			return odTransmitter;
-		}
-
-		@Override
-		public void close() {
-			for (Receiver receiver : receivers) {
-				receiver.close();
-			}
-			this.transmitter.close();
-		}
-	}
-
 	private static class NullTransmitter implements Transmitter {
 		private Receiver receiver;
 
 		@Override
-		public void setReceiver(Receiver receiver) {
+		public void setReceiver(final Receiver receiver) {
 			this.receiver = receiver;
 		}
 
@@ -416,7 +372,7 @@ public class Runtime {
 	private static class NullReceiver implements Receiver {
 
 		@Override
-		public void send(MidiMessage message, long timeStamp) {
+		public void send(final MidiMessage message, final long timeStamp) {
 		}
 
 		@Override
@@ -428,7 +384,7 @@ public class Runtime {
 		private final String deviceName;
 		private final Receiver receiver;
 
-		public DeviceReceiverTuple(String deviceName, Receiver receiver) {
+		public DeviceReceiverTuple(final String deviceName, final Receiver receiver) {
 			super();
 			this.deviceName = deviceName;
 			this.receiver = receiver;
