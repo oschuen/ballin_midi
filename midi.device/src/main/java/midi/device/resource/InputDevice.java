@@ -56,6 +56,14 @@ public class InputDevice {
 			transmitter = null;
 		}
 	}
+	
+	public void addInput(Receiver receiver) {
+		this.receiver.addReceiver(receiver);
+	}
+
+	public void removeInput(Receiver receiver) {
+		this.receiver.removeReceiver(receiver);
+	}
 
 	public void setDeviceName(final String deviceName) {
 		try {

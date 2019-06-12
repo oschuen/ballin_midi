@@ -21,7 +21,6 @@ package midi.pad.ui.event;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -31,13 +30,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import javax.sound.midi.MidiDevice;
-import javax.sound.midi.MidiMessage;
-import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Receiver;
-import javax.sound.midi.Transmitter;
 
-import midi.device.resource.MidiDevices;
+import midi.device.resource.InputDevice;
+import midi.device.resource.OutputDevice;
 import midi.pad.ui.Screen;
 
 /**
@@ -48,14 +44,15 @@ public class Runtime {
 
 	private final Screen screen = new Screen();
 
-	private Transmitter transmitter = null;
-	private Receiver receiver = null;
+	private Receiver padOutput = null;
+	private final Receiver padInput = new PadReceiver(screen);
 	private static boolean checkConfiguration = true;
 	private static String defaultDevice = "Mini [hw:3,0,0]";
 	private static long flashPeriod = 500;
 	private boolean inRuntimeThread = false;
-	private final Receiver inputReceiver = new PadReceiver(screen);
-	private final String DEV_NULL = "dev::null";
+	
+	private final OutputDevice padOutputDevice = new OutputDevice();
+	private final InputDevice padInputDevice = new InputDevice();
 
 	@SuppressWarnings("serial")
 	private static Map<String, Object> runtimeConfig = new HashMap<String, Object>() {
@@ -92,6 +89,8 @@ public class Runtime {
 
 	private Runtime() {
 		super();
+		padOutput = padOutputDevice.getOutput();
+		padInputDevice.addInput(padInput);
 		scheduleAtFixedRate(flasher, flashPeriod, flashPeriod, TimeUnit.MILLISECONDS);
 	}
 
@@ -135,74 +134,16 @@ public class Runtime {
 		}
 	}
 
-	private Optional<DeviceReceiverTuple> getConfiguredDevice(final String key) {
-		final Object obj = runningConfig.get(key);
-		if (obj instanceof DeviceReceiverTuple) {
-			return Optional.of((DeviceReceiverTuple) obj);
-		}
-		return Optional.empty();
-	}
-
-	@SuppressWarnings("resource")
-	private Receiver getReceiver(final String confKey) {
-		Receiver receiver = new NullReceiver();
-		lock.lock();
-		try {
-			final String outputDeviceName = getStringConfig(confKey, DEV_NULL);
-			final Optional<DeviceReceiverTuple> devRecTuple = getConfiguredDevice(confKey);
-
-			if (devRecTuple.isPresent()) {
-				final DeviceReceiverTuple tuple = devRecTuple.get();
-				if (tuple.getDeviceName().equals(outputDeviceName)) {
-					return tuple.getReceiver();
-				} else {
-					tuple.getReceiver().close();
-					runningConfig.remove(confKey);
-				}
-			}
-			if (outputDeviceName != null) {
-				final MidiDevice receiverDevice = MidiDevices
-						.secureGetReceiverDevice(outputDeviceName);
-				if (!receiverDevice.isOpen()) {
-					receiverDevice.open();
-				}
-				receiver = receiverDevice.getReceiver();
-			}
-			runningConfig.put(confKey, new DeviceReceiverTuple(outputDeviceName, receiver));
-		} catch (final MidiUnavailableException mue) {
-			mue.printStackTrace();
-		} finally {
-			checkConfiguration = false;
-			lock.unlock();
-		}
-		return receiver;
-	}
-
 	private void innerSetConfig(final Map<String, Object> runtimeConfig) {
-		lock.lock();
 		try {
+			lock.lock();
 			final Integer numberOfLayers = getIntConfig(CFG_NUMBER_OF_LAYERS, Integer.valueOf(5));
 			if (!numberOfLayers.equals(runningConfig.get(CFG_NUMBER_OF_LAYERS))) {
 				screen.setNumberOfLayers(numberOfLayers);
 				runningConfig.put(CFG_NUMBER_OF_LAYERS, numberOfLayers);
 			}
-			final String inputDevice = getStringConfig(CFG_INPUT_DEVICE, defaultDevice);
-			if (!inputDevice.equals(runningConfig.get(CFG_INPUT_DEVICE))) {
-				if (transmitter != null) {
-					transmitter.close();
-				}
-				final MidiDevice transmitterDevice = MidiDevices
-						.secureGetTransmitterDevice(inputDevice);
-				if (!transmitterDevice.isOpen()) {
-					transmitterDevice.open();
-				}
-				transmitter = transmitterDevice.getTransmitter();
-				transmitter.setReceiver(inputReceiver);
-				runningConfig.put(CFG_INPUT_DEVICE, inputDevice);
-			}
-			receiver = getReceiver(CFG_OUTPUT_DEVICE);
-		} catch (final MidiUnavailableException mue) {
-			mue.printStackTrace();
+			padInputDevice.setDeviceName(getStringConfig(CFG_INPUT_DEVICE, defaultDevice));
+			padOutputDevice.setDeviceName(getStringConfig(CFG_OUTPUT_DEVICE, defaultDevice));
 		} finally {
 			checkConfiguration = false;
 			lock.unlock();
@@ -210,8 +151,8 @@ public class Runtime {
 	}
 
 	private void redraw() {
-		if (!(receiver == null || screen == null)) {
-			screen.draw(receiver);
+		if (!(padOutput == null || screen == null)) {
+			screen.draw(padOutput);
 		}
 	}
 
@@ -262,8 +203,8 @@ public class Runtime {
 	 * @see java.util.concurrent.ScheduledExecutorService#scheduleAtFixedRate(java.lang.Runnable,
 	 *      long, long, java.util.concurrent.TimeUnit)
 	 */
-	public void scheduleAtFixedRate(final Runnable command, final long initialDelay,
-			final long period, final TimeUnit unit) {
+	public void scheduleAtFixedRate(final Runnable command, final long initialDelay, final long period,
+			final TimeUnit unit) {
 		final DrawRunnable runner = new DrawRunnable(command);
 		runnerMap.put(command, runner);
 		runner.setFuture(executor.scheduleAtFixedRate(runner, initialDelay, period, unit));
@@ -277,8 +218,8 @@ public class Runtime {
 	 * @see java.util.concurrent.ScheduledExecutorService#scheduleWithFixedDelay(java.lang.Runnable,
 	 *      long, long, java.util.concurrent.TimeUnit)
 	 */
-	public void scheduleWithFixedDelay(final Runnable command, final long initialDelay,
-			final long delay, final TimeUnit unit) {
+	public void scheduleWithFixedDelay(final Runnable command, final long initialDelay, final long delay,
+			final TimeUnit unit) {
 		final DrawRunnable runner = new DrawRunnable(command);
 		runnerMap.put(command, runner);
 		runner.setFuture(executor.scheduleWithFixedDelay(runner, initialDelay, delay, unit));
@@ -349,54 +290,5 @@ public class Runtime {
 	 */
 	public Screen getScreen() {
 		return screen;
-	}
-
-	private static class NullTransmitter implements Transmitter {
-		private Receiver receiver;
-
-		@Override
-		public void setReceiver(final Receiver receiver) {
-			this.receiver = receiver;
-		}
-
-		@Override
-		public Receiver getReceiver() {
-			return receiver;
-		}
-
-		@Override
-		public void close() {
-		}
-	}
-
-	private static class NullReceiver implements Receiver {
-
-		@Override
-		public void send(final MidiMessage message, final long timeStamp) {
-		}
-
-		@Override
-		public void close() {
-		}
-	}
-
-	private class DeviceReceiverTuple {
-		private final String deviceName;
-		private final Receiver receiver;
-
-		public DeviceReceiverTuple(final String deviceName, final Receiver receiver) {
-			super();
-			this.deviceName = deviceName;
-			this.receiver = receiver;
-		}
-
-		public String getDeviceName() {
-			return deviceName;
-		}
-
-		public Receiver getReceiver() {
-			return receiver;
-		}
-
 	}
 }
