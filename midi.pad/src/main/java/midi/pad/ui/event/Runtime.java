@@ -30,10 +30,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.Receiver;
+import javax.sound.midi.ShortMessage;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import midi.device.resource.InputDevice;
+import midi.device.resource.NullReceiver;
 import midi.device.resource.OutputDevice;
+import midi.loop.config.ChannelConfig;
 import midi.pad.ui.Screen;
 
 /**
@@ -43,35 +50,74 @@ import midi.pad.ui.Screen;
 public class Runtime {
 
 	private final Screen screen = new Screen();
+	private static final Logger logger = LoggerFactory.getLogger(Runtime.class);
 
 	private Receiver padOutput = null;
 	private final Receiver padInput = new PadReceiver(screen);
 	private static boolean checkConfiguration = true;
-	private static String defaultDevice = "Mini [hw:3,0,0]";
+	private static String defaultDevice = "null";
+	private static String padInDevice = "Mini \\[hw:\\d,0,0\\]";
+	private static String padOutDevice = "Mini \\[hw:\\d,0,0\\]";
+	private static String midi1InDevice = "VirMIDI \\[hw:\\d,0,0\\]";
+	private static String midi1OutDevice = "VirMIDI \\[hw:\\d,0,0\\]";
+	private static String midi2InDevice = "VirMIDI \\[hw:\\d,1,0\\]";
+	private static String midi2OutDevice = "VirMIDI \\[hw:\\d,1,0\\]";
+	private static String midi3InDevice = "VirMIDI \\[hw:\\d,2,0\\]";
+	private static String midi3OutDevice = "VirMIDI \\[hw:\\d,2,0\\]";
+	private static String midi4InDevice = "VirMIDI \\[hw:\\d,3,0\\]";
+	private static String midi4OutDevice = "VirMIDI \\[hw:\\d,3,0\\]";
 	private static long flashPeriod = 500;
 	private boolean inRuntimeThread = false;
-	
+
 	private final OutputDevice padOutputDevice = new OutputDevice();
 	private final InputDevice padInputDevice = new InputDevice();
+	private final OutputDevice midi1OutputDevice = new OutputDevice();
+	private final InputDevice midi1InputDevice = new InputDevice();
+	private final OutputDevice midi2OutputDevice = new OutputDevice();
+	private final InputDevice midi2InputDevice = new InputDevice();
+	private final OutputDevice midi3OutputDevice = new OutputDevice();
+	private final InputDevice midi3InputDevice = new InputDevice();
+	private final OutputDevice midi4OutputDevice = new OutputDevice();
+	private final InputDevice midi4InputDevice = new InputDevice();
+	private final OutputDevice[] outputChannels = { midi1OutputDevice, midi2OutputDevice,
+			midi3OutputDevice, midi4OutputDevice };
+	private final InputDevice[] inputChannels = { midi1InputDevice, midi2InputDevice,
+			midi3InputDevice, midi4InputDevice };
+	private static final NullReceiver nullReceiver = new NullReceiver();
+
+	public static String CFG_NUMBER_OF_LAYERS = "NUMBER_OF_LAYERS";
+	public static String CFG_PAD_INPUT_DEVICE = "PAD_INPUT_DEVICE";
+	public static String CFG_PAD_OUTPUT_DEVICE = "PAD_OUTPUT_DEVICE";
+	public static String CFG_MIDI_1_INPUT_DEVICE = "MIDI_1_INPUT_DEVICE";
+	public static String CFG_MIDI_1_OUTPUT_DEVICE = "MIDI_1_OUTPUT_DEVICE";
+	public static String CFG_MIDI_2_INPUT_DEVICE = "MIDI_2_INPUT_DEVICE";
+	public static String CFG_MIDI_2_OUTPUT_DEVICE = "MIDI_2_OUTPUT_DEVICE";
+	public static String CFG_MIDI_3_INPUT_DEVICE = "MIDI_3_INPUT_DEVICE";
+	public static String CFG_MIDI_3_OUTPUT_DEVICE = "MIDI_3_OUTPUT_DEVICE";
+	public static String CFG_MIDI_4_INPUT_DEVICE = "MIDI_4_INPUT_DEVICE";
+	public static String CFG_MIDI_4_OUTPUT_DEVICE = "MIDI_4_OUTPUT_DEVICE";
 
 	@SuppressWarnings("serial")
 	private static Map<String, Object> runtimeConfig = new HashMap<String, Object>() {
 		{
 			put(CFG_NUMBER_OF_LAYERS, 5);
-			put(CFG_INPUT_DEVICE, defaultDevice);
-			put(CFG_OUTPUT_DEVICE, defaultDevice);
+			put(CFG_PAD_INPUT_DEVICE, padInDevice);
+			put(CFG_PAD_OUTPUT_DEVICE, padOutDevice);
+			put(CFG_MIDI_1_INPUT_DEVICE, midi1InDevice);
+			put(CFG_MIDI_1_OUTPUT_DEVICE, midi1OutDevice);
+			put(CFG_MIDI_2_INPUT_DEVICE, midi2InDevice);
+			put(CFG_MIDI_2_OUTPUT_DEVICE, midi2OutDevice);
+			put(CFG_MIDI_3_INPUT_DEVICE, midi3InDevice);
+			put(CFG_MIDI_3_OUTPUT_DEVICE, midi3OutDevice);
+			put(CFG_MIDI_4_INPUT_DEVICE, midi4InDevice);
+			put(CFG_MIDI_4_OUTPUT_DEVICE, midi4OutDevice);
+
 		}
 	};
-
-	private final Map<String, Object> runningConfig = new HashMap<>();
 
 	private static Lock lock = new ReentrantLock();
 
 	private static Runtime singleton = null;
-
-	public static String CFG_NUMBER_OF_LAYERS = "NUMBER_OF_LAYERS";
-	public static String CFG_INPUT_DEVICE = "INPUT_DEVICE";
-	public static String CFG_OUTPUT_DEVICE = "OUTPUT_DEVICE";
 
 	private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
@@ -138,16 +184,48 @@ public class Runtime {
 		try {
 			lock.lock();
 			final Integer numberOfLayers = getIntConfig(CFG_NUMBER_OF_LAYERS, Integer.valueOf(5));
-			if (!numberOfLayers.equals(runningConfig.get(CFG_NUMBER_OF_LAYERS))) {
-				screen.setNumberOfLayers(numberOfLayers);
-				runningConfig.put(CFG_NUMBER_OF_LAYERS, numberOfLayers);
-			}
-			padInputDevice.setDeviceName(getStringConfig(CFG_INPUT_DEVICE, defaultDevice));
-			padOutputDevice.setDeviceName(getStringConfig(CFG_OUTPUT_DEVICE, defaultDevice));
+			screen.setNumberOfLayers(numberOfLayers);
+			padInputDevice.setDeviceName(getStringConfig(CFG_PAD_INPUT_DEVICE, defaultDevice));
+			padOutputDevice.setDeviceName(getStringConfig(CFG_PAD_OUTPUT_DEVICE, defaultDevice));
+			midi1InputDevice.setDeviceName(getStringConfig(CFG_MIDI_1_INPUT_DEVICE, defaultDevice));
+			midi1OutputDevice
+					.setDeviceName(getStringConfig(CFG_MIDI_1_OUTPUT_DEVICE, defaultDevice));
+			midi2InputDevice.setDeviceName(getStringConfig(CFG_MIDI_2_INPUT_DEVICE, defaultDevice));
+			midi2OutputDevice
+					.setDeviceName(getStringConfig(CFG_MIDI_2_OUTPUT_DEVICE, defaultDevice));
+			midi3InputDevice.setDeviceName(getStringConfig(CFG_MIDI_3_INPUT_DEVICE, defaultDevice));
+			midi3OutputDevice
+					.setDeviceName(getStringConfig(CFG_MIDI_3_OUTPUT_DEVICE, defaultDevice));
+			midi4InputDevice.setDeviceName(getStringConfig(CFG_MIDI_4_INPUT_DEVICE, defaultDevice));
+			midi4OutputDevice
+					.setDeviceName(getStringConfig(CFG_MIDI_4_OUTPUT_DEVICE, defaultDevice));
 		} finally {
 			checkConfiguration = false;
 			lock.unlock();
 		}
+	}
+
+	public void applyChannelConfig(final ChannelConfig config) {
+		if (config.getMidiOut() >= 0 && config.getMidiOut() < outputChannels.length) {
+			try {
+				final Receiver receiver = outputChannels[config.getMidiOut()].getOutput();
+				final ShortMessage bsmsb = new ShortMessage();
+				bsmsb.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 0,
+						(config.getBank() & 0x7f80) >> 7);
+				receiver.send(bsmsb, 0);
+				final ShortMessage bslsb = new ShortMessage();
+				bslsb.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 32,
+						(config.getBank() & 0x7f));
+				receiver.send(bslsb, 0);
+				final ShortMessage pc = new ShortMessage();
+				pc.setMessage(ShortMessage.PROGRAM_CHANGE, config.getChannel(), config.getProgram(),
+						0);
+				receiver.send(pc, 0);
+			} catch (final InvalidMidiDataException e) {
+				logger.error("Failed to configure output device");
+			}
+		}
+
 	}
 
 	private void redraw() {
@@ -203,8 +281,8 @@ public class Runtime {
 	 * @see java.util.concurrent.ScheduledExecutorService#scheduleAtFixedRate(java.lang.Runnable,
 	 *      long, long, java.util.concurrent.TimeUnit)
 	 */
-	public void scheduleAtFixedRate(final Runnable command, final long initialDelay, final long period,
-			final TimeUnit unit) {
+	public void scheduleAtFixedRate(final Runnable command, final long initialDelay,
+			final long period, final TimeUnit unit) {
 		final DrawRunnable runner = new DrawRunnable(command);
 		runnerMap.put(command, runner);
 		runner.setFuture(executor.scheduleAtFixedRate(runner, initialDelay, period, unit));
@@ -218,8 +296,8 @@ public class Runtime {
 	 * @see java.util.concurrent.ScheduledExecutorService#scheduleWithFixedDelay(java.lang.Runnable,
 	 *      long, long, java.util.concurrent.TimeUnit)
 	 */
-	public void scheduleWithFixedDelay(final Runnable command, final long initialDelay, final long delay,
-			final TimeUnit unit) {
+	public void scheduleWithFixedDelay(final Runnable command, final long initialDelay,
+			final long delay, final TimeUnit unit) {
 		final DrawRunnable runner = new DrawRunnable(command);
 		runnerMap.put(command, runner);
 		runner.setFuture(executor.scheduleWithFixedDelay(runner, initialDelay, delay, unit));
@@ -290,5 +368,36 @@ public class Runtime {
 	 */
 	public Screen getScreen() {
 		return screen;
+	}
+
+	public Receiver getOutput(final int channel) {
+		if (channel >= 0 && channel < outputChannels.length) {
+			return outputChannels[channel].getOutput();
+		}
+		return nullReceiver;
+	}
+
+	public void addBelowSplitInput(final Receiver receiver, final int device) {
+		if (device >= 0 && device < outputChannels.length) {
+			inputChannels[device].addBelowSplitInput(receiver);
+		}
+	}
+
+	public void addAboveSplitInput(final Receiver receiver, final int device) {
+		if (device >= 0 && device < outputChannels.length) {
+			inputChannels[device].addAboveSplitInput(receiver);
+		}
+	}
+
+	public void addInput(final Receiver receiver, final int device) {
+		if (device >= 0 && device < outputChannels.length) {
+			inputChannels[device].addInput(receiver);
+		}
+	}
+
+	public void removeInput(final Receiver receiver, final int device) {
+		if (device >= 0 && device < outputChannels.length) {
+			inputChannels[device].removeInput(receiver);
+		}
 	}
 }

@@ -54,14 +54,16 @@ public class OutputDevice {
 			currentReceiver = nullReceiver;
 			currentReceiver = null;
 		} else if (!deviceName.equals(this.deviceName)) {
-			final MidiDevice receiverDevice = MidiDevices.secureGetReceiverDevice(deviceName);
-			try {
-				if (!receiverDevice.isOpen()) {
-					receiverDevice.open();
+			final MidiDevice receiverDevice = MidiDevices.getReceiverDeviceRegex(deviceName);
+			if (receiverDevice != null) {
+				try {
+					if (!receiverDevice.isOpen()) {
+						receiverDevice.open();
+					}
+					currentReceiver = receiverDevice.getReceiver();
+				} catch (final MidiUnavailableException e) {
+					logger.error("Unable to get Device {}", deviceName);
 				}
-				currentReceiver = receiverDevice.getReceiver();
-			} catch (final MidiUnavailableException e) {
-				logger.error("Unable to get Device {}", deviceName);
 			}
 		}
 	}
@@ -86,17 +88,6 @@ public class OutputDevice {
 		@Override
 		public void close() {
 			closed = true;
-		}
-	}
-
-	public static class NullReceiver implements Receiver {
-
-		@Override
-		public void send(final MidiMessage message, final long timeStamp) {
-		}
-
-		@Override
-		public void close() {
 		}
 	}
 }

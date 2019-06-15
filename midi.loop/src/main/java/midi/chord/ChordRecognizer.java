@@ -35,6 +35,8 @@ import javax.sound.midi.ShortMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import midi.device.resource.InputDevice;
+
 /**
  * This Recognizer is able to identify chord presses on a keyboard in the
  * accompaniment section. A chord must be held for about 100 ms before it is
@@ -43,7 +45,7 @@ import org.slf4j.LoggerFactory;
  * @author oliver
  */
 public class ChordRecognizer implements Receiver {
-	public static final int splitTone = 54;
+	public static final int splitTone = InputDevice.splitTone;
 	public static final long recogHoldTime = 20;
 	private final ScheduledExecutorService service;
 	private final ChordListener listener;

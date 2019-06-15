@@ -115,31 +115,22 @@ public class Sequencer {
 	 */
 	private static void mainGuitar(final String[] args) throws MidiUnavailableException {
 		final Screen screen = Runtime.getRuntime().getScreen();
-		final ChannelConfig config = new ChannelConfig();
 		final Guitar guitar;
 		final GuitarModel model = new GuitarModel();
 		final ChordRecognizer recognizer = new ChordRecognizer(model);
-		final Transmitter transmitter;
+		final int midiChannel = 5;
+		final int midiDevice = 0;
 
-		final MidiDevice guitarDevice = MidiDevices.secureGetReceiverDevice("VirMIDI [hw:4,0,2]");
-
-		if (guitarDevice == null) {
-			logger.error("Percussion Device not found");
-			return;
-		} else {
-			if (!guitarDevice.isOpen()) {
-				guitarDevice.open();
-			}
-			guitar = new Guitar(guitarDevice.getReceiver(), 0);
-		}
-
-		final MidiDevice transmitterDevice = MidiDevices
-				.secureGetTransmitterDevice("VirMIDI [hw:4,0,2]");
-		if (!transmitterDevice.isOpen()) {
-			transmitterDevice.open();
-		}
-		transmitter = transmitterDevice.getTransmitter();
-		transmitter.setReceiver(recognizer);
+		guitar = new Guitar(Runtime.getRuntime().getOutput(midiDevice), midiChannel);
+		Runtime.getRuntime().addInput(recognizer, midiDevice);
+		final ChannelConfig config = new ChannelConfig();
+		config.setBank(128);
+		config.setProgram(24);
+		config.setChannel(midiChannel);
+		config.setChoir(0);
+		config.setReverb(0);
+		config.setMidiOut(0);
+		Runtime.getRuntime().applyChannelConfig(config);
 
 		final Beat beat = new Beat();
 		beat.start();

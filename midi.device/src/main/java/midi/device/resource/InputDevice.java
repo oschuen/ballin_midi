@@ -21,11 +21,13 @@ package midi.device.resource;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Predicate;
 
 import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Receiver;
+import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Transmitter;
 
 import org.slf4j.Logger;
@@ -36,16 +38,43 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class InputDevice {
+	public static final int splitTone = 54;
 	private static final Logger logger = LoggerFactory.getLogger(OutputDevice.class);
 	private String deviceName;
 	private Transmitter transmitter = null;
-	ReceiverDispatcher receiver = new ReceiverDispatcher();
+	private final ReceiverDispatcher receiver = new ReceiverDispatcher();
+
+	private final ReceiverDispatcher aboveSplitReceiver = new ReceiverDispatcher((m) -> {
+		if (m instanceof ShortMessage) {
+			final ShortMessage shortMessage = (ShortMessage) m;
+			if (shortMessage.getCommand() == ShortMessage.NOTE_ON
+					|| shortMessage.getCommand() == ShortMessage.NOTE_OFF) {
+				final int onKey = shortMessage.getData1();
+				return onKey > splitTone;
+			}
+		}
+		return false;
+	});
+	private final ReceiverDispatcher belowSplitReceiver = new ReceiverDispatcher((m) -> {
+		if (m instanceof ShortMessage) {
+			final ShortMessage shortMessage = (ShortMessage) m;
+			if (shortMessage.getCommand() == ShortMessage.NOTE_ON
+					|| shortMessage.getCommand() == ShortMessage.NOTE_OFF) {
+				final int onKey = shortMessage.getData1();
+				return onKey <= splitTone;
+			}
+		}
+		return false;
+	});
 
 	public InputDevice() {
 		super();
+		receiver.addReceiver(aboveSplitReceiver);
+		receiver.addReceiver(belowSplitReceiver);
 	}
 
 	public InputDevice(final String deviceName) {
+		this();
 		setDeviceName(deviceName);
 	}
 
@@ -56,13 +85,23 @@ public class InputDevice {
 			transmitter = null;
 		}
 	}
-	
-	public void addInput(Receiver receiver) {
+
+	public void addInput(final Receiver receiver) {
 		this.receiver.addReceiver(receiver);
 	}
 
-	public void removeInput(Receiver receiver) {
+	public void removeInput(final Receiver receiver) {
 		this.receiver.removeReceiver(receiver);
+		aboveSplitReceiver.removeReceiver(receiver);
+		belowSplitReceiver.removeReceiver(receiver);
+	}
+
+	public void addBelowSplitInput(final Receiver receiver) {
+		belowSplitReceiver.addReceiver(receiver);
+	}
+
+	public void addAboveSplitInput(final Receiver receiver) {
+		aboveSplitReceiver.addReceiver(receiver);
 	}
 
 	public void setDeviceName(final String deviceName) {
@@ -74,12 +113,14 @@ public class InputDevice {
 			} else if (!deviceName.equals(this.deviceName)) {
 				closeTransmitter();
 				final MidiDevice transmitterDevice = MidiDevices
-						.secureGetTransmitterDevice(deviceName);
-				if (!transmitterDevice.isOpen()) {
-					transmitterDevice.open();
+						.getTransmitterDeviceRegex(deviceName);
+				if (transmitterDevice != null) {
+					if (!transmitterDevice.isOpen()) {
+						transmitterDevice.open();
+					}
+					transmitter = transmitterDevice.getTransmitter();
+					transmitter.setReceiver(receiver);
 				}
-				transmitter = transmitterDevice.getTransmitter();
-				transmitter.setReceiver(receiver);
 			}
 		} catch (final MidiUnavailableException e) {
 			logger.error("Couldn't set device {}", deviceName);
@@ -88,9 +129,17 @@ public class InputDevice {
 
 	public static class ReceiverDispatcher implements Receiver {
 		private final List<Receiver> receivers = new CopyOnWriteArrayList<>();
+		private final Predicate<MidiMessage> filter;
 
 		public ReceiverDispatcher() {
 			super();
+			filter = (t) -> {
+				return true;
+			};
+		}
+
+		public ReceiverDispatcher(final Predicate<MidiMessage> filter) {
+			this.filter = filter;
 		}
 
 		public void addReceiver(final Receiver receiver) {
@@ -103,8 +152,10 @@ public class InputDevice {
 
 		@Override
 		public void send(final MidiMessage message, final long timeStamp) {
-			for (final Receiver receiver : receivers) {
-				receiver.send(message, timeStamp);
+			if (filter.test(message)) {
+				for (final Receiver receiver : receivers) {
+					receiver.send(message, timeStamp);
+				}
 			}
 		}
 

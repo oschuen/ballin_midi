@@ -86,6 +86,30 @@ public final class MidiDevices {
 		return null;
 	}
 
+	public static MidiDevice getTransmitterDeviceRegex(final String regex) {
+		if (regex == null) {
+			return null;
+		}
+		for (final MidiDevice transmitter : devTrans) {
+			if (transmitter.getDeviceInfo().getName().matches(regex)) {
+				return transmitter;
+			}
+		}
+		return null;
+	}
+
+	public static MidiDevice getReceiverDeviceRegex(final String regex) {
+		if (regex == null) {
+			return null;
+		}
+		for (final MidiDevice receiver : devRecv) {
+			if (receiver.getDeviceInfo().getName().matches(regex)) {
+				return receiver;
+			}
+		}
+		return null;
+	}
+
 	public static List<String> getTransmitterNames() {
 		final List<String> transmitters = new ArrayList<>();
 		for (final MidiDevice transmitter : devTrans) {
