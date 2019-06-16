@@ -118,17 +118,17 @@ public class Sequencer {
 		final Guitar guitar;
 		final GuitarModel model = new GuitarModel();
 		final ChordRecognizer recognizer = new ChordRecognizer(model);
-		final int midiChannel = 5;
+		final int midiChannel = 4;
 		final int midiDevice = 0;
 
 		guitar = new Guitar(Runtime.getRuntime().getOutput(midiDevice), midiChannel);
 		Runtime.getRuntime().addInput(recognizer, midiDevice);
 		final ChannelConfig config = new ChannelConfig();
 		config.setBank(128);
-		config.setProgram(24);
+		config.setProgram(0);
 		config.setChannel(midiChannel);
 		config.setChoir(0);
-		config.setReverb(0);
+		config.setReverb(127);
 		config.setMidiOut(0);
 		Runtime.getRuntime().applyChannelConfig(config);
 

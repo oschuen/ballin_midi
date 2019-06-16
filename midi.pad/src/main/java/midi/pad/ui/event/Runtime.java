@@ -210,17 +210,28 @@ public class Runtime {
 			try {
 				final Receiver receiver = outputChannels[config.getMidiOut()].getOutput();
 				final ShortMessage bsmsb = new ShortMessage();
-				bsmsb.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 0,
+				System.out.println("MSB : " + ((config.getBank() & 0x7f80) >> 7) + " LSB "
+						+ (config.getBank() & 0x7f));
+				bsmsb.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 0x00,
 						(config.getBank() & 0x7f80) >> 7);
+
 				receiver.send(bsmsb, 0);
 				final ShortMessage bslsb = new ShortMessage();
-				bslsb.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 32,
+				bslsb.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 0x20,
 						(config.getBank() & 0x7f));
 				receiver.send(bslsb, 0);
 				final ShortMessage pc = new ShortMessage();
 				pc.setMessage(ShortMessage.PROGRAM_CHANGE, config.getChannel(), config.getProgram(),
 						0);
 				receiver.send(pc, 0);
+				final ShortMessage chorus = new ShortMessage();
+				chorus.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 93,
+						(config.getChoir() & 0x7f));
+				receiver.send(chorus, 0);
+				final ShortMessage reverb = new ShortMessage();
+				reverb.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 91,
+						(config.getReverb() & 0x7f));
+				receiver.send(reverb, 0);
 			} catch (final InvalidMidiDataException e) {
 				logger.error("Failed to configure output device");
 			}
