@@ -25,6 +25,7 @@
 		<module>midi.pad</module>
 		<module>jsequencer</module>
 		<module>midi.loop</module>
+		<module>midi.pad.sim</module>
 	</modules>
 	<dependencyManagement>
 		<dependencies>
