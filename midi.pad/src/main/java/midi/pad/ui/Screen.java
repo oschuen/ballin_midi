@@ -66,7 +66,7 @@ public class Screen {
 					final int vel1 = getColor(x * 2, y).getMidiValue();
 					final int vel2 = getColor(x * 2 + 1, y).getMidiValue();
 					final ShortMessage msg = new ShortMessage();
-					msg.setMessage(0x92, 2, vel1, vel2);
+					msg.setMessage(ShortMessage.NOTE_ON, 2, vel1, vel2);
 					receiver.send(msg, 0);
 				}
 			}
@@ -80,7 +80,7 @@ public class Screen {
 					final int vel2 = tLayer.getAbcControlButton(i * 2 + 1)
 							.map(b -> b.getColor().getMidiValue()).orElse(blackMidiValue);
 					final ShortMessage msg = new ShortMessage();
-					msg.setMessage(0x92, 2, vel1, vel2);
+					msg.setMessage(ShortMessage.NOTE_ON, 2, vel1, vel2);
 					receiver.send(msg, 0);
 				}
 			} else {
@@ -88,7 +88,7 @@ public class Screen {
 					final int vel1 = blackMidiValue;
 					final int vel2 = blackMidiValue;
 					final ShortMessage msg = new ShortMessage();
-					msg.setMessage(0x92, 2, vel1, vel2);
+					msg.setMessage(ShortMessage.NOTE_ON, 2, vel1, vel2);
 					receiver.send(msg, 0);
 				}
 			}
@@ -96,7 +96,7 @@ public class Screen {
 				final int vel1 = numberButton[i * 2].getMidiValue();
 				final int vel2 = numberButton[i * 2 + 1].getMidiValue();
 				final ShortMessage msg = new ShortMessage();
-				msg.setMessage(0x92, 2, vel1, vel2);
+				msg.setMessage(ShortMessage.NOTE_ON, 2, vel1, vel2);
 				receiver.send(msg, 0);
 			}
 
