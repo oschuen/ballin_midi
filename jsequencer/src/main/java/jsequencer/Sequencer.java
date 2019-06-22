@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import jsequencer.ui.screen.DrumLoopLayer;
 import jsequencer.ui.screen.GuitarLoopLayer;
+import jsequencer.ui.screen.SongLayer;
 import midi.chord.ChordRecognizer;
 import midi.device.resource.MidiDevices;
 import midi.instrument.Guitar;
@@ -124,8 +125,8 @@ public class Sequencer {
 		guitar = new Guitar(Runtime.getRuntime().getOutput(midiDevice), midiChannel);
 		Runtime.getRuntime().addInput(recognizer, midiDevice);
 		final ChannelConfig config = new ChannelConfig();
-		config.setBank(128);
-		config.setProgram(0);
+		config.setBank(0);
+		config.setProgram(24);
 		config.setChannel(midiChannel);
 		config.setChoir(0);
 		config.setReverb(127);
@@ -147,20 +148,31 @@ public class Sequencer {
 			public void run() {
 				final GuitarLoopLayer layer = new GuitarLoopLayer(model);
 				beat.addBeatListener(layer);
-				screen.putLayer(3,
-						// new ConfirmDialog("Zufrieden ?", finishRunnable,
-						// finishRunnable));
-						// new NumberDialog("Program", 127, 0, finishRunnable));
-						// new LooperConfigDialog("Track 1", config));
-						layer);
+				// 3, new ConfirmDialog("Zufrieden ?", () -> {}, () -> {}));
+				// new NumberDialog("Program", 127, 0, finishRunnable));
+				// new LooperConfigDialog("Track 1", config));
+				screen.putLayer(3, layer);
 
 			}
 		});
+		Runtime.getRuntime().addInput(new KeyBoardReceiver(), midiDevice);
+	}
 
+	private static void mainSong(final String[] args) throws MidiUnavailableException {
+		final Screen screen = Runtime.getRuntime().getScreen();
+		Runtime.getRuntime().schedule(new Runnable() {
+			@Override
+			public void run() {
+				final SongLayer layer = new SongLayer();
+				screen.putLayer(1, layer);
+
+			}
+		});
 	}
 
 	public static void main(final String[] args) throws MidiUnavailableException {
-		mainGuitar(args);
+		// mainGuitar(args);
+		mainSong(args);
 	}
 
 }

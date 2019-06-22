@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 
 import jmidi.gui.model.IntegerModel;
+import midi.instrument.Instrument;
 import midi.instrument.model.GuitarModel;
 import midi.instrument.model.GuitarModel.GuitarInstrument;
 import midi.loop.beat.Beat.BeatListener;
@@ -51,9 +52,13 @@ public class GuitarLoopLayer extends HintDialog implements BeatListener {
 	private final List<SimpleLooper> guitarLoopers = Arrays.asList(bassLooper, gLooper, bLooper,
 			eLooper);
 	private final AbcControlButton accentButton;
+	private final AbcControlButton bassButton;
+	private final AbcControlButton gButton;
+	private final AbcControlButton bButton;
+	private final AbcControlButton eButton;
 
 	public GuitarLoopLayer(final GuitarModel model) {
-		super("Drums");
+		super("Guitar");
 		this.model = model;
 
 		config = new LoopConfig(0, 0, new Runnable() {
@@ -84,6 +89,15 @@ public class GuitarLoopLayer extends HintDialog implements BeatListener {
 		model.getLoopModel(GuitarInstrument.E_STRING).ifPresent(m -> eLooper.setLoopModel(m));
 		setWidgets(config, accent, bassLooper, gLooper, bLooper, eLooper);
 		accentButton = new AbcControlButton(Color.GREEN, new ConfigureAccentVelocity());
+		bassButton = new AbcControlButton(Color.GREEN,
+				new ConfigureInstrumentVelocity(GuitarInstrument.BASS_STRING));
+		gButton = new AbcControlButton(Color.GREEN,
+				new ConfigureInstrumentVelocity(GuitarInstrument.G_STRING));
+		bButton = new AbcControlButton(Color.GREEN,
+				new ConfigureInstrumentVelocity(GuitarInstrument.B_STRING));
+		eButton = new AbcControlButton(Color.GREEN,
+				new ConfigureInstrumentVelocity(GuitarInstrument.E_STRING));
+		start();
 	}
 
 	/*
@@ -107,8 +121,21 @@ public class GuitarLoopLayer extends HintDialog implements BeatListener {
 	 */
 	@Override
 	public Optional<AbcControlButton> getAbcControlButton(final int y) {
-		if (y == 3) {
+		switch (y) {
+		case 3:
 			return Optional.of(accentButton);
+		case 4:
+			return Optional.of(bassButton);
+		case 5:
+			return Optional.of(gButton);
+		case 6:
+			return Optional.of(bButton);
+		case 7:
+			return Optional.of(eButton);
+
+		}
+		if (y == 3) {
+
 		}
 		return Optional.empty();
 	}
@@ -134,30 +161,28 @@ public class GuitarLoopLayer extends HintDialog implements BeatListener {
 		}
 	}
 
-	// private final class ConfigureDrumVelocity implements Runnable {
-	//
-	// public ConfigureDrumVelocity() {
-	// super();
-	// }
-	//
-	// /*
-	// * (non-Javadoc)
-	// *
-	// * @see java.lang.Runnable#run()
-	// */
-	// @Override
-	// public void run() {
-	// final Screen screen = Runtime.getRuntime().getScreen();
-	// final Instrument instrument = selector.getInstrument();
-	// final Optional<LoopModel> loopModel = model.getLoopModel(instrument);
-	// loopModel.ifPresent(m -> {
-	// final IntegerModel vm = m.getVelocityModel();
-	// screen.putLayer(4, new NumberDialog(instrument.name() + " Velocity", vm,
-	// () -> {
-	// screen.removeLayer(4);
-	// }));
-	// });
-	// }
-	// }
+	private final class ConfigureInstrumentVelocity implements Runnable {
+
+		private final Instrument instrument;
+
+		public ConfigureInstrumentVelocity(final Instrument instrument) {
+			super();
+			this.instrument = instrument;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 *
+		 * @see java.lang.Runnable#run()
+		 */
+		@Override
+		public void run() {
+			final Screen screen = Runtime.getRuntime().getScreen();
+			model.getLoopModel(instrument).ifPresent(
+					m -> screen.putLayer(4, new NumberDialog(instrument.toString() + " Velocity",
+							m.getVelocityModel(), () -> screen.removeLayer(4))));
+
+		}
+	}
 
 }

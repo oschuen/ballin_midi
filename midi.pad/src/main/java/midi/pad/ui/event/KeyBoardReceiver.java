@@ -38,8 +38,9 @@ public class KeyBoardReceiver implements Receiver {
 	public void send(final MidiMessage message, final long timeStamp) {
 		if (message instanceof ShortMessage) {
 			final ShortMessage shortMessage = (ShortMessage) message;
-			System.out.println("Command = " + shortMessage.getCommand() + " d1 = "
-					+ shortMessage.getData1() + " d2 = " + shortMessage.getData2());
+			System.out.println("Command = " + shortMessage.getCommand() + " channel "
+					+ shortMessage.getChannel() + " d1 = " + shortMessage.getData1() + " d2 = "
+					+ shortMessage.getData2());
 		} else {
 			System.out.println(message.getClass().toGenericString());
 		}
