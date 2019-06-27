@@ -21,6 +21,7 @@ package midi.pad.ui.event;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -29,6 +30,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Stream;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.Receiver;
@@ -54,7 +56,7 @@ public class Runtime {
 
 	private Receiver padOutput = null;
 	private final Receiver padInput = new PadReceiver(screen);
-	private static boolean checkConfiguration = true;
+	private static boolean checkConfiguration = false;
 	private static String defaultDevice = "null";
 	// private static String padInDevice = "Mini \\[hw:\\d,0,0\\]";
 	// private static String padOutDevice = "Mini \\[hw:\\d,0,0\\]";
@@ -100,9 +102,9 @@ public class Runtime {
 	public static String CFG_MIDI_4_OUTPUT_DEVICE = "MIDI_4_OUTPUT_DEVICE";
 
 	@SuppressWarnings("serial")
-	private static Map<String, Object> runtimeConfig = new HashMap<String, Object>() {
+	private static Map<String, String> runtimeConfig = new HashMap<String, String>() {
 		{
-			put(CFG_NUMBER_OF_LAYERS, 5);
+			put(CFG_NUMBER_OF_LAYERS, "5");
 			put(CFG_PAD_INPUT_DEVICE, padInDevice);
 			put(CFG_PAD_OUTPUT_DEVICE, padOutDevice);
 			put(CFG_MIDI_1_INPUT_DEVICE, midi1InDevice);
@@ -146,20 +148,36 @@ public class Runtime {
 	 * @param runtimeConfig
 	 *            the runtimeConfig to set
 	 */
-	public static synchronized void setRuntimeConfig(final Map<String, Object> runtimeConfig) {
+	public static synchronized void setRuntimeConfig(final Map<String, String> runtimeConfig) {
 		lock.lock();
 		try {
 			Runtime.runtimeConfig = runtimeConfig;
 			checkConfiguration = true;
-			getRuntime().innerSetConfig(runtimeConfig);
+			getRuntime().innerSetConfig();
+		} finally {
+			lock.unlock();
+		}
+	}
+	
+	/**
+	 * @param runtimeConfig
+	 *            the runtimeConfig to set
+	 */
+	public static synchronized void setRuntimeConfig(final Properties runtimeConfig) {
+		lock.lock();
+		try {
+			Runtime.runtimeConfig.clear();
+			runtimeConfig.entrySet().stream().forEach(e -> Runtime.runtimeConfig.put((String)e.getKey(), (String)e.getValue()));
+			checkConfiguration = true;
+			getRuntime().innerSetConfig();
 		} finally {
 			lock.unlock();
 		}
 	}
 
 	protected static Integer getIntConfig(final String key, final Integer defValue) {
-		final Object raw = Runtime.runtimeConfig.get(key);
-		return raw == null ? defValue : ((Integer) raw).intValue();
+		final String raw = Runtime.runtimeConfig.get(key);
+		return raw == null ? defValue : Integer.parseInt(raw);
 	}
 
 	protected static String getStringConfig(final String key, final String defValue) {
@@ -173,7 +191,7 @@ public class Runtime {
 			if (singleton == null) {
 				singleton = new Runtime();
 				if (checkConfiguration) {
-					singleton.innerSetConfig(runtimeConfig);
+					singleton.innerSetConfig();
 				}
 			}
 			return singleton;
@@ -182,7 +200,7 @@ public class Runtime {
 		}
 	}
 
-	private void innerSetConfig(final Map<String, Object> runtimeConfig) {
+	private void innerSetConfig() {
 		try {
 			lock.lock();
 			final Integer numberOfLayers = getIntConfig(CFG_NUMBER_OF_LAYERS, Integer.valueOf(5));

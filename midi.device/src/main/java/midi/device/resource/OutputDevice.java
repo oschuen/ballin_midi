@@ -55,7 +55,9 @@ public class OutputDevice {
 			currentReceiver = null;
 		} else if (!deviceName.equals(this.deviceName)) {
 			final MidiDevice receiverDevice = MidiDevices.getReceiverDeviceRegex(deviceName);
-			if (receiverDevice != null) {
+			if (receiverDevice == null) {
+				logger.error("Unable to get Device {}", deviceName);
+			} else {
 				try {
 					if (!receiverDevice.isOpen()) {
 						receiverDevice.open();

@@ -19,10 +19,22 @@
  */
 package jsequencer;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
 import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Transmitter;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,8 +68,7 @@ public class Sequencer {
 		final PercussionModel model = new PercussionModel();
 		final Transmitter transmitter;
 
-		final MidiDevice percussionDevice = MidiDevices
-				.secureGetReceiverDevice("VirMIDI [hw:4,0,2]");
+		final MidiDevice percussionDevice = MidiDevices.secureGetReceiverDevice("VirMIDI [hw:4,0,2]");
 
 		if (percussionDevice == null) {
 			logger.error("Percussion Device not found");
@@ -69,8 +80,7 @@ public class Sequencer {
 			percussion = new Percussion(percussionDevice.getReceiver(), 9);
 		}
 
-		final MidiDevice transmitterDevice = MidiDevices
-				.secureGetTransmitterDevice("VirMIDI [hw:4,2,0]");
+		final MidiDevice transmitterDevice = MidiDevices.secureGetTransmitterDevice("VirMIDI [hw:4,2,0]");
 		if (!transmitterDevice.isOpen()) {
 			transmitterDevice.open();
 		}
@@ -114,8 +124,16 @@ public class Sequencer {
 	/**
 	 * @param args
 	 */
-	private static void mainGuitar(final String[] args) throws MidiUnavailableException {
+	private static void mainGuitar(final File file) throws MidiUnavailableException {
 		final Screen screen = Runtime.getRuntime().getScreen();
+		Properties props = new Properties();
+		try {
+			try (InputStream stream = new FileInputStream(file)) {
+				props.load(stream);
+			}
+		} catch (IOException e) {
+		}
+		Runtime.setRuntimeConfig(props);
 		final Guitar guitar;
 		final GuitarModel model = new GuitarModel();
 		final ChordRecognizer recognizer = new ChordRecognizer(model);
@@ -158,8 +176,16 @@ public class Sequencer {
 		Runtime.getRuntime().addInput(new KeyBoardReceiver(), midiDevice);
 	}
 
-	private static void mainSong(final String[] args) throws MidiUnavailableException {
+	private static void mainSong(final File file) throws MidiUnavailableException {
 		final Screen screen = Runtime.getRuntime().getScreen();
+		Properties props = new Properties();
+		try {
+			try (InputStream stream = new FileInputStream(file)) {
+				props.load(stream);
+			}
+		} catch (IOException e) {
+		}
+		Runtime.setRuntimeConfig(props);
 		Runtime.getRuntime().schedule(new Runnable() {
 			@Override
 			public void run() {
@@ -171,8 +197,28 @@ public class Sequencer {
 	}
 
 	public static void main(final String[] args) throws MidiUnavailableException {
-		// mainGuitar(args);
-		mainSong(args);
+		Options options = new Options();
+		options.addOption("c", "config", true, "Configuration File");
+		CommandLineParser parser = new DefaultParser();
+		boolean error = false;
+		File file = null;
+		try {
+			CommandLine cmd = parser.parse(options, args);
+			String configFile = cmd.getOptionValue("c");
+			if (configFile == null) {
+				error = true;
+				file = null;
+			} else {
+				file = new File(configFile);
+			}
+		} catch (ParseException e) {
+			error = true;
+		}
+		if (error || file == null) {
+			HelpFormatter formatter = new HelpFormatter();
+			formatter.printHelp("Sequencer", options);
+		} else {
+			mainGuitar(file);
+		}
 	}
-
 }
