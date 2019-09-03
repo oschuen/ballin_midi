@@ -6,11 +6,22 @@ import java.awt.Graphics;
 import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.swing.JFrame;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,20 +39,17 @@ public class PadFrame extends JFrame {
 	public static String CFG_MIDI_INPUT_DEVICE = "MIDI_INPUT_DEVICE";
 	public static String CFG_MIDI_OUTPUT_DEVICE = "MIDI_OUTPUT_DEVICE";
 	private static String defaultDevice = "null";
-	private final PadReceiver padReceiver = new PadReceiver(midiOutputDevice.getOutput(),
-			() -> draw());
+	private final PadReceiver padReceiver = new PadReceiver(midiOutputDevice.getOutput(), () -> draw());
 
 	private final MouseAdapter adapter = new MouseAdapter() {
 		@Override
 		public void mousePressed(final MouseEvent e) {
-			padReceiver.press(e.getX(), e.getY(), getContentPane().getWidth(),
-					getContentPane().getHeight());
+			padReceiver.press(e.getX(), e.getY(), getContentPane().getWidth(), getContentPane().getHeight());
 		}
 
 		@Override
 		public void mouseReleased(final MouseEvent e) {
-			padReceiver.release(e.getX(), e.getY(), getContentPane().getWidth(),
-					getContentPane().getHeight());
+			padReceiver.release(e.getX(), e.getY(), getContentPane().getWidth(), getContentPane().getHeight());
 		}
 
 		@Override
@@ -95,11 +103,33 @@ public class PadFrame extends JFrame {
 	@Override
 	public void paint(final Graphics g) {
 		super.paint(g);
-		// g.setColor(Color.lightGray);
-		// g.fillRect(0, 0, width - 1, height - 1);
 		draw();
 	}
 
+	private static void innerMain(File file) {
+		Properties props = new Properties();
+		try {
+			try (InputStream stream = new FileInputStream(file)) {
+				props.load(stream);
+			}
+		} catch (IOException e) {
+		}
+		runtimeConfig.clear();
+		props.entrySet().stream().forEach(e -> runtimeConfig.put((String)e.getKey(), (String)e.getValue()));
+		final PadFrame frame = new PadFrame();
+		frame.innerSetConfig(runtimeConfig);
+		EventQueue.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					frame.setVisible(true);
+				} catch (final Exception e) {
+					logger.error(e.getMessage(), e);
+				}
+			}
+		});
+	}
+	
 	/**
 	 * Launch the application.
 	 * 
@@ -108,35 +138,28 @@ public class PadFrame extends JFrame {
 	 * 
 	 */
 	public static void main(final String[] args) {
-		final PadFrame frame = new PadFrame();
-		EventQueue.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					// frame.setResizable(true);
-					frame.setVisible(true);
-				} catch (final Exception e) {
-					logger.error(e.getMessage(), e);
-				}
+		Options options = new Options();
+		options.addOption("c", "config", true, "Configuration File");
+		CommandLineParser parser = new DefaultParser();
+		boolean error = false;
+		File file = null;
+		try {
+			CommandLine cmd = parser.parse(options, args);
+			String configFile = cmd.getOptionValue("c");
+			if (configFile == null) {
+				error = true;
+				file = null;
+			} else {
+				file = new File(configFile);
 			}
-		});
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				while (true) {
-					EventQueue.invokeLater(new Runnable() {
-						@Override
-						public void run() {
-							frame.draw();
-						}
-					});
-					try {
-						Thread.sleep(1000);
-					} catch (final InterruptedException e) {
-
-					}
-				}
-			}
-		}).start();
+		} catch (ParseException e) {
+			error = true;
+		}
+		if (error || file == null) {
+			HelpFormatter formatter = new HelpFormatter();
+			formatter.printHelp("Pad Simulation", options);
+		} else {
+			innerMain(file);
+		}
 	}
 }
