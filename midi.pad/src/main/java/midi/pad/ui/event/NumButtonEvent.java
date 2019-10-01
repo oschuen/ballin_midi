@@ -70,8 +70,8 @@ public class NumButtonEvent implements Event {
 				&& values[ordinal].equals(event.getEventType()));
 	}
 
-	public static PadEvent getEvent(final Event event) {
-		return (PadEvent) event;
+	public static NumButtonEvent getEvent(final Event event) {
+		return (NumButtonEvent) event;
 	}
 
 	/*

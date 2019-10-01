@@ -127,6 +127,7 @@ public class LoopConfig extends Widget implements BeatListener {
 		final int page = (int) ((beat / division / quarterPerPage / quarterDivision)
 				% numberOfPages);
 		final int quarter = (int) ((beat / division / quarterDivision) % quarterPerPage);
+		g.fill(Color.BLACK);
 		for (int i = 0; i < numberOfPages; ++i) {
 			if (hold && i == holdPage && i == page) {
 				g.setPixel(i, 0, Color.FULL_RED);

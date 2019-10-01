@@ -26,7 +26,7 @@ import java.util.Optional;
 
 import midi.pad.ui.event.Event;
 import midi.pad.ui.event.PadEvent;
-import midi.pad.ui.widgets.AbcControlButton;
+import midi.pad.ui.widgets.ControlButton;
 
 /**
  * @author oliver
@@ -35,6 +35,14 @@ import midi.pad.ui.widgets.AbcControlButton;
 public class Layer extends Widget {
 
 	private final List<Widget> widgets = new ArrayList<>();
+	private boolean exclusive = false;
+	
+	
+
+	public Layer(boolean exclusive) {
+		super();
+		this.exclusive = exclusive;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -43,6 +51,9 @@ public class Layer extends Widget {
 	 */
 	@Override
 	public void paint(final Graphic g) {
+		if (exclusive) {
+			g.fill(Color.RED);
+		}
 		for (int i = widgets.size() - 1; i >= 0; i--) {
 			final Widget widget = widgets.get(i);
 			final Graphic subG = g.create(widget.getX(), widget.getY(), widget.getWidth(),
@@ -66,7 +77,7 @@ public class Layer extends Widget {
 				}
 			}
 		}
-		return false;
+		return exclusive;
 	}
 
 	/**
@@ -121,7 +132,11 @@ public class Layer extends Widget {
 		widgets.clear();
 	}
 
-	public Optional<AbcControlButton> getAbcControlButton(final int y) {
+	public Optional<ControlButton> getAbcControlButton(final int y) {
+		return Optional.empty();
+	}
+
+	public Optional<ControlButton> getNumControlButton(final int x) {
 		return Optional.empty();
 	}
 }

@@ -50,6 +50,7 @@ public class HintDialog extends Layer {
 	private final ToggleWidgets toggletoHint;
 
 	public HintDialog(final String hint) {
+		super(true);
 		toggletoWidgets = new ToggleWidgets(widgets, MODE.WIDGET);
 		stopButton = new SinglePixelButton(0, 0, new Color(Color.FULL_RED, true, true),
 				toggletoWidgets);

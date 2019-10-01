@@ -21,7 +21,15 @@ package jsequencer.ui.screen;
 
 import static midi.pad.ui.event.Runtime.getRuntime;
 
+import java.util.Optional;
+
+import jsequencer.ui.model.SongModel;
+import midi.loop.beat.Beat;
+import midi.pad.ui.Color;
+import midi.pad.ui.Screen;
 import midi.pad.ui.dialogs.HintDialog;
+import midi.pad.ui.event.Runtime;
+import midi.pad.ui.widgets.ControlButton;
 import midi.pad.ui.widgets.TrackConfig;
 
 /**
@@ -31,13 +39,34 @@ import midi.pad.ui.widgets.TrackConfig;
 public class SongLayer extends HintDialog {
 
 	private final TrackConfig[] config = new TrackConfig[8];
+	private final SongModel model;
+	private final Beat beat;
 
 	/**
 	 * @param hint
 	 */
-	public SongLayer() {
+	public SongLayer(SongModel model, final Beat beat) {
 		super("J 1.0");
-		for (int i = 0; i < config.length; i++) {
+		this.model = model;
+		this.beat = beat;
+		config[0] = new TrackConfig(0, () -> {
+			final DrumLoopLayer layer = new DrumLoopLayer(this.model.getPercussionModel());
+			final Screen screen = Runtime.getRuntime().getScreen();
+			this.beat.addBeatListener(layer);
+			screen.putLayer(3, layer, () -> {
+				beat.removeBeatListener(layer);
+				screen.removeLayer(layer);
+			});
+			layer.start();
+		}, () -> {
+			getRuntime().invalidate();
+		}, () -> {
+			getRuntime().invalidate();
+		}, () -> {
+			getRuntime().invalidate();
+		});
+
+		for (int i = 1; i < config.length; i++) {
 			config[i] = new TrackConfig(i, () -> {
 				getRuntime().invalidate();
 			}, () -> {
@@ -53,6 +82,22 @@ public class SongLayer extends HintDialog {
 			config[i].setIn(true);
 		}
 		start();
+	}
+
+	@Override
+	public Optional<ControlButton> getNumControlButton(int x) {
+		final Screen screen = Runtime.getRuntime().getScreen();
+		if (screen.isTopLayer(this)) {
+
+		} else {
+			if (x == 0) {
+				return Optional.of(new ControlButton(Color.GREEN, () -> {
+					screen.showBottomLayer();
+					getRuntime().invalidate();
+				}));
+			}
+		}
+		return super.getNumControlButton(x);
 	}
 
 }

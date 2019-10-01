@@ -23,18 +23,18 @@ import static midi.pad.ui.event.Runtime.getRuntime;
 
 import midi.pad.ui.Color;
 import midi.pad.ui.event.AbcButtonEvent;
-import midi.pad.ui.event.AbcButtonEvent.EVENT_TYPE;
 import midi.pad.ui.event.Event;
+import midi.pad.ui.event.NumButtonEvent;
 
 /**
  * @author oliver
  *
  */
-public class AbcControlButton {
+public class ControlButton {
 	private final Runnable pressRunner;
 	private final Color color;
 
-	public AbcControlButton(final Color c, final Runnable pressRunner) {
+	public ControlButton(final Color c, final Runnable pressRunner) {
 		this.pressRunner = pressRunner;
 		color = c;
 	}
@@ -42,7 +42,12 @@ public class AbcControlButton {
 	public boolean eventOccured(final Event event) {
 		if (AbcButtonEvent.isEventOfThisType(event)) {
 			final AbcButtonEvent buttonEvent = AbcButtonEvent.getEvent(event);
-			if (EVENT_TYPE.ABC_RELEASED.equals(buttonEvent.getEventType())) {
+			if (AbcButtonEvent.EVENT_TYPE.ABC_RELEASED.equals(buttonEvent.getEventType())) {
+				getRuntime().schedule(pressRunner);
+			}
+		} else if (NumButtonEvent.isEventOfThisType(event)) {
+			final NumButtonEvent buttonEvent = NumButtonEvent.getEvent(event);
+			if (NumButtonEvent.EVENT_TYPE.NUM_RELEASED.equals(buttonEvent.getEventType())) {
 				getRuntime().schedule(pressRunner);
 			}
 		}

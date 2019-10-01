@@ -1,0 +1,2 @@
+MIDI_INPUT_DEVICE=VirMIDI \\[hw:\\d,3,0\\]
+MIDI_OUTPUT_DEVICE=VirMIDI \\[hw:\\d,3,0\\]

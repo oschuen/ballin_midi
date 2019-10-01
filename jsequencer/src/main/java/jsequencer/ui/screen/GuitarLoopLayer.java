@@ -33,7 +33,7 @@ import midi.pad.ui.Screen;
 import midi.pad.ui.dialogs.HintDialog;
 import midi.pad.ui.dialogs.NumberDialog;
 import midi.pad.ui.event.Runtime;
-import midi.pad.ui.widgets.AbcControlButton;
+import midi.pad.ui.widgets.ControlButton;
 import midi.pad.ui.widgets.LoopConfig;
 import midi.pad.ui.widgets.SimpleLooper;
 
@@ -51,11 +51,11 @@ public class GuitarLoopLayer extends HintDialog implements BeatListener {
 	private final SimpleLooper eLooper = new SimpleLooper(0, 7);
 	private final List<SimpleLooper> guitarLoopers = Arrays.asList(bassLooper, gLooper, bLooper,
 			eLooper);
-	private final AbcControlButton accentButton;
-	private final AbcControlButton bassButton;
-	private final AbcControlButton gButton;
-	private final AbcControlButton bButton;
-	private final AbcControlButton eButton;
+	private final ControlButton accentButton;
+	private final ControlButton bassButton;
+	private final ControlButton gButton;
+	private final ControlButton bButton;
+	private final ControlButton eButton;
 
 	public GuitarLoopLayer(final GuitarModel model) {
 		super("Guitar");
@@ -88,14 +88,14 @@ public class GuitarLoopLayer extends HintDialog implements BeatListener {
 		model.getLoopModel(GuitarInstrument.B_STRING).ifPresent(m -> bLooper.setLoopModel(m));
 		model.getLoopModel(GuitarInstrument.E_STRING).ifPresent(m -> eLooper.setLoopModel(m));
 		setWidgets(config, accent, bassLooper, gLooper, bLooper, eLooper);
-		accentButton = new AbcControlButton(Color.GREEN, new ConfigureAccentVelocity());
-		bassButton = new AbcControlButton(Color.GREEN,
+		accentButton = new ControlButton(Color.GREEN, new ConfigureAccentVelocity());
+		bassButton = new ControlButton(Color.GREEN,
 				new ConfigureInstrumentVelocity(GuitarInstrument.BASS_STRING));
-		gButton = new AbcControlButton(Color.GREEN,
+		gButton = new ControlButton(Color.GREEN,
 				new ConfigureInstrumentVelocity(GuitarInstrument.G_STRING));
-		bButton = new AbcControlButton(Color.GREEN,
+		bButton = new ControlButton(Color.GREEN,
 				new ConfigureInstrumentVelocity(GuitarInstrument.B_STRING));
-		eButton = new AbcControlButton(Color.GREEN,
+		eButton = new ControlButton(Color.GREEN,
 				new ConfigureInstrumentVelocity(GuitarInstrument.E_STRING));
 		start();
 	}
@@ -120,7 +120,7 @@ public class GuitarLoopLayer extends HintDialog implements BeatListener {
 	 * @see midi.pad.ui.Layer#getAbcControlButton(int)
 	 */
 	@Override
-	public Optional<AbcControlButton> getAbcControlButton(final int y) {
+	public Optional<ControlButton> getAbcControlButton(final int y) {
 		switch (y) {
 		case 3:
 			return Optional.of(accentButton);

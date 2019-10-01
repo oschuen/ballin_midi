@@ -38,6 +38,7 @@ import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import jsequencer.ui.model.SongModel;
 import jsequencer.ui.screen.DrumLoopLayer;
 import jsequencer.ui.screen.GuitarLoopLayer;
 import jsequencer.ui.screen.SongLayer;
@@ -178,6 +179,8 @@ public class Sequencer {
 
 	private static void mainSong(final File file) throws MidiUnavailableException {
 		final Screen screen = Runtime.getRuntime().getScreen();
+		final SongModel model = new SongModel();
+		final Beat beat = new Beat();
 		Properties props = new Properties();
 		try {
 			try (InputStream stream = new FileInputStream(file)) {
@@ -189,9 +192,8 @@ public class Sequencer {
 		Runtime.getRuntime().schedule(new Runnable() {
 			@Override
 			public void run() {
-				final SongLayer layer = new SongLayer();
+				final SongLayer layer = new SongLayer(model, beat);
 				screen.putLayer(1, layer);
-
 			}
 		});
 	}
@@ -218,7 +220,7 @@ public class Sequencer {
 			HelpFormatter formatter = new HelpFormatter();
 			formatter.printHelp("Sequencer", options);
 		} else {
-			mainGuitar(file);
+			mainSong(file);
 		}
 	}
 }
