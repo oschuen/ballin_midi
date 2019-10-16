@@ -30,9 +30,9 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Stream;
 
 import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
 
@@ -407,6 +407,10 @@ public class Runtime {
 		}
 		return nullReceiver;
 	}
+	
+	public Receiver getOutput(final ChannelConfig config) {
+		return new ConfiguredReceiver(config);
+	}
 
 	public void addBelowSplitInput(final Receiver receiver, final int device) {
 		if (device >= 0 && device < outputChannels.length) {
@@ -429,6 +433,38 @@ public class Runtime {
 	public void removeInput(final Receiver receiver, final int device) {
 		if (device >= 0 && device < outputChannels.length) {
 			inputChannels[device].removeInput(receiver);
+		}
+	}
+	
+	private class ConfiguredReceiver implements Receiver{
+		private int channel;
+		private Receiver receiver;
+		private final ChannelConfig config;
+		private boolean close = false;
+		
+		public ConfiguredReceiver(final ChannelConfig config) {
+			this.config = config;
+			this.channel = config.getMidiOut();
+			this.receiver = getOutput(this.channel);
+		}
+		
+
+		@Override
+		public void send(MidiMessage message, long timeStamp) {
+			if (channel != config.getMidiOut()) {
+				channel = config.getMidiOut();
+				this.receiver.close();
+				this.receiver = getOutput(this.channel);
+			}
+			if (!close ) {
+				this.receiver.send(message, timeStamp);
+			}
+		}
+
+		@Override
+		public void close() {
+			this.receiver.close();
+			this.close = true;
 		}
 	}
 }

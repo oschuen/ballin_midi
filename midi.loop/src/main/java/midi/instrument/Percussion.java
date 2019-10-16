@@ -34,6 +34,7 @@ import midi.loop.LoopEvent;
 import midi.loop.LoopModel;
 import midi.loop.beat.Beat;
 import midi.loop.beat.Beat.BeatListener;
+import midi.loop.config.ChannelConfig;
 
 /**
  * @author oliver
@@ -42,7 +43,7 @@ import midi.loop.beat.Beat.BeatListener;
 public class Percussion implements BeatListener {
 
 	private final Receiver receiver;
-	private final int channel;
+	private final ChannelConfig config;
 	private PercussionModel model;
 	private static final Logger logger = LoggerFactory.getLogger(Percussion.class);
 	private int velocity = 127;
@@ -52,10 +53,10 @@ public class Percussion implements BeatListener {
 
 	private final PercussionModel defaultModel = new PercussionModel();
 
-	public Percussion(final Receiver receiver, final int channel) {
+	public Percussion(final Receiver receiver, final ChannelConfig config) {
 		super();
 		this.receiver = receiver;
-		this.channel = channel;
+		this.config = config;
 		model = defaultModel;
 		for (final PercussionInstrument percussionInstrument : instruments) {
 			loopModel[percussionInstrument.ordinal()] = model.getLoopModel(percussionInstrument)
@@ -76,7 +77,7 @@ public class Percussion implements BeatListener {
 	public void panic() {
 		try {
 			final ShortMessage msg = new ShortMessage();
-			msg.setMessage(ShortMessage.CONTROL_CHANGE, channel, 123, 0);
+			msg.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 123, 0);
 			receiver.send(msg, -1);
 		} catch (final InvalidMidiDataException e) {
 			logger.error("Panic Failed", e);
@@ -106,7 +107,7 @@ public class Percussion implements BeatListener {
 			final Optional<LoopEvent> event = loopModel[i].getStepEvent(step);
 			event.ifPresent(it -> {
 				try {
-					it.asWeightedEvent(accent).playEvent(receiver, channel);
+					it.asWeightedEvent(accent).playEvent(receiver, config.getChannel());
 				} catch (final InvalidMidiDataException e) {
 					logger.error("Couldn't play event", e);
 				}

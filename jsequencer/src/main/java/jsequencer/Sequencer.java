@@ -64,22 +64,21 @@ public class Sequencer {
 
 	public static void mainPercussion(final String[] args) throws MidiUnavailableException {
 		final Screen screen = Runtime.getRuntime().getScreen();
-		final ChannelConfig config = new ChannelConfig();
 		final Percussion percussion;
 		final PercussionModel model = new PercussionModel();
 		final Transmitter transmitter;
+		final int midiChannel = 4;
 
-		final MidiDevice percussionDevice = MidiDevices.secureGetReceiverDevice("VirMIDI [hw:4,0,2]");
-
-		if (percussionDevice == null) {
-			logger.error("Percussion Device not found");
-			return;
-		} else {
-			if (!percussionDevice.isOpen()) {
-				percussionDevice.open();
-			}
-			percussion = new Percussion(percussionDevice.getReceiver(), 9);
-		}
+		final ChannelConfig config = new ChannelConfig();
+		config.setBank(0);
+		config.setProgram(24);
+		config.setChannel(midiChannel);
+		config.setChoir(0);
+		config.setReverb(127);
+		config.setMidiOut(0);
+		Runtime.getRuntime().applyChannelConfig(config);
+		
+		percussion = new Percussion(Runtime.getRuntime().getOutput(config), config);
 
 		final MidiDevice transmitterDevice = MidiDevices.secureGetTransmitterDevice("VirMIDI [hw:4,2,0]");
 		if (!transmitterDevice.isOpen()) {
@@ -141,7 +140,6 @@ public class Sequencer {
 		final int midiChannel = 4;
 		final int midiDevice = 0;
 
-		guitar = new Guitar(Runtime.getRuntime().getOutput(midiDevice), midiChannel);
 		Runtime.getRuntime().addInput(recognizer, midiDevice);
 		final ChannelConfig config = new ChannelConfig();
 		config.setBank(0);
@@ -151,6 +149,7 @@ public class Sequencer {
 		config.setReverb(127);
 		config.setMidiOut(0);
 		Runtime.getRuntime().applyChannelConfig(config);
+		guitar = new Guitar(Runtime.getRuntime().getOutput(config), config);
 
 		final Beat beat = new Beat();
 		beat.start();
@@ -180,7 +179,23 @@ public class Sequencer {
 	private static void mainSong(final File file) throws MidiUnavailableException {
 		final Screen screen = Runtime.getRuntime().getScreen();
 		final SongModel model = new SongModel();
+		final ChannelConfig percussionChannelConfig = model.getPercussionChannelConfig();
+		Runtime.getRuntime().applyChannelConfig(model.getGuitarChannelConfig());
+		
+		Runtime.getRuntime().applyChannelConfig(percussionChannelConfig);
+		Percussion percussion = new Percussion(Runtime.getRuntime().getOutput(percussionChannelConfig), percussionChannelConfig);
 		final Beat beat = new Beat();
+		beat.start();
+		percussion.setModel(model.getPercussionModel());
+		beat.addBeatListener(new BeatListener() {
+
+			@Override
+			public void accept(final long beat) {
+				percussion.accept(beat);
+			}
+		});
+		
+		
 		Properties props = new Properties();
 		try {
 			try (InputStream stream = new FileInputStream(file)) {

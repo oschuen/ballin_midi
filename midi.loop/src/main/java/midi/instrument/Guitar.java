@@ -35,6 +35,7 @@ import midi.loop.LoopEvent.COMMAND;
 import midi.loop.LoopModel;
 import midi.loop.beat.Beat;
 import midi.loop.beat.Beat.BeatListener;
+import midi.loop.config.ChannelConfig;
 
 /**
  * Guitar accompaniment playing picking patterns. Pattern must be provided for
@@ -45,7 +46,7 @@ import midi.loop.beat.Beat.BeatListener;
 public class Guitar implements BeatListener {
 
 	private final Receiver receiver;
-	private final int channel;
+	private final ChannelConfig config;
 	private GuitarModel model;
 	private static final Logger logger = LoggerFactory.getLogger(Guitar.class);
 	private int velocity = 127;
@@ -57,10 +58,10 @@ public class Guitar implements BeatListener {
 
 	private final GuitarModel defaultModel = new GuitarModel();
 
-	public Guitar(final Receiver receiver, final int channel) {
+	public Guitar(final Receiver receiver, final ChannelConfig config) {
 		super();
 		this.receiver = receiver;
-		this.channel = channel;
+		this.config = config;
 		model = defaultModel;
 		for (final GuitarInstrument percussionInstrument : instruments) {
 			loopModel[percussionInstrument.ordinal()] = model.getLoopModel(percussionInstrument)
@@ -81,7 +82,7 @@ public class Guitar implements BeatListener {
 	public void panic() {
 		try {
 			final ShortMessage msg = new ShortMessage();
-			msg.setMessage(ShortMessage.CONTROL_CHANGE, channel, 123, 0);
+			msg.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 123, 0);
 			receiver.send(msg, -1);
 		} catch (final InvalidMidiDataException e) {
 			logger.error("Panic Failed", e);
@@ -123,7 +124,7 @@ public class Guitar implements BeatListener {
 				} else {
 					lostTime[var] = 0;
 					try {
-						event.asWeightedEvent(accent).playEvent(receiver, channel);
+						event.asWeightedEvent(accent).playEvent(receiver, config.getChannel());
 					} catch (final InvalidMidiDataException e) {
 						logger.error("Couldn't play event", e);
 					}
@@ -145,7 +146,7 @@ public class Guitar implements BeatListener {
 				event.ifPresent(it -> {
 					if (COMMAND.IGNORE != it.getCommand()) {
 						try {
-							it.asWeightedEvent(accent).playEvent(receiver, channel);
+							it.asWeightedEvent(accent).playEvent(receiver, config.getChannel());
 						} catch (final InvalidMidiDataException e) {
 							logger.error("Couldn't play event", e);
 						}
