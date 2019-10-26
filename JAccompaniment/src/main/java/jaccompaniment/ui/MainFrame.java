@@ -71,6 +71,7 @@ import midi.instrument.Instrument;
 import midi.instrument.Percussion;
 import midi.instrument.model.GuitarModel;
 import midi.instrument.model.PercussionModel;
+import midi.loop.config.ChannelConfig;
 
 /**
  * Main application frame
@@ -79,7 +80,7 @@ import midi.instrument.model.PercussionModel;
  */
 @SuppressWarnings("serial")
 public class MainFrame extends JFrame {
-
+ 
 	private static final Preferences prefs = Preferences.userNodeForPackage(ConfigDialog.class);
 
 	private static final int panelCount = 5;
@@ -100,6 +101,8 @@ public class MainFrame extends JFrame {
 	private final ValuePanel pagePanel;
 	private final ValuePanel divisionPanel;
 	private final Beat beat = new Beat();
+	private final ChannelConfig guitarConfig = new ChannelConfig();
+	private final ChannelConfig percussionConfig = new ChannelConfig();
 
 	private static final String LAST_FILE_KEY = "last file";
 
@@ -480,13 +483,28 @@ public class MainFrame extends JFrame {
 
 		final MidiDevice guitarDevice = MidiDevices
 				.secureGetReceiverDevice(ConfigDialog.getGuitarOutputDevice());
+
+		guitarConfig.setBank(0);
+		guitarConfig.setProgram(24);
+		guitarConfig.setChannel(ConfigDialog.getGuitarChannel());
+		guitarConfig.setChoir(0);
+		guitarConfig.setReverb(0);
+		guitarConfig.setMidiOut(0);
+
+		percussionConfig.setBank(128);
+		percussionConfig.setProgram(9);
+		percussionConfig.setChannel(ConfigDialog.getPercussionChannel());
+		percussionConfig.setChoir(0);
+		percussionConfig.setReverb(0);
+		percussionConfig.setMidiOut(0);
+
 		if (guitarDevice == null) {
 			logger.error("Guitar Device not found");
 		} else {
 			if (!guitarDevice.isOpen()) {
 				guitarDevice.open();
 			}
-			guitar = new Guitar(guitarDevice.getReceiver(), ConfigDialog.getGuitarChannel());
+			guitar = new Guitar(guitarDevice.getReceiver(), guitarConfig);
 		}
 		final MidiDevice percussionDevice = MidiDevices
 				.secureGetReceiverDevice(ConfigDialog.getPercussionOutputDevice());
@@ -496,8 +514,7 @@ public class MainFrame extends JFrame {
 			if (!percussionDevice.isOpen()) {
 				percussionDevice.open();
 			}
-			percussion = new Percussion(percussionDevice.getReceiver(),
-					ConfigDialog.getPercussionChannel());
+			percussion = new Percussion(percussionDevice.getReceiver(), percussionConfig);
 		}
 
 		final MidiDevice recognizerDevice = MidiDevices

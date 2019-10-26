@@ -158,7 +158,7 @@ public class Runtime {
 			lock.unlock();
 		}
 	}
-	
+
 	/**
 	 * @param runtimeConfig
 	 *            the runtimeConfig to set
@@ -167,12 +167,13 @@ public class Runtime {
 		lock.lock();
 		try {
 			Runtime.runtimeConfig.clear();
-			runtimeConfig.entrySet().stream().forEach(e -> Runtime.runtimeConfig.put((String)e.getKey(), (String)e.getValue()));
+			runtimeConfig.entrySet().stream().forEach(
+					e -> Runtime.runtimeConfig.put((String) e.getKey(), (String) e.getValue()));
 			checkConfiguration = true;
 			getRuntime().innerSetConfig();
 		} finally {
 			lock.unlock();
-		}
+		} 
 	}
 
 	protected static Integer getIntConfig(final String key, final Integer defValue) {
@@ -226,19 +227,20 @@ public class Runtime {
 	}
 
 	public void applyChannelConfig(final ChannelConfig config) {
+		System.out.println(config);
 		if (config.getMidiOut() >= 0 && config.getMidiOut() < outputChannels.length) {
 			try {
 				final Receiver receiver = outputChannels[config.getMidiOut()].getOutput();
 				final ShortMessage bsmsb = new ShortMessage();
-				System.out.println("MSB : " + ((config.getBank() & 0x7f80) >> 7) + " LSB "
-						+ (config.getBank() & 0x7f));
+				System.out.println(
+						"MSB : " + (config.getBank() / 128) + " LSB " + (config.getBank() % 128));
 				bsmsb.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 0x00,
-						(config.getBank() & 0x7f80) >> 7);
+						config.getBank() / 128);
 
 				receiver.send(bsmsb, 0);
 				final ShortMessage bslsb = new ShortMessage();
 				bslsb.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 0x20,
-						(config.getBank() & 0x7f));
+						(config.getBank() % 128));
 				receiver.send(bslsb, 0);
 				final ShortMessage pc = new ShortMessage();
 				pc.setMessage(ShortMessage.PROGRAM_CHANGE, config.getChannel(), config.getProgram(),
@@ -407,7 +409,7 @@ public class Runtime {
 		}
 		return nullReceiver;
 	}
-	
+
 	public Receiver getOutput(final ChannelConfig config) {
 		return new ConfiguredReceiver(config);
 	}
@@ -435,36 +437,35 @@ public class Runtime {
 			inputChannels[device].removeInput(receiver);
 		}
 	}
-	
-	private class ConfiguredReceiver implements Receiver{
+
+	private class ConfiguredReceiver implements Receiver {
 		private int channel;
 		private Receiver receiver;
 		private final ChannelConfig config;
 		private boolean close = false;
-		
+
 		public ConfiguredReceiver(final ChannelConfig config) {
 			this.config = config;
-			this.channel = config.getMidiOut();
-			this.receiver = getOutput(this.channel);
+			channel = config.getMidiOut();
+			receiver = getOutput(channel);
 		}
-		
 
 		@Override
-		public void send(MidiMessage message, long timeStamp) {
+		public void send(final MidiMessage message, final long timeStamp) {
 			if (channel != config.getMidiOut()) {
 				channel = config.getMidiOut();
-				this.receiver.close();
-				this.receiver = getOutput(this.channel);
+				receiver.close();
+				receiver = getOutput(channel);
 			}
-			if (!close ) {
-				this.receiver.send(message, timeStamp);
+			if (!close) {
+				receiver.send(message, timeStamp);
 			}
 		}
 
 		@Override
 		public void close() {
-			this.receiver.close();
-			this.close = true;
+			receiver.close();
+			close = true;
 		}
 	}
 }

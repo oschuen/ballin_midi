@@ -144,6 +144,18 @@ public class ChannelConfig {
 	 * @return the changed
 	 */
 	public boolean isChanged() {
-		return changed;
+		return changed; 
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "ChannelConfig [bank=" + bank + ", program=" + program + ", midiOut=" + midiOut
+				+ ", reverb=" + reverb + ", choir=" + choir + ", channel=" + channel + ", changed="
+				+ changed + "]";
 	}
 }

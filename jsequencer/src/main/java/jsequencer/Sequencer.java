@@ -77,10 +77,11 @@ public class Sequencer {
 		config.setReverb(127);
 		config.setMidiOut(0);
 		Runtime.getRuntime().applyChannelConfig(config);
-		
+
 		percussion = new Percussion(Runtime.getRuntime().getOutput(config), config);
 
-		final MidiDevice transmitterDevice = MidiDevices.secureGetTransmitterDevice("VirMIDI [hw:4,2,0]");
+		final MidiDevice transmitterDevice = MidiDevices
+				.secureGetTransmitterDevice("VirMIDI [hw:4,2,0]");
 		if (!transmitterDevice.isOpen()) {
 			transmitterDevice.open();
 		}
@@ -88,7 +89,7 @@ public class Sequencer {
 		transmitter.setReceiver(new KeyBoardReceiver());
 
 		final Runnable finishRunnable = new Runnable() {
-
+ 
 			@Override
 			public void run() {
 				System.exit(0);
@@ -126,12 +127,12 @@ public class Sequencer {
 	 */
 	private static void mainGuitar(final File file) throws MidiUnavailableException {
 		final Screen screen = Runtime.getRuntime().getScreen();
-		Properties props = new Properties();
+		final Properties props = new Properties();
 		try {
 			try (InputStream stream = new FileInputStream(file)) {
 				props.load(stream);
 			}
-		} catch (IOException e) {
+		} catch (final IOException e) {
 		}
 		Runtime.setRuntimeConfig(props);
 		final Guitar guitar;
@@ -142,8 +143,8 @@ public class Sequencer {
 
 		Runtime.getRuntime().addInput(recognizer, midiDevice);
 		final ChannelConfig config = new ChannelConfig();
-		config.setBank(0);
-		config.setProgram(24);
+		config.setBank(128);
+		config.setProgram(9);
 		config.setChannel(midiChannel);
 		config.setChoir(0);
 		config.setReverb(127);
@@ -179,11 +180,21 @@ public class Sequencer {
 	private static void mainSong(final File file) throws MidiUnavailableException {
 		final Screen screen = Runtime.getRuntime().getScreen();
 		final SongModel model = new SongModel();
+		final Properties props = new Properties();
+		try {
+			try (InputStream stream = new FileInputStream(file)) {
+				props.load(stream);
+			}
+		} catch (final IOException e) {
+		}
+		Runtime.setRuntimeConfig(props);
+
 		final ChannelConfig percussionChannelConfig = model.getPercussionChannelConfig();
 		Runtime.getRuntime().applyChannelConfig(model.getGuitarChannelConfig());
-		
+
 		Runtime.getRuntime().applyChannelConfig(percussionChannelConfig);
-		Percussion percussion = new Percussion(Runtime.getRuntime().getOutput(percussionChannelConfig), percussionChannelConfig);
+		final Percussion percussion = new Percussion(
+				Runtime.getRuntime().getOutput(percussionChannelConfig), percussionChannelConfig);
 		final Beat beat = new Beat();
 		beat.start();
 		percussion.setModel(model.getPercussionModel());
@@ -194,16 +205,7 @@ public class Sequencer {
 				percussion.accept(beat);
 			}
 		});
-		
-		
-		Properties props = new Properties();
-		try {
-			try (InputStream stream = new FileInputStream(file)) {
-				props.load(stream);
-			}
-		} catch (IOException e) {
-		}
-		Runtime.setRuntimeConfig(props);
+
 		Runtime.getRuntime().schedule(new Runnable() {
 			@Override
 			public void run() {
@@ -214,28 +216,29 @@ public class Sequencer {
 	}
 
 	public static void main(final String[] args) throws MidiUnavailableException {
-		Options options = new Options();
+		final Options options = new Options();
 		options.addOption("c", "config", true, "Configuration File");
-		CommandLineParser parser = new DefaultParser();
+		final CommandLineParser parser = new DefaultParser();
 		boolean error = false;
 		File file = null;
 		try {
-			CommandLine cmd = parser.parse(options, args);
-			String configFile = cmd.getOptionValue("c");
+			final CommandLine cmd = parser.parse(options, args);
+			final String configFile = cmd.getOptionValue("c");
 			if (configFile == null) {
 				error = true;
 				file = null;
 			} else {
 				file = new File(configFile);
 			}
-		} catch (ParseException e) {
+		} catch (final ParseException e) {
 			error = true;
 		}
 		if (error || file == null) {
-			HelpFormatter formatter = new HelpFormatter();
+			final HelpFormatter formatter = new HelpFormatter();
 			formatter.printHelp("Sequencer", options);
 		} else {
 			mainSong(file);
+			// mainGuitar(file);
 		}
 	}
 }

@@ -47,8 +47,9 @@ public class Beat {
 	private int step = 0;
 	private final ScheduledExecutorService service = Executors.newScheduledThreadPool(16);
 	private final List<BeatListener> listeners = new ArrayList<>();
+	private final List<BarListener> barListeners = new ArrayList<>();
 	private final Lock lock = new ReentrantLock();
-
+ 
 	private final NextStepRunnable[] fractionSteps = { new NextBeat(), new IntermediateBeat(6, 1),
 			new IntermediateBeat(5, 1), new IntermediateBeat(4, 1), new IntermediateBeat(3, 1),
 			new IntermediateBeat(5, 2), new IntermediateBeat(2, 1), new IntermediateBeat(5, 3),
@@ -72,7 +73,23 @@ public class Beat {
 			}
 			service.schedule(nextStep, delay, TimeUnit.NANOSECONDS);
 		}
+	}
 
+	private void publishBar(final long beat) {
+		if (running) {
+			lock.lock();
+			try {
+				barListeners.stream().filter(it -> {
+					return beat % it.getNumberOfQuarterPerBar() == 0;
+				}).forEach(it -> {
+					service.execute(() -> {
+						it.accept(beat / it.getNumberOfQuarterPerBar());
+					});
+				});
+			} finally {
+				lock.unlock();
+			}
+		}
 	}
 
 	public void start() {
@@ -141,6 +158,7 @@ public class Beat {
 				beatStart = System.nanoTime() - (minute * beat / currentBpm);
 			}
 			logger.debug("Next beat {}", beat * BEAT_DIVISION);
+			publishBar(beat);
 			publishBeat(beat * BEAT_DIVISION);
 		}
 	}
@@ -175,6 +193,46 @@ public class Beat {
 		} finally {
 			lock.unlock();
 		}
+	}
+
+	/**
+	 * @param listener
+	 *            to add
+	 */
+	public void addBarListener(final BarListener listener) {
+		lock.lock();
+		try {
+			barListeners.add(listener);
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	/**
+	 * 
+	 * @param listener
+	 *            to remove
+	 */
+	public void removeBarListener(final BarListener listener) {
+		lock.lock();
+		try {
+			barListeners.remove(listener);
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	/**
+	 * Observer interface for all clients that want to react to the bar
+	 */
+	public interface BarListener extends LongConsumer {
+		/**
+		 * @return the number of Quarters the listener thinks, a bar has
+		 */
+		long getNumberOfQuarterPerBar();
+
+		@Override
+		void accept(long bar);
 	}
 
 	/**

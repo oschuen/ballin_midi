@@ -36,14 +36,12 @@ public class Layer extends Widget {
 
 	private final List<Widget> widgets = new ArrayList<>();
 	private boolean exclusive = false;
-	
-	
 
-	public Layer(boolean exclusive) {
+	public Layer(final boolean exclusive) {
 		super();
 		this.exclusive = exclusive;
 	}
-
+ 
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -52,7 +50,7 @@ public class Layer extends Widget {
 	@Override
 	public void paint(final Graphic g) {
 		if (exclusive) {
-			g.fill(Color.RED);
+			g.fill(Color.BLACK);
 		}
 		for (int i = widgets.size() - 1; i >= 0; i--) {
 			final Widget widget = widgets.get(i);
