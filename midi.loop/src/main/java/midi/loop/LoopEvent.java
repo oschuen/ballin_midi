@@ -23,6 +23,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
@@ -86,8 +90,7 @@ public class LoopEvent {
 		return velocity;
 	}
 
-	public void playEvent(final Receiver receiver, final int channel)
-			throws InvalidMidiDataException {
+	public void playEvent(final Receiver receiver, final int channel) throws InvalidMidiDataException {
 		if (command != COMMAND.IGNORE) {
 			for (final Integer tone : notes) {
 				final ShortMessage msg = new ShortMessage();
@@ -123,7 +126,11 @@ public class LoopEvent {
 	 */
 	@Override
 	public String toString() {
-		return "LoopEvent [command=" + command.name() + ", velocity=" + velocity + ", notes="
-				+ notes + "]";
+		return "LoopEvent [command=" + command.name() + ", velocity=" + velocity + ", notes=" + notes + "]";
+	}
+
+	public JsonObject toJson() {
+		return Json.createObjectBuilder().add("command", command.name()).add("velocity", velocity)
+				.add("notes", Json.createArrayBuilder(notes)).build();
 	}
 }

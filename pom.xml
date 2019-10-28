@@ -27,7 +27,7 @@
 		<module>jsequencer</module>
 		<module>midi.loop</module>
 		<module>midi.pad.sim</module>
-		
+
 	</modules>
 	<dependencyManagement>
 		<dependencies>
@@ -82,7 +82,11 @@
 				<artifactId>midi.pad</artifactId>
 				<version>${midi.pad.version}</version>
 			</dependency>
-
+			<dependency>
+				<groupId>org.glassfish</groupId>
+				<artifactId>javax.json</artifactId>
+				<version>1.1.4</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<build>

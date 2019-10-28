@@ -25,5 +25,9 @@
 			<groupId>de.yamap</groupId>
 			<artifactId>midi.gui.model</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.glassfish</groupId>
+			<artifactId>javax.json</artifactId>
+		</dependency>
 	</dependencies>
 </project>

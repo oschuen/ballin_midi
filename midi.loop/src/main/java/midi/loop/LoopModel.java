@@ -19,9 +19,14 @@
  */
 package midi.loop;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
 
 import jmidi.gui.model.IntegerModel;
 
@@ -160,7 +165,7 @@ public class LoopModel {
 	 *            the velocity to set
 	 */
 	public void setVelocity(final int velocity) {
-		
+
 		this.velocity.setValue(velocity);
 	}
 
@@ -178,5 +183,13 @@ public class LoopModel {
 		} else {
 			this.effect = effect;
 		}
+	}
+
+	public JsonObject toJson() {
+		JsonArrayBuilder jEvents = Json.createArrayBuilder();
+		Arrays.stream(events).map(LoopEvent::toJson).forEach(jEvents::add);
+		return Json.createObjectBuilder().add("velocity", getVelocity()).add("quarterPerPage", quarterPerPage)
+				.add("numberOfPages", numberOfPages).add("quarterDivision", quarterDivision).add("events", jEvents)
+				.build();
 	}
 }
