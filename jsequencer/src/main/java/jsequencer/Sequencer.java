@@ -89,7 +89,7 @@ public class Sequencer {
 		transmitter.setReceiver(new KeyBoardReceiver());
 
 		final Runnable finishRunnable = new Runnable() {
- 
+
 			@Override
 			public void run() {
 				System.exit(0);
@@ -179,7 +179,7 @@ public class Sequencer {
 
 	private static void mainSong(final File file) throws MidiUnavailableException {
 		final Screen screen = Runtime.getRuntime().getScreen();
-		final SongModel model = new SongModel();
+		final SongModel model = new SongModel(8, 4);
 		final Properties props = new Properties();
 		try {
 			try (InputStream stream = new FileInputStream(file)) {
@@ -197,7 +197,7 @@ public class Sequencer {
 				Runtime.getRuntime().getOutput(percussionChannelConfig), percussionChannelConfig);
 		final Beat beat = new Beat();
 		beat.start();
-		percussion.setModel(model.getPercussionModel());
+		percussion.setModel(model.getPercussionModel(0));
 		beat.addBeatListener(new BeatListener() {
 
 			@Override
@@ -206,12 +206,10 @@ public class Sequencer {
 			}
 		});
 
-		Runtime.getRuntime().schedule(new Runnable() {
-			@Override
-			public void run() {
-				final SongLayer layer = new SongLayer(model, beat);
-				screen.putLayer(1, layer);
-			}
+		Runtime.getRuntime().schedule(() -> {
+			final SongLayer layer = new SongLayer(model, beat);
+			screen.putLayer(1, layer);
+			beat.addBarListener(layer);
 		});
 	}
 

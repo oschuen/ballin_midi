@@ -1,20 +1,31 @@
 package jsequencer.ui.model;
 
+import jmidi.gui.model.LayerModel;
 import midi.instrument.model.GuitarModel;
 import midi.instrument.model.PercussionModel;
 import midi.loop.config.ChannelConfig;
 import midi.pad.ui.event.Runtime;
 
 public class SongModel {
-	private final int LOOP_NUMBER = 8;
-	private final GuitarModel guitarModel = new GuitarModel();
-	private final PercussionModel percussionModel = new PercussionModel();
+	private final GuitarModel[] guitarModel;
+	private final PercussionModel[] percussionModel;
+	private final LayerModel[] layerModel;
 
-	private final ChannelConfig[] channelConfig = new ChannelConfig[LOOP_NUMBER];
+	private final ChannelConfig[] channelConfig;
 
-	public SongModel() {
-		for (int i = 0; i < channelConfig.length; i++) {
+	public SongModel(final int numberOfLoops, final int numberOfLayer) {
+		layerModel = new LayerModel[numberOfLoops];
+		guitarModel = new GuitarModel[numberOfLayer];
+		percussionModel = new PercussionModel[numberOfLayer];
+
+		channelConfig = new ChannelConfig[numberOfLoops];
+		for (int i = 0; i < numberOfLoops; i++) {
 			channelConfig[i] = new ChannelConfig();
+			layerModel[i] = new LayerModel(4);
+		}
+		for (int i = 0; i < numberOfLayer; i++) {
+			guitarModel[i] = new GuitarModel();
+			percussionModel[i] = new PercussionModel();
 		}
 		ChannelConfig config = channelConfig[0];
 		config.setBank(128);
@@ -24,7 +35,7 @@ public class SongModel {
 		config.setReverb(0);
 		config.setMidiOut(0);
 		Runtime.getRuntime().applyChannelConfig(config);
- 
+
 		config = channelConfig[1];
 		config.setBank(0);
 		config.setProgram(24);
@@ -35,12 +46,12 @@ public class SongModel {
 		Runtime.getRuntime().applyChannelConfig(config);
 	}
 
-	public GuitarModel getGuitarModel() {
-		return guitarModel;
+	public GuitarModel getGuitarModel(final int layer) {
+		return guitarModel[layer];
 	}
 
-	public PercussionModel getPercussionModel() {
-		return percussionModel;
+	public PercussionModel getPercussionModel(final int layer) {
+		return percussionModel[layer];
 	}
 
 	public ChannelConfig getGuitarChannelConfig() {
@@ -49,5 +60,9 @@ public class SongModel {
 
 	public ChannelConfig getPercussionChannelConfig() {
 		return channelConfig[0];
+	}
+
+	public LayerModel getLayerModel(final int loop) {
+		return layerModel[loop];
 	}
 }

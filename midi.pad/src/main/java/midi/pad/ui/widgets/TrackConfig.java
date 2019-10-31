@@ -21,6 +21,7 @@ package midi.pad.ui.widgets;
 
 import static midi.pad.ui.event.Runtime.getRuntime;
 
+import jmidi.gui.model.LayerModel;
 import midi.pad.ui.Color;
 import midi.pad.ui.Graphic;
 import midi.pad.ui.Widget;
@@ -53,11 +54,11 @@ public class TrackConfig extends Widget {
 	private final Runnable channelInConfigRunnable;
 	private final Runnable channelOutConfigRunnable;
 	private final Runnable changeRunnable;
+	private final LayerModel layerModel;
 	private PlayMode mode;
 	private long lastModeChange;
 	private PlayMode lastBeforeOff;
 	private boolean in;
-	private final int[] model = { 1, 0, 0, 0 };
 	private static final long offTime = 1000;
 
 	public enum PlayMode {
@@ -66,7 +67,7 @@ public class TrackConfig extends Widget {
 
 	public TrackConfig(final int y, final Runnable noteEditRunnable,
 			final Runnable channelInConfigRunnable, final Runnable channelOutConfigRunnable,
-			final Runnable changeRunnable) {
+			final Runnable changeRunnable, final LayerModel layerModel) {
 		super();
 		bounds.x = 0;
 		bounds.y = y;
@@ -76,6 +77,7 @@ public class TrackConfig extends Widget {
 		this.channelInConfigRunnable = channelInConfigRunnable;
 		this.channelOutConfigRunnable = channelOutConfigRunnable;
 		this.changeRunnable = changeRunnable;
+		this.layerModel = layerModel;
 		lastModeChange = System.currentTimeMillis();
 	}
 
@@ -97,7 +99,7 @@ public class TrackConfig extends Widget {
 			g.setPixel(3, 0, Color.RED);
 		}
 		for (int i = 0; i < 4; i++) {
-			switch (model[i]) {
+			switch (layerModel.getLayer(i)) {
 			case 0:
 				g.setPixel(4 + i, 0, Color.BLACK);
 				break;
@@ -169,7 +171,7 @@ public class TrackConfig extends Widget {
 				changed = true;
 				break;
 			default:
-				model[padEvent.getX() - 4] = (model[padEvent.getX() - 4] + 1) % 5;
+				layerModel.increment(padEvent.getX() - 4);
 				changed = true;
 			}
 		}
@@ -205,9 +207,6 @@ public class TrackConfig extends Widget {
 	 * @return the model
 	 */
 	public int getModel(final int x) {
-		if (x >= 0 && x < model.length) {
-			return model[x];
-		}
-		return 0;
+		return layerModel.getLayer(x);
 	}
 }

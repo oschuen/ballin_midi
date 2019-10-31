@@ -82,9 +82,11 @@ public class Screen {
 			if (topLayer.isPresent()) {
 				final Layer tLayer = topLayer.get();
 				for (int i = 0; i < 4; i++) {
-					final int vel1 = tLayer.getAbcControlButton(i * 2).map(b -> b.getColor().getMidiValue())
+					final int vel1 = tLayer.getAbcControlButton(i * 2)
+							.map(b -> getBlinkColor(b.getColor()).getMidiValue())
 							.orElse(blackMidiValue);
-					final int vel2 = tLayer.getAbcControlButton(i * 2 + 1).map(b -> b.getColor().getMidiValue())
+					final int vel2 = tLayer.getAbcControlButton(i * 2 + 1)
+							.map(b -> getBlinkColor(b.getColor()).getMidiValue())
 							.orElse(blackMidiValue);
 					final ShortMessage msg = new ShortMessage();
 					msg.setMessage(ShortMessage.NOTE_ON, 2, vel1, vel2);
@@ -99,13 +101,17 @@ public class Screen {
 					receiver.send(msg, 0);
 				}
 			}
-			Optional<Layer> layer = getBottomLayer();
+			final Optional<Layer> layer = getBottomLayer();
 			for (int i = 0; i < 4; i++) {
 				final int loop = i;
-				Color c1 = layer.map(l -> {return l.getNumControlButton(loop * 2).orElse(null);}).map(ControlButton::getColor).orElse(Color.BLACK);
-				Color c2 = layer.map(l -> {return l.getNumControlButton(loop * 2 + 1).orElse(null);}).map(ControlButton::getColor).orElse(Color.BLACK);
-				final int vel1 = c1.getMidiValue();
-				final int vel2 = c2.getMidiValue();
+				final Color c1 = layer.map(l -> {
+					return l.getNumControlButton(loop * 2).orElse(null);
+				}).map(ControlButton::getColor).orElse(Color.BLACK);
+				final Color c2 = layer.map(l -> {
+					return l.getNumControlButton(loop * 2 + 1).orElse(null);
+				}).map(ControlButton::getColor).orElse(Color.BLACK);
+				final int vel1 = getBlinkColor(c1).getMidiValue();
+				final int vel2 = getBlinkColor(c2).getMidiValue();
 				final ShortMessage msg = new ShortMessage();
 				msg.setMessage(ShortMessage.NOTE_ON, 2, vel1, vel2);
 				receiver.send(msg, 0);
@@ -121,13 +127,17 @@ public class Screen {
 		firstpage = !firstpage;
 	}
 
+	private Color getBlinkColor(final Color c) {
+		return c.isFlashing() ? (blink ? c : Color.BLACK) : c;
+	}
+
 	private Color getColor(final int x, final int y) {
 
 		for (int i = graphics.length - 1; i >= 0; --i) {
 			if (graphics[i] != null) {
 				final Color c = graphics[i].getPixel(x, y);
 				if (c != null && c.isOpaque()) {
-					return c.isFlashing() ? (blink ? c : Color.BLACK) : c;
+					return getBlinkColor(c);
 				}
 			}
 		}
@@ -182,7 +192,7 @@ public class Screen {
 			finishRunnable[level] = runnable;
 			getRuntime().invalidate();
 		}
-		
+
 	}
 
 	public void removeLayer(final int level) {
@@ -243,11 +253,12 @@ public class Screen {
 			}
 		} else if (AbcButtonEvent.isEventOfThisType(event)) {
 			final AbcButtonEvent abcEvent = AbcButtonEvent.getEvent(event);
-			getTopLayer().ifPresent(l -> l.getAbcControlButton(abcEvent.getY()).ifPresent(b -> b.eventOccured(event)));
+			getTopLayer().ifPresent(l -> l.getAbcControlButton(abcEvent.getY())
+					.ifPresent(b -> b.eventOccured(event)));
 		} else if (NumButtonEvent.isEventOfThisType(event)) {
 			final NumButtonEvent abcEvent = NumButtonEvent.getEvent(event);
-			getBottomLayer()
-					.ifPresent(l -> l.getNumControlButton(abcEvent.getX()).ifPresent(b -> b.eventOccured(event)));
+			getBottomLayer().ifPresent(l -> l.getNumControlButton(abcEvent.getX())
+					.ifPresent(b -> b.eventOccured(event)));
 		}
 	}
 }
