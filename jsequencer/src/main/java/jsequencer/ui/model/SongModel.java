@@ -46,20 +46,20 @@ public class SongModel {
 		Runtime.getRuntime().applyChannelConfig(config);
 	}
 
-	public GuitarModel getGuitarModel(final int layer) {
-		return guitarModel[layer];
-	}
-
 	public PercussionModel getPercussionModel(final int layer) {
-		return percussionModel[layer];
+		return percussionModel[layerModel[0].getLayer(layer)];
 	}
 
-	public ChannelConfig getGuitarChannelConfig() {
-		return channelConfig[1];
+	public GuitarModel getGuitarModel(final int layer) {
+		return guitarModel[layerModel[1].getLayer(layer)];
 	}
 
 	public ChannelConfig getPercussionChannelConfig() {
 		return channelConfig[0];
+	}
+
+	public ChannelConfig getGuitarChannelConfig() {
+		return channelConfig[1];
 	}
 
 	public LayerModel getLayerModel(final int loop) {

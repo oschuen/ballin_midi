@@ -80,7 +80,7 @@ import midi.loop.config.ChannelConfig;
  */
 @SuppressWarnings("serial")
 public class MainFrame extends JFrame {
- 
+
 	private static final Preferences prefs = Preferences.userNodeForPackage(ConfigDialog.class);
 
 	private static final int panelCount = 5;
@@ -529,7 +529,9 @@ public class MainFrame extends JFrame {
 					logger.error("Midi Exception occured for Recognizer", e1);
 				}
 			}
-			recognizer = new ChordRecognizer(new ChordListener() {
+			recognizer = new ChordRecognizer();
+
+			recognizer.setListener(new ChordListener() {
 				@Override
 				public void newChord(final String chord) {
 					beat.newChord(chord);

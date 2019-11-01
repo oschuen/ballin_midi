@@ -114,7 +114,7 @@ public class Percussion implements BeatListener {
 				}
 				lastPlayed[var] = it.asOffEvent();
 			});
-		} 
+		}
 	}
 
 	/**

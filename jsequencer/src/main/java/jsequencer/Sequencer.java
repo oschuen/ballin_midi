@@ -137,7 +137,8 @@ public class Sequencer {
 		Runtime.setRuntimeConfig(props);
 		final Guitar guitar;
 		final GuitarModel model = new GuitarModel();
-		final ChordRecognizer recognizer = new ChordRecognizer(model);
+		final ChordRecognizer recognizer = new ChordRecognizer();
+		recognizer.setListener(model);
 		final int midiChannel = 4;
 		final int midiDevice = 0;
 
@@ -189,25 +190,13 @@ public class Sequencer {
 		}
 		Runtime.setRuntimeConfig(props);
 
-		final ChannelConfig percussionChannelConfig = model.getPercussionChannelConfig();
-		Runtime.getRuntime().applyChannelConfig(model.getGuitarChannelConfig());
-
-		Runtime.getRuntime().applyChannelConfig(percussionChannelConfig);
-		final Percussion percussion = new Percussion(
-				Runtime.getRuntime().getOutput(percussionChannelConfig), percussionChannelConfig);
 		final Beat beat = new Beat();
-		beat.start();
-		percussion.setModel(model.getPercussionModel(0));
-		beat.addBeatListener(new BeatListener() {
+		final Orchester orchester = new Orchester(model, beat);
 
-			@Override
-			public void accept(final long beat) {
-				percussion.accept(beat);
-			}
-		});
+		beat.start();
 
 		Runtime.getRuntime().schedule(() -> {
-			final SongLayer layer = new SongLayer(model, beat);
+			final SongLayer layer = new SongLayer(orchester, model, beat);
 			screen.putLayer(1, layer);
 			beat.addBarListener(layer);
 		});

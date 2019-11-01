@@ -48,7 +48,7 @@ public class ChordRecognizer implements Receiver {
 	public static final int splitTone = InputDevice.splitTone;
 	public static final long recogHoldTime = 20;
 	private final ScheduledExecutorService service;
-	private final ChordListener listener;
+	private ChordListener listener;
 	private ScheduledFuture<?> recogTimeoutFuture = null;
 	private final Recognizer recognizer = new Recognizer();
 	private final Lock lock = new ReentrantLock();
@@ -61,12 +61,8 @@ public class ChordRecognizer implements Receiver {
 	 * @param listener
 	 *            that is informed about the chords
 	 */
-	public ChordRecognizer(final ChordListener listener) {
+	public ChordRecognizer() {
 		service = Executors.newSingleThreadScheduledExecutor();
-		if (listener == null) {
-			throw new IllegalArgumentException("Listener must not be null");
-		}
-		this.listener = listener;
 	}
 
 	/**
@@ -305,5 +301,13 @@ public class ChordRecognizer implements Receiver {
 		void newChord(String chord);
 
 		void noChord();
+	}
+
+	/**
+	 * @param listener
+	 *            the listener to set
+	 */
+	public void setListener(final ChordListener listener) {
+		this.listener = listener;
 	}
 }

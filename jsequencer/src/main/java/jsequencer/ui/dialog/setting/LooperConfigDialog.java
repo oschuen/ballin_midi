@@ -112,22 +112,22 @@ public class LooperConfigDialog extends HintDialog {
 	private void setValue(final ChannelConfig config, final MODE mode, final int value) {
 		switch (mode) {
 		case BANK:
-			config.setBank(Math.max(mode.getMax(), value));
+			config.setBank(Math.min(mode.getMax(), value));
 			break;
 		case CHANNEL:
-			config.setChannel(Math.max(mode.getMax(), value));
+			config.setChannel(Math.min(mode.getMax(), value));
 			break;
 		case CHOIR:
-			config.setChoir(Math.max(mode.getMax(), value));
+			config.setChoir(Math.min(mode.getMax(), value));
 			break;
 		case MIDIOUT:
-			config.setMidiOut(Math.max(mode.getMax(), value));
+			config.setMidiOut(Math.min(mode.getMax(), value));
 			break;
 		case PROGRAM:
-			config.setProgram(Math.max(mode.getMax(), value));
+			config.setProgram(Math.min(mode.getMax(), value));
 			break;
 		case REVERB:
-			config.setReverb(Math.max(mode.getMax(), value));
+			config.setReverb(Math.min(mode.getMax(), value));
 			break;
 		default:
 			logger.error("Unkown mode: " + mode.name());

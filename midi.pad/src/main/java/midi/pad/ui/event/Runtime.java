@@ -173,7 +173,7 @@ public class Runtime {
 			getRuntime().innerSetConfig();
 		} finally {
 			lock.unlock();
-		} 
+		}
 	}
 
 	protected static Integer getIntConfig(final String key, final Integer defValue) {
@@ -227,7 +227,7 @@ public class Runtime {
 	}
 
 	public void applyChannelConfig(final ChannelConfig config) {
-		System.out.println(config);
+		logger.info(config.toString());
 		if (config.getMidiOut() >= 0 && config.getMidiOut() < outputChannels.length) {
 			try {
 				final Receiver receiver = outputChannels[config.getMidiOut()].getOutput();
@@ -258,7 +258,7 @@ public class Runtime {
 				logger.error("Failed to configure output device");
 			}
 		}
-
+		config.applied();
 	}
 
 	private void redraw() {
@@ -456,6 +456,9 @@ public class Runtime {
 				channel = config.getMidiOut();
 				receiver.close();
 				receiver = getOutput(channel);
+			}
+			if (config.isChanged()) {
+				applyChannelConfig(config);
 			}
 			if (!close) {
 				receiver.send(message, timeStamp);

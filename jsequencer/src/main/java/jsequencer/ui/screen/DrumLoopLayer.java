@@ -27,9 +27,7 @@ import midi.instrument.model.PercussionModel;
 import midi.loop.LoopModel;
 import midi.loop.beat.Beat.BeatListener;
 import midi.pad.ui.Color;
-import midi.pad.ui.Graphic;
 import midi.pad.ui.Screen;
-import midi.pad.ui.Widget;
 import midi.pad.ui.dialogs.HintDialog;
 import midi.pad.ui.dialogs.NumberDialog;
 import midi.pad.ui.event.Runtime;
@@ -75,20 +73,23 @@ public class DrumLoopLayer extends HintDialog implements BeatListener {
 				accent.setHoldQuarter(config.getHoldQuarter());
 			}
 		});
-		selector = new InstrumentSelector(0, 3, 8, 2, PercussionModel.PercussionInstrument.values(), new Runnable() {
-			@Override
-			public void run() {
-				extraHint(selector.getInstrument().toString());
-				final Optional<LoopModel> loopModel = model.getLoopModel(selector.getInstrument());
-				loopModel.ifPresent(m -> looper.setLoopModel(m));
-			}
-		});
+		selector = new InstrumentSelector(0, 3, 8, 2, PercussionModel.PercussionInstrument.values(),
+				new Runnable() {
+					@Override
+					public void run() {
+						extraHint(selector.getInstrument().toString());
+						final Optional<LoopModel> loopModel = model
+								.getLoopModel(selector.getInstrument());
+						loopModel.ifPresent(m -> looper.setLoopModel(m));
+					}
+				});
 		accent = new SimpleLooper(0, 5);
 		looper = new SimpleLooper(0, 6);
 		final Optional<LoopModel> loopModel = model.getLoopModel(selector.getInstrument());
 		loopModel.ifPresent(m -> looper.setLoopModel(m));
 		accent.setLoopModel(model.getAccentModel());
-		accentVelocity = new SinglePixelButton(0, 7, Color.FULL_GREEN, new ConfigureAccentVelocity());
+		accentVelocity = new SinglePixelButton(0, 7, Color.FULL_GREEN,
+				new ConfigureAccentVelocity());
 		drumVelocity = new SinglePixelButton(2, 7, Color.FULL_GREEN, new ConfigureDrumVelocity());
 		setWidgets(config, selector, accent, looper, accentVelocity, drumVelocity);
 	}

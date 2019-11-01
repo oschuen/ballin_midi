@@ -23,6 +23,8 @@ import static midi.pad.ui.event.Runtime.getRuntime;
 
 import java.util.Optional;
 
+import jsequencer.Orchester;
+import jsequencer.ui.dialog.setting.LooperConfigDialog;
 import jsequencer.ui.model.SongModel;
 import midi.loop.beat.Beat;
 import midi.loop.beat.Beat.BarListener;
@@ -42,16 +44,18 @@ public class SongLayer extends HintDialog implements BarListener {
 	private final TrackConfig[] config = new TrackConfig[8];
 	private final SongModel model;
 	private final Beat beat;
+	private final Orchester orchester;
 	private int currentLayer = 0;
 	private int nextLayer = 0;
 
 	/**
 	 * @param hint
 	 */
-	public SongLayer(final SongModel model, final Beat beat) {
+	public SongLayer(final Orchester orchester, final SongModel model, final Beat beat) {
 		super("J 1.0");
 		this.model = model;
 		this.beat = beat;
+		this.orchester = orchester;
 		config[0] = new TrackConfig(0, () -> {
 			final DrumLoopLayer layer = new DrumLoopLayer(
 					this.model.getPercussionModel(currentLayer));
@@ -65,12 +69,47 @@ public class SongLayer extends HintDialog implements BarListener {
 		}, () -> {
 			getRuntime().invalidate();
 		}, () -> {
+			final Screen screen = Runtime.getRuntime().getScreen();
+			final LooperConfigDialog layer = new LooperConfigDialog("Percussion Output",
+					model.getPercussionChannelConfig());
+			screen.putLayer(3, layer, () -> {
+				screen.removeLayer(layer);
+				Runtime.getRuntime().applyChannelConfig(model.getPercussionChannelConfig());
+			});
+			layer.start();
+			getRuntime().invalidate();
 			getRuntime().invalidate();
 		}, () -> {
 			getRuntime().invalidate();
 		}, model.getLayerModel(0));
 
-		for (int i = 1; i < config.length; i++) {
+		config[1] = new TrackConfig(1, () -> {
+			final GuitarLoopLayer layer = new GuitarLoopLayer(
+					this.model.getGuitarModel(currentLayer));
+			final Screen screen = Runtime.getRuntime().getScreen();
+			this.beat.addBeatListener(layer);
+			screen.putLayer(3, layer, () -> {
+				beat.removeBeatListener(layer);
+				screen.removeLayer(layer);
+			});
+			layer.start();
+		}, () -> {
+			getRuntime().invalidate();
+		}, () -> {
+			final Screen screen = Runtime.getRuntime().getScreen();
+			final LooperConfigDialog layer = new LooperConfigDialog("Guitar Output",
+					model.getGuitarChannelConfig());
+			screen.putLayer(3, layer, () -> {
+				screen.removeLayer(layer);
+				Runtime.getRuntime().applyChannelConfig(model.getGuitarChannelConfig());
+			});
+			layer.start();
+			getRuntime().invalidate();
+		}, () -> {
+			getRuntime().invalidate();
+		}, model.getLayerModel(1));
+
+		for (int i = 2; i < config.length; i++) {
 			config[i] = new TrackConfig(i, () -> {
 				getRuntime().invalidate();
 			}, () -> {
@@ -135,6 +174,7 @@ public class SongLayer extends HintDialog implements BarListener {
 	public void accept(final long bar) {
 		if (nextLayer >= 0) {
 			currentLayer = nextLayer;
+			orchester.setLayer(currentLayer);
 		}
 		nextLayer = -1;
 	}

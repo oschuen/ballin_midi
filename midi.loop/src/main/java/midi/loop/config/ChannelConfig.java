@@ -144,7 +144,11 @@ public class ChannelConfig {
 	 * @return the changed
 	 */
 	public boolean isChanged() {
-		return changed; 
+		return changed;
+	}
+
+	public void applied() {
+		changed = false;
 	}
 
 	/*
