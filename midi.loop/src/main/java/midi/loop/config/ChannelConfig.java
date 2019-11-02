@@ -19,6 +19,9 @@
  */
 package midi.loop.config;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+
 /**
  * @author oliver
  *
@@ -161,5 +164,21 @@ public class ChannelConfig {
 		return "ChannelConfig [bank=" + bank + ", program=" + program + ", midiOut=" + midiOut
 				+ ", reverb=" + reverb + ", choir=" + choir + ", channel=" + channel + ", changed="
 				+ changed + "]";
+	}
+
+	public JsonObject toJson() {
+		return Json.createObjectBuilder().add("bank", bank).add("program", program)
+				.add("reverb", reverb).add("choir", choir).add("channel", channel)
+				.add("midiOut", midiOut).build();
+	}
+
+	public void fromJson(final JsonObject json) {
+		bank = json.getInt("bank");
+		program = json.getInt("program");
+		midiOut = json.getInt("midiOut");
+		reverb = json.getInt("reverb");
+		choir = json.getInt("choir");
+		channel = json.getInt("channel");
+		changed = true;
 	}
 }
