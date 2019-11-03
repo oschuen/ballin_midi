@@ -23,6 +23,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+
 import midi.instrument.Instrument;
 import midi.loop.LoopEvent;
 import midi.loop.LoopEvent.COMMAND;
@@ -174,6 +178,24 @@ public class PercussionModel {
 		for (final LoopModel model : tomsMap.values()) {
 			model.setQuarterDivision(quarterDivision);
 		}
+	}
 
+	public JsonObject toJson() {
+		final JsonObjectBuilder json = Json.createObjectBuilder();
+		for (final PercussionInstrument percussionInstrument : PercussionInstrument.values()) {
+			getLoopModel(percussionInstrument)
+					.ifPresent(it -> json.add(percussionInstrument.name(), it.toJson()));
+		}
+		json.add("accent", accent.toJson());
+
+		return json.build();
+	}
+
+	public void fromJson(final JsonObject json) {
+		for (final PercussionInstrument percussionInstrument : PercussionInstrument.values()) {
+			final JsonObject jloopModel = json.getJsonObject(percussionInstrument.name());
+			getLoopModel(percussionInstrument).ifPresent(it -> it.fromJson(jloopModel));
+		}
+		accent.fromJson(json.getJsonObject("accent"));
 	}
 }

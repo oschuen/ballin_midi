@@ -24,6 +24,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -399,5 +403,24 @@ public class GuitarModel implements ChordListener {
 		public int getETone() {
 			return baseMidi[5] + fret[5];
 		}
+	}
+
+	public JsonObject toJson() {
+		final JsonObjectBuilder json = Json.createObjectBuilder();
+		for (final GuitarInstrument guitarInstrument : GuitarInstrument.values()) {
+			getLoopModel(guitarInstrument)
+					.ifPresent(it -> json.add(guitarInstrument.name(), it.toJson()));
+		}
+		json.add("accent", accent.toJson());
+
+		return json.build();
+	}
+
+	public void fromJson(final JsonObject json) {
+		for (final GuitarInstrument guitarInstrument : GuitarInstrument.values()) {
+			final JsonObject jloopModel = json.getJsonObject(guitarInstrument.name());
+			getLoopModel(guitarInstrument).ifPresent(it -> it.fromJson(jloopModel));
+		}
+		accent.fromJson(json.getJsonObject("accent"));
 	}
 }

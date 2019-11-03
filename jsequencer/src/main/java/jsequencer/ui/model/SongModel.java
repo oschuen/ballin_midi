@@ -1,5 +1,12 @@
 package jsequencer.ui.model;
 
+import java.util.Arrays;
+
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
+
 import jmidi.gui.model.LayerModel;
 import midi.instrument.model.GuitarModel;
 import midi.instrument.model.PercussionModel;
@@ -21,7 +28,7 @@ public class SongModel {
 		channelConfig = new ChannelConfig[numberOfLoops];
 		for (int i = 0; i < numberOfLoops; i++) {
 			channelConfig[i] = new ChannelConfig();
-			layerModel[i] = new LayerModel(4);
+			layerModel[i] = new LayerModel(numberOfLayer);
 		}
 		for (int i = 0; i < numberOfLayer; i++) {
 			guitarModel[i] = new GuitarModel();
@@ -65,4 +72,38 @@ public class SongModel {
 	public LayerModel getLayerModel(final int loop) {
 		return layerModel[loop];
 	}
+
+	public JsonObject toJson() {
+		final JsonArrayBuilder jconfig = Json.createArrayBuilder();
+		final JsonArrayBuilder jpercussion = Json.createArrayBuilder();
+		final JsonArrayBuilder jguitar = Json.createArrayBuilder();
+		final JsonArrayBuilder jlayer = Json.createArrayBuilder();
+		Arrays.stream(channelConfig).map(ChannelConfig::toJson).forEach(jconfig::add);
+		Arrays.stream(percussionModel).map(PercussionModel::toJson).forEach(jpercussion::add);
+		Arrays.stream(guitarModel).map(GuitarModel::toJson).forEach(jguitar::add);
+		Arrays.stream(layerModel).map(LayerModel::toJson).forEach(jlayer::add);
+
+		return Json.createObjectBuilder().add("config", jconfig).add("percussion", jpercussion)
+				.add("guitar", jguitar).add("layer", jlayer).build();
+	}
+
+	public void fromJson(final JsonObject json) {
+		final JsonArray jconfig = json.getJsonArray("config");
+		for (int i = 0; i < jconfig.size(); ++i) {
+			channelConfig[i].fromJson(jconfig.getJsonObject(i));
+		}
+		final JsonArray jpercussion = json.getJsonArray("percussion");
+		for (int i = 0; i < jpercussion.size(); ++i) {
+			percussionModel[i].fromJson(jpercussion.getJsonObject(i));
+		}
+		final JsonArray jguitar = json.getJsonArray("guitar");
+		for (int i = 0; i < jguitar.size(); ++i) {
+			guitarModel[i].fromJson(jguitar.getJsonObject(i));
+		}
+		final JsonArray jlayer = json.getJsonArray("layer");
+		for (int i = 0; i < jlayer.size(); ++i) {
+			layerModel[i].fromJson(jlayer.getJsonObject(i));
+		}
+	}
+
 }

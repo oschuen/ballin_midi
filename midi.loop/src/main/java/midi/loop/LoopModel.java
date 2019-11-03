@@ -25,6 +25,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 
@@ -186,10 +187,38 @@ public class LoopModel {
 	}
 
 	public JsonObject toJson() {
-		JsonArrayBuilder jEvents = Json.createArrayBuilder();
-		Arrays.stream(events).map(LoopEvent::toJson).forEach(jEvents::add);
-		return Json.createObjectBuilder().add("velocity", getVelocity()).add("quarterPerPage", quarterPerPage)
-				.add("numberOfPages", numberOfPages).add("quarterDivision", quarterDivision).add("events", jEvents)
-				.build();
+		final JsonArrayBuilder jEvents = Json.createArrayBuilder();
+		Arrays.stream(events).map(it -> {
+			if (it == null) {
+				return LoopEvent.getNullEvent();
+			} else {
+				return it;
+			}
+		}).map(LoopEvent::toJson).forEach(jEvents::add);
+		return Json.createObjectBuilder().add("velocity", getVelocity())
+				.add("quarterPerPage", quarterPerPage).add("numberOfPages", numberOfPages)
+				.add("quarterDivision", quarterDivision).add("events", jEvents).build();
+	}
+
+	public void fromJson(final JsonObject json) {
+		final JsonArray jevents = json.getJsonArray("events");
+		events = new LoopEvent[jevents.size()];
+		quarterDivision = json.getInt("quarterDivision");
+		quarterPerPage = json.getInt("quarterPerPage");
+		numberOfPages = json.getInt("numberOfPages");
+		velocity.setValue(json.getInt("velocity"));
+		adaptSize();
+		for (int i = 0; i < jevents.size() && i < events.length; ++i) {
+			if (LoopEvent.isNull(jevents.getJsonObject(i))) {
+				events[i] = null;
+			} else {
+				final LoopEvent event = new LoopEvent();
+				event.fromJson(jevents.getJsonObject(i));
+				events[i] = event;
+			}
+		}
+		for (int i = jevents.size(); i < events.length; ++i) {
+			events[i] = null;
+		}
 	}
 }

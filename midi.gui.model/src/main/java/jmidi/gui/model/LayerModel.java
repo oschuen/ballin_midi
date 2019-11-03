@@ -19,13 +19,19 @@
  */
 package jmidi.gui.model;
 
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+
 /**
  * @author oliver
  *
  */
 public class LayerModel {
 
-	final private IntegerModel[] layers;
+	private final IntegerModel[] layers;
 
 	public LayerModel(final int number) {
 		layers = new IntegerModel[number];
@@ -41,6 +47,12 @@ public class LayerModel {
 		return 0;
 	}
 
+	public void setLayer(final int column, final int layer) {
+		if (0 <= column && column < layers.length) {
+			layers[column].setValue(layer);
+		}
+	}
+
 	public void increment(final int column) {
 		if (0 <= column && column < layers.length) {
 			final IntegerModel integerModel = layers[column];
@@ -49,6 +61,21 @@ public class LayerModel {
 			if (integerModel.getValue() == currentValue) {
 				integerModel.setValue(integerModel.getMinValue());
 			}
+		}
+	}
+
+	public JsonObjectBuilder toJson() {
+		final JsonArrayBuilder jlayers = Json.createArrayBuilder();
+		for (final IntegerModel integerModel : layers) {
+			jlayers.add(integerModel.getValue());
+		}
+		return Json.createObjectBuilder().add("layers", jlayers);
+	}
+
+	public void fromJson(final JsonObject json) {
+		final JsonArray jlayers = json.getJsonArray("layers");
+		for (int i = 0; i < jlayers.size(); ++i) {
+			layers[i].setValue(jlayers.getInt(i));
 		}
 	}
 }

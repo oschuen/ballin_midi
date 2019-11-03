@@ -43,6 +43,7 @@ public class LoopEvent {
 		NOTE_ON, NOTE_OFF, IGNORE
 	};
 
+	private static final LoopEvent nullEvent = new LoopEvent(true);
 	private final List<Integer> notes = new ArrayList<>();
 	private int velocity = 127;
 
@@ -50,7 +51,13 @@ public class LoopEvent {
 
 	private static final Logger logger = LoggerFactory.getLogger(LoopEvent.class);
 
+	private final boolean isNull = false;
+
 	public LoopEvent() {
+		super();
+	}
+
+	public LoopEvent(final boolean isNull) {
 		super();
 	}
 
@@ -131,8 +138,10 @@ public class LoopEvent {
 	}
 
 	public JsonObject toJson() {
-		return Json.createObjectBuilder().add("command", command.name()).add("velocity", velocity)
+		final JsonObject ret = Json.createObjectBuilder().add("command", command.name())
+				.add("velocity", velocity).add("isnull", isNull)
 				.add("notes", Json.createArrayBuilder(notes)).build();
+		return ret;
 	}
 
 	public void fromJson(final JsonObject json) {
@@ -143,5 +152,20 @@ public class LoopEvent {
 		for (int i = 0; i < jnotes.size(); ++i) {
 			notes.add(Integer.valueOf(jnotes.getInt(i)));
 		}
+	}
+
+	/**
+	 * @return the isNull
+	 */
+	public boolean isNull() {
+		return isNull;
+	}
+
+	public static boolean isNull(final JsonObject json) {
+		return json.getBoolean("isnull");
+	}
+
+	public static LoopEvent getNullEvent() {
+		return nullEvent;
 	}
 }

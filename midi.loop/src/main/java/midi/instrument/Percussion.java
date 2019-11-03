@@ -107,7 +107,6 @@ public class Percussion implements BeatListener {
 			final Optional<LoopEvent> event = loopModel[i].getStepEvent(step);
 			event.ifPresent(it -> {
 				try {
-					System.out.println(config);
 					it.asWeightedEvent(accent).playEvent(receiver, config.getChannel());
 				} catch (final InvalidMidiDataException e) {
 					logger.error("Couldn't play event", e);
