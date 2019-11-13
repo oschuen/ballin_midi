@@ -104,6 +104,7 @@ public class SongModelTest {
 				}
 			}
 		}
+		long millis = System.currentTimeMillis();
 		try (final ByteArrayOutputStream out = new ByteArrayOutputStream();) {
 			final JsonWriter writer = writerFactory.createWriter(out);
 			writer.write(model.toJson());
@@ -117,6 +118,7 @@ public class SongModelTest {
 				}
 			}
 		}
+		System.out.println(System.currentTimeMillis() - millis);
 	}
 
 }
