@@ -38,6 +38,7 @@ import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import jsequencer.persistence.Persistence;
 import jsequencer.ui.model.SongModel;
 import jsequencer.ui.screen.DrumLoopLayer;
 import jsequencer.ui.screen.GuitarLoopLayer;
@@ -181,6 +182,7 @@ public class Sequencer {
 	private static void mainSong(final File file) throws MidiUnavailableException {
 		final Screen screen = Runtime.getRuntime().getScreen();
 		final SongModel model = new SongModel(8, 4);
+		final Persistence persistence = new Persistence(model, 0);
 		final Properties props = new Properties();
 		try {
 			try (InputStream stream = new FileInputStream(file)) {
