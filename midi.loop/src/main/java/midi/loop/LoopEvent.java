@@ -51,14 +51,16 @@ public class LoopEvent {
 
 	private static final Logger logger = LoggerFactory.getLogger(LoopEvent.class);
 
-	private final boolean isNull = false;
+	private final boolean isNull;
 
 	public LoopEvent() {
 		super();
+		isNull = false;
 	}
 
 	public LoopEvent(final boolean isNull) {
 		super();
+		this.isNull = isNull;
 	}
 
 	public LoopEvent(final COMMAND command, final int velocity, final List<Integer> notes) {
@@ -66,6 +68,7 @@ public class LoopEvent {
 		this.command = command;
 		this.velocity = velocity;
 		this.notes.addAll(notes);
+		isNull = false;
 	}
 
 	public LoopEvent(final COMMAND command, final int velocity, final Integer... notes) {
@@ -73,6 +76,7 @@ public class LoopEvent {
 		this.command = command;
 		this.velocity = velocity;
 		this.notes.addAll(Arrays.asList(notes));
+		isNull = false;
 	}
 
 	/**

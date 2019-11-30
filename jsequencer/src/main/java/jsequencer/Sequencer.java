@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Transmitter;
 
@@ -44,7 +43,6 @@ import jsequencer.ui.screen.DrumLoopLayer;
 import jsequencer.ui.screen.GuitarLoopLayer;
 import jsequencer.ui.screen.SongLayer;
 import midi.chord.ChordRecognizer;
-import midi.device.resource.MidiDevices;
 import midi.instrument.Guitar;
 import midi.instrument.Percussion;
 import midi.instrument.model.GuitarModel;
@@ -53,7 +51,6 @@ import midi.loop.beat.Beat;
 import midi.loop.beat.Beat.BeatListener;
 import midi.loop.config.ChannelConfig;
 import midi.pad.ui.Screen;
-import midi.pad.ui.event.KeyBoardReceiver;
 import midi.pad.ui.event.Runtime;
 
 /**
@@ -80,14 +77,6 @@ public class Sequencer {
 		Runtime.getRuntime().applyChannelConfig(config);
 
 		percussion = new Percussion(Runtime.getRuntime().getOutput(config), config);
-
-		final MidiDevice transmitterDevice = MidiDevices
-				.secureGetTransmitterDevice("VirMIDI [hw:4,2,0]");
-		if (!transmitterDevice.isOpen()) {
-			transmitterDevice.open();
-		}
-		transmitter = transmitterDevice.getTransmitter();
-		transmitter.setReceiver(new KeyBoardReceiver());
 
 		final Runnable finishRunnable = new Runnable() {
 
@@ -176,14 +165,15 @@ public class Sequencer {
 
 			}
 		});
-		Runtime.getRuntime().addInput(new KeyBoardReceiver(), midiDevice);
 	}
 
 	private static void mainSong(final File file) throws MidiUnavailableException {
 		final Screen screen = Runtime.getRuntime().getScreen();
 		final SongModel model = new SongModel(8, 4);
-		final Persistence persistence = new Persistence(model, 0);
+
 		final Properties props = new Properties();
+
+		new Persistence(model, 0);
 		try {
 			try (InputStream stream = new FileInputStream(file)) {
 				props.load(stream);
@@ -194,6 +184,8 @@ public class Sequencer {
 
 		final Beat beat = new Beat();
 		final Orchester orchester = new Orchester(model, beat);
+		final Controller controller = new Controller(orchester);
+		Runtime.getRuntime().addControlInput(controller);
 
 		beat.start();
 

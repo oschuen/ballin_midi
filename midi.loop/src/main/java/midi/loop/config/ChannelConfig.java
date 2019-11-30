@@ -33,6 +33,7 @@ public class ChannelConfig {
 	private int reverb;
 	private int choir;
 	private int channel;
+	private int volume;
 	private boolean changed;
 
 	/**
@@ -67,6 +68,24 @@ public class ChannelConfig {
 	public void setProgram(final int program) {
 		if (this.program != program) {
 			this.program = program;
+			changed = true;
+		}
+	}
+
+	/**
+	 * @return the volume
+	 */
+	public int getVolume() {
+		return volume;
+	}
+
+	/**
+	 * @param volume
+	 *            the volume to set
+	 */
+	public void setVolume(final int volume) {
+		if (this.volume != volume) {
+			this.volume = volume;
 			changed = true;
 		}
 	}
@@ -162,14 +181,14 @@ public class ChannelConfig {
 	@Override
 	public String toString() {
 		return "ChannelConfig [bank=" + bank + ", program=" + program + ", midiOut=" + midiOut
-				+ ", reverb=" + reverb + ", choir=" + choir + ", channel=" + channel + ", changed="
-				+ changed + "]";
+				+ ", volume=" + volume + ", reverb=" + reverb + ", choir=" + choir + ", channel="
+				+ channel + ", changed=" + changed + "]";
 	}
 
 	public JsonObject toJson() {
 		return Json.createObjectBuilder().add("bank", bank).add("program", program)
 				.add("reverb", reverb).add("choir", choir).add("channel", channel)
-				.add("midiOut", midiOut).build();
+				.add("midiOut", midiOut).add("volume", volume).build();
 	}
 
 	public void fromJson(final JsonObject json) {
@@ -179,6 +198,7 @@ public class ChannelConfig {
 		reverb = json.getInt("reverb");
 		choir = json.getInt("choir");
 		channel = json.getInt("channel");
+		volume = json.getInt("volume");
 		changed = true;
 	}
 }

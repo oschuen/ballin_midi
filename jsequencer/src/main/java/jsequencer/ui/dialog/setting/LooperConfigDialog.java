@@ -40,8 +40,8 @@ public class LooperConfigDialog extends HintDialog {
 
 	private enum MODE {
 
-		BANK("Bank", 255), PROGRAM("Program", 127), MIDIOUT("Midi Out", 3), CHANNEL("Channel",
-				15), REVERB("Reverb", 120), CHOIR("Choir", 100);
+		BANK("Bank", 127), PROGRAM("Program", 127), MIDIOUT("Midi Out", 3), CHANNEL("Channel",
+				15), REVERB("Reverb", 127), CHOIR("Choir", 127), VOLUME("Volume", 127);
 
 		private MODE(final String hint, final int max) {
 			this.hint = hint;
@@ -76,7 +76,8 @@ public class LooperConfigDialog extends HintDialog {
 		this.config = config;
 		setWidgets(getButton(0, 2, MODE.MIDIOUT), getButton(1, 2, Color.FULL_AMBER, MODE.CHANNEL),
 				getButton(2, 2, MODE.BANK), getButton(3, 2, Color.RED, MODE.PROGRAM),
-				getButton(4, 2, MODE.REVERB), getButton(5, 2, MODE.CHOIR));
+				getButton(4, 2, MODE.VOLUME), getButton(5, 2, MODE.REVERB),
+				getButton(6, 2, MODE.CHOIR));
 		start();
 	}
 
@@ -103,6 +104,8 @@ public class LooperConfigDialog extends HintDialog {
 			return config.getProgram();
 		case REVERB:
 			return config.getReverb();
+		case VOLUME:
+			return config.getVolume();
 		default:
 			logger.error("Unkown mode: " + mode.name());
 			return 0;
@@ -128,6 +131,9 @@ public class LooperConfigDialog extends HintDialog {
 			break;
 		case REVERB:
 			config.setReverb(Math.min(mode.getMax(), value));
+			break;
+		case VOLUME:
+			config.setVolume(Math.min(mode.getMax(), value));
 			break;
 		default:
 			logger.error("Unkown mode: " + mode.name());

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2016 Oliver Schünemann
+ * Copyright (C) 2019 Oliver Schünemann
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,17 +20,10 @@
 package jsequencer.persistence;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -63,15 +56,16 @@ public class Persistence {
 	private int currentSong = 0;
 	private final int MAX_COPIES = 10;
 	private String currentJson = "";
-	
-	private SongModel model;
+
+	private final SongModel model;
 	private final SongModel defaultModel;
-	private final String defaultJsonString; 
+	private final String defaultJsonString;
 	private static final Logger logger = LoggerFactory.getLogger(Persistence.class);
 	private final Path persistencePath;
-	private Lock lock = new ReentrantLock();
-	private ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-	public Persistence(SongModel model, int currentSong) {
+	private final Lock lock = new ReentrantLock();
+	private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+
+	public Persistence(final SongModel model, final int currentSong) {
 		this.model = model;
 		final Map<String, Object> properties = new HashMap<>();
 		properties.put(JsonGenerator.PRETTY_PRINTING, true);
@@ -82,81 +76,85 @@ public class Persistence {
 		if (!Files.exists(persistencePath)) {
 			try {
 				Files.createDirectories(persistencePath);
-			} catch (IOException e) {
-				logger.error("Can't create Persistence Path {}", persistencePath.toAbsolutePath().toString());
+			} catch (final IOException e) {
+				logger.error("Can't create Persistence Path {}",
+						persistencePath.toAbsolutePath().toString());
 			}
 		}
 		loadSong(currentSong);
-		executor.scheduleAtFixedRate(() -> writeSong(), 10, 10, TimeUnit.SECONDS); 
+		executor.scheduleAtFixedRate(() -> writeSong(), 10, 10, TimeUnit.SECONDS);
 	}
-	
-	private String modelToString(SongModel model) {
+
+	private String modelToString(final SongModel model) {
 		try (final ByteArrayOutputStream out = new ByteArrayOutputStream();) {
 			final JsonWriter writer = writerFactory.createWriter(out);
 			writer.write(model.toJson());
 			return new String(out.toByteArray());
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			logger.error("Model To String failed", e);
 		}
 		return defaultJsonString;
 	}
-	
-	private Path getSongPath(int song, int revision) {
+
+	private Path getSongPath(final int song, final int revision) {
 		return persistencePath.resolve("SONG_" + song + "_" + revision + ".json");
 	}
 
-	private void moveRevisions(int song) {
+	private void moveRevisions(final int song) {
 		Path lastRevision = getSongPath(song, MAX_COPIES);
 		try {
 			if (Files.exists(lastRevision)) {
 				Files.delete(lastRevision);
 			}
 			for (int i = MAX_COPIES; i > 0; --i) {
-				Path nextRevision = getSongPath(song, i-1);
+				final Path nextRevision = getSongPath(song, i - 1);
 				if (Files.exists(nextRevision)) {
 					Files.move(nextRevision, lastRevision, StandardCopyOption.REPLACE_EXISTING);
 				}
 				lastRevision = nextRevision;
 			}
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			logger.error("Moving old revisions failed");
 		}
 	}
-	
+
 	public void writeSong() {
 		String songJson = null;
 		boolean identical = true;
 		int song = -1;
+		lock.lock();
 		try {
 			song = currentSong;
 			songJson = modelToString(model);
 			identical = Objects.equals(songJson, currentJson);
+			currentJson = songJson;
+			if (!(identical || songJson == null || songJson == null)) {
+				moveRevisions(song);
+				try (FileWriter fw = new FileWriter(getSongPath(song, 0).toFile())) {
+					fw.write(songJson);
+				} catch (final IOException e) {
+					logger.error("Write Song failed", e);
+				}
+			}
 		} finally {
 			lock.unlock();
 		}
-		if (! (identical || songJson == null || songJson == null)) {
-			try (FileWriter fw = new FileWriter(getSongPath(song, 0).toFile())) {
-				fw.write(songJson);
-				moveRevisions(song);
-			} catch (IOException e) {
-				logger.error("Write Song failed", e);
-			}
-		}
 	}
-	
-	public void loadSong(int song) {
-		Path songPath = getSongPath(song, 0);
+
+	public void loadSong(final int song) {
+		final Path songPath = getSongPath(song, 0);
 		lock.lock();
 		try {
 			if (Files.exists(songPath)) {
 				try {
-					String newJson = FileUtils.readFileToString(songPath.toFile(), StandardCharsets.UTF_8);	
-					JsonReader reader = Json.createReader(new StringReader(currentJson));
-			        JsonObject json = reader.readObject();
-			        model.fromJson(json);
-			        reader.close();
-			        currentJson = newJson;
-				} catch (IOException e) {
+					final String newJson = FileUtils.readFileToString(songPath.toFile(),
+							StandardCharsets.UTF_8);
+					final JsonReader reader = Json.createReader(new StringReader(newJson));
+					final JsonObject json = reader.readObject();
+					model.fromJson(json);
+					reader.close();
+					currentJson = newJson;
+				} catch (final IOException e) {
 					logger.error("Loading song failed", e);
 				}
 			} else {

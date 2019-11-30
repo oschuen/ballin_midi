@@ -46,7 +46,7 @@ public class Orchester {
 		guitarChannelConfig = model.getGuitarChannelConfig();
 
 		// Configure Runtime
-		Runtime.getRuntime().applyChannelConfig(model.getGuitarChannelConfig());
+		Runtime.getRuntime().applyChannelConfig(guitarChannelConfig);
 		Runtime.getRuntime().applyChannelConfig(percussionChannelConfig);
 
 		// Create instruments
@@ -69,5 +69,33 @@ public class Orchester {
 		percussion.setModel(model.getPercussionModel(layer));
 		guitar.setModel(model.getGuitarModel(layer));
 		recognizer.setListener(model.getGuitarModel(layer));
+	}
+
+	/**
+	 * @return the percussion
+	 */
+	public Percussion getPercussion() {
+		return percussion;
+	}
+
+	/**
+	 * @return the guitar
+	 */
+	public Guitar getGuitar() {
+		return guitar;
+	}
+
+	/**
+	 * @return the percussionChannelConfig
+	 */
+	public ChannelConfig getPercussionChannelConfig() {
+		return percussionChannelConfig;
+	}
+
+	/**
+	 * @return the guitarChannelConfig
+	 */
+	public ChannelConfig getGuitarChannelConfig() {
+		return guitarChannelConfig;
 	}
 }

@@ -58,10 +58,9 @@ public class Runtime {
 	private final Receiver padInput = new PadReceiver(screen);
 	private static boolean checkConfiguration = false;
 	private static String defaultDevice = "null";
-	// private static String padInDevice = "Mini \\[hw:\\d,0,0\\]";
-	// private static String padOutDevice = "Mini \\[hw:\\d,0,0\\]";
 	private static String padInDevice = "VirMIDI \\[hw:\\d,2,0\\]";
 	private static String padOutDevice = "VirMIDI \\[hw:\\d,2,0\\]";
+	private static String controlInDevice = "M2X2 \\[hw:\\d,0,0\\]";
 	private static String midi1InDevice = "M2X2 \\[hw:\\d,0,0\\]";
 	private static String midi1OutDevice = "M2X2 \\[hw:\\d,0,0\\]";
 	private static String midi2InDevice = "M2X2 \\[hw:\\d,0,1\\]";
@@ -75,6 +74,7 @@ public class Runtime {
 
 	private final OutputDevice padOutputDevice = new OutputDevice();
 	private final InputDevice padInputDevice = new InputDevice();
+	private final InputDevice controlInputDevice = new InputDevice();
 	private final OutputDevice midi1OutputDevice = new OutputDevice();
 	private final InputDevice midi1InputDevice = new InputDevice();
 	private final OutputDevice midi2OutputDevice = new OutputDevice();
@@ -92,6 +92,7 @@ public class Runtime {
 	public static String CFG_NUMBER_OF_LAYERS = "NUMBER_OF_LAYERS";
 	public static String CFG_PAD_INPUT_DEVICE = "PAD_INPUT_DEVICE";
 	public static String CFG_PAD_OUTPUT_DEVICE = "PAD_OUTPUT_DEVICE";
+	public static String CFG_CONTROL_INPUT_DEVICE = "CONTROL_INPUT_DEVICE";
 	public static String CFG_MIDI_1_INPUT_DEVICE = "MIDI_1_INPUT_DEVICE";
 	public static String CFG_MIDI_1_OUTPUT_DEVICE = "MIDI_1_OUTPUT_DEVICE";
 	public static String CFG_MIDI_2_INPUT_DEVICE = "MIDI_2_INPUT_DEVICE";
@@ -106,6 +107,7 @@ public class Runtime {
 		{
 			put(CFG_NUMBER_OF_LAYERS, "5");
 			put(CFG_PAD_INPUT_DEVICE, padInDevice);
+			put(CFG_CONTROL_INPUT_DEVICE, controlInDevice);
 			put(CFG_PAD_OUTPUT_DEVICE, padOutDevice);
 			put(CFG_MIDI_1_INPUT_DEVICE, midi1InDevice);
 			put(CFG_MIDI_1_OUTPUT_DEVICE, midi1OutDevice);
@@ -208,6 +210,8 @@ public class Runtime {
 			screen.setNumberOfLayers(numberOfLayers);
 			padInputDevice.setDeviceName(getStringConfig(CFG_PAD_INPUT_DEVICE, defaultDevice));
 			padOutputDevice.setDeviceName(getStringConfig(CFG_PAD_OUTPUT_DEVICE, defaultDevice));
+			controlInputDevice
+					.setDeviceName(getStringConfig(CFG_CONTROL_INPUT_DEVICE, defaultDevice));
 			midi1InputDevice.setDeviceName(getStringConfig(CFG_MIDI_1_INPUT_DEVICE, defaultDevice));
 			midi1OutputDevice
 					.setDeviceName(getStringConfig(CFG_MIDI_1_OUTPUT_DEVICE, defaultDevice));
@@ -232,8 +236,6 @@ public class Runtime {
 			try {
 				final Receiver receiver = outputChannels[config.getMidiOut()].getOutput();
 				final ShortMessage bsmsb = new ShortMessage();
-				System.out.println(
-						"MSB : " + (config.getBank() / 128) + " LSB " + (config.getBank() % 128));
 				bsmsb.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 0x00,
 						config.getBank() / 128);
 
@@ -254,6 +256,10 @@ public class Runtime {
 				reverb.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 91,
 						(config.getReverb() & 0x7f));
 				receiver.send(reverb, 0);
+				final ShortMessage volume = new ShortMessage();
+				volume.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 7,
+						(config.getVolume() & 0x7f));
+				receiver.send(volume, 0);
 			} catch (final InvalidMidiDataException e) {
 				logger.error("Failed to configure output device");
 			}
@@ -436,6 +442,14 @@ public class Runtime {
 		if (device >= 0 && device < outputChannels.length) {
 			inputChannels[device].removeInput(receiver);
 		}
+	}
+
+	public void addControlInput(final Receiver receiver) {
+		controlInputDevice.addInput(receiver);
+	}
+
+	public void removeControlInput(final Receiver receiver) {
+		controlInputDevice.removeInput(receiver);
 	}
 
 	private class ConfiguredReceiver implements Receiver {

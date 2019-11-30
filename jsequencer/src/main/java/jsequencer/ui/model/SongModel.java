@@ -41,6 +41,7 @@ public class SongModel {
 		config.setChoir(0);
 		config.setReverb(0);
 		config.setMidiOut(0);
+		config.setVolume(127);
 		Runtime.getRuntime().applyChannelConfig(config);
 
 		config = channelConfig[1];
@@ -50,6 +51,7 @@ public class SongModel {
 		config.setChoir(0);
 		config.setReverb(127);
 		config.setMidiOut(0);
+		config.setVolume(127);
 		Runtime.getRuntime().applyChannelConfig(config);
 	}
 

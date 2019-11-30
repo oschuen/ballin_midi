@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * 
- * @since 01.06.2019
+ * @since 30.11.2019
  * @version 1.0
  * @author oliver
  */
-package midi.pad.ui.event;
+package jsequencer;
 
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
@@ -27,7 +27,14 @@ import javax.sound.midi.ShortMessage;
  * @author oliver
  *
  */
-public class KeyBoardReceiver implements Receiver {
+public class Controller implements Receiver {
+
+	private final Orchester orchester;
+
+	public Controller(final Orchester orchester) {
+		super();
+		this.orchester = orchester;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -41,6 +48,19 @@ public class KeyBoardReceiver implements Receiver {
 			System.out.println("Command = " + shortMessage.getCommand() + " channel "
 					+ shortMessage.getChannel() + " d1 = " + shortMessage.getData1() + " d2 = "
 					+ shortMessage.getData2());
+			if (ShortMessage.CONTROL_CHANGE == shortMessage.getCommand()) {
+				switch (shortMessage.getData1()) {
+				case 73:
+					orchester.getPercussionChannelConfig().setVolume(shortMessage.getData2());
+					break;
+				case 74:
+					orchester.getPercussionChannelConfig().setReverb(shortMessage.getData2());
+					break;
+				case 85:
+					orchester.getGuitar().setVelocity(shortMessage.getData2());
+					orchester.getPercussion().setVelocity(shortMessage.getData2());
+				}
+			}
 		} else {
 			System.out.println(message.getClass().toGenericString());
 		}
