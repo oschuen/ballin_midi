@@ -25,6 +25,7 @@ import midi.instrument.Guitar;
 import midi.instrument.Percussion;
 import midi.loop.beat.Beat;
 import midi.loop.config.ChannelConfig;
+import midi.loop.config.InputChannelConfig;
 import midi.pad.ui.event.Runtime;
 
 /**
@@ -38,12 +39,14 @@ public class Orchester {
 	private final ChordRecognizer recognizer;
 	private final ChannelConfig percussionChannelConfig;
 	private final ChannelConfig guitarChannelConfig;
+	private final InputChannelConfig guitarInputConfig;
 
 	public Orchester(final SongModel model, final Beat beat) {
 		super();
 		this.model = model;
 		percussionChannelConfig = model.getPercussionChannelConfig();
 		guitarChannelConfig = model.getGuitarChannelConfig();
+		guitarInputConfig = model.getGuitarInputConfig();
 
 		// Configure Runtime
 		Runtime.getRuntime().applyChannelConfig(guitarChannelConfig);
@@ -56,7 +59,7 @@ public class Orchester {
 				guitarChannelConfig);
 		recognizer = new ChordRecognizer();
 		recognizer.setListener(model.getGuitarModel(0));
-		Runtime.getRuntime().addInput(recognizer, guitarChannelConfig.getMidiOut());
+		Runtime.getRuntime().addInput(recognizer, guitarInputConfig.getMidiIn());
 
 		// Apply Models to instruments
 		percussion.setModel(model.getPercussionModel(0));

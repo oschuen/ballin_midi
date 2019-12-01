@@ -25,6 +25,7 @@ import java.util.Optional;
 
 import jsequencer.Orchester;
 import jsequencer.ui.dialog.setting.LooperConfigDialog;
+import jsequencer.ui.dialog.setting.LooperInputDialog;
 import jsequencer.ui.model.SongModel;
 import midi.loop.beat.Beat;
 import midi.loop.beat.Beat.BarListener;
@@ -94,6 +95,13 @@ public class SongLayer extends HintDialog implements BarListener {
 			});
 			layer.start();
 		}, () -> {
+			final Screen screen = Runtime.getRuntime().getScreen();
+			final LooperInputDialog layer = new LooperInputDialog("Guitar Input",
+					model.getGuitarInputConfig());
+			screen.putLayer(3, layer, () -> {
+				screen.removeLayer(layer);
+			});
+			layer.start();
 			getRuntime().invalidate();
 		}, () -> {
 			final Screen screen = Runtime.getRuntime().getScreen();
