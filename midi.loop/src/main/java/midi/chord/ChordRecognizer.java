@@ -52,6 +52,8 @@ public class ChordRecognizer implements Receiver {
 	private ScheduledFuture<?> recogTimeoutFuture = null;
 	private final Recognizer recognizer = new Recognizer();
 	private final Lock lock = new ReentrantLock();
+	private int midiChannel = 0;
+	private boolean split = true;
 
 	private static final Logger logger = LoggerFactory.getLogger(ChordRecognizer.class);
 
@@ -74,9 +76,10 @@ public class ChordRecognizer implements Receiver {
 	private void handleNoteOn(final ShortMessage shortMessage) {
 		lock.lock();
 		try {
+
 			final int onKey = shortMessage.getData1();
 			final int velocity = shortMessage.getData2();
-			if (onKey <= splitTone) {
+			if ((onKey <= splitTone || !split) && shortMessage.getChannel() == midiChannel) {
 				if (recogTimeoutFuture != null) {
 					recogTimeoutFuture.cancel(false);
 				}
@@ -104,7 +107,7 @@ public class ChordRecognizer implements Receiver {
 		lock.lock();
 		try {
 			final int offKey = shortMessage.getData1();
-			if (offKey <= splitTone) {
+			if ((offKey <= splitTone || !split) && shortMessage.getChannel() == midiChannel) {
 				if (recogTimeoutFuture != null) {
 					recogTimeoutFuture.cancel(false);
 				}
@@ -309,5 +312,35 @@ public class ChordRecognizer implements Receiver {
 	 */
 	public void setListener(final ChordListener listener) {
 		this.listener = listener;
+	}
+
+	/**
+	 * @return the midiChannel
+	 */
+	public int getMidiChannel() {
+		return midiChannel;
+	}
+
+	/**
+	 * @param midiChannel
+	 *            the midiChannel to set
+	 */
+	public void setMidiChannel(final int midiChannel) {
+		this.midiChannel = midiChannel;
+	}
+
+	/**
+	 * @return the split
+	 */
+	public boolean isSplit() {
+		return split;
+	}
+
+	/**
+	 * @param split
+	 *            the split to set
+	 */
+	public void setSplit(final boolean split) {
+		this.split = split;
 	}
 }

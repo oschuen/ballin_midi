@@ -29,7 +29,12 @@ import javax.json.JsonObject;
 public class InputChannelConfig {
 	private int midiIn;
 	private int channel;
+	private InputMode mode = InputMode.OFF;
 	private boolean changed;
+
+	public static enum InputMode {
+		OFF, BELOW, ABOVE, ALL
+	};
 
 	/**
 	 * @return the midiOut
@@ -68,6 +73,24 @@ public class InputChannelConfig {
 	}
 
 	/**
+	 * @return the mode
+	 */
+	public InputMode getMode() {
+		return mode;
+	}
+
+	/**
+	 * @param mode
+	 *            the mode to set
+	 */
+	public void setMode(final InputMode mode) {
+		if (this.mode.equals(mode)) {
+			this.mode = mode;
+			changed = true;
+		}
+	}
+
+	/**
 	 * @return the changed
 	 */
 	public boolean isChanged() {
@@ -85,17 +108,24 @@ public class InputChannelConfig {
 	 */
 	@Override
 	public String toString() {
-		return "InputChannelConfig [midiIn=" + midiIn + ", channel=" + channel + ", changed="
-				+ changed + "]";
+		return "InputChannelConfig [midiIn=" + midiIn + ", channel=" + channel + ", mode="
+				+ mode.name() + ", changed=" + changed + "]";
 	}
 
 	public JsonObject toJson() {
-		return Json.createObjectBuilder().add("channel", channel).add("midiIn", midiIn).build();
+		return Json.createObjectBuilder().add("channel", channel).add("midiIn", midiIn)
+				.add("mode", mode.ordinal()).build();
 	}
 
 	public void fromJson(final JsonObject json) {
 		midiIn = json.getInt("midiIn");
 		channel = json.getInt("channel");
+		final int imode = json.getInt("mode", 0);
+		if (imode >= 0 && imode < InputMode.values().length) {
+			mode = InputMode.values()[imode];
+		} else {
+			mode = InputMode.OFF;
+		}
 		changed = true;
 	}
 

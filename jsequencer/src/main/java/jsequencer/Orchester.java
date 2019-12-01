@@ -59,7 +59,9 @@ public class Orchester {
 				guitarChannelConfig);
 		recognizer = new ChordRecognizer();
 		recognizer.setListener(model.getGuitarModel(0));
-		Runtime.getRuntime().addInput(recognizer, guitarInputConfig.getMidiIn());
+		recognizer.setSplit(false);
+		recognizer.setMidiChannel(guitarInputConfig.getChannel());
+		Runtime.getRuntime().addBelowSplitInput(recognizer, guitarInputConfig.getMidiIn());
 
 		// Apply Models to instruments
 		percussion.setModel(model.getPercussionModel(0));
@@ -100,5 +102,35 @@ public class Orchester {
 	 */
 	public ChannelConfig getGuitarChannelConfig() {
 		return guitarChannelConfig;
+	}
+
+	public void applyConfigs() {
+		if (percussionChannelConfig.isChanged()) {
+			Runtime.getRuntime().applyChannelConfig(percussionChannelConfig);
+			percussionChannelConfig.applied();
+		}
+		if (guitarChannelConfig.isChanged()) {
+			Runtime.getRuntime().applyChannelConfig(guitarChannelConfig);
+			guitarChannelConfig.applied();
+		}
+		if (guitarInputConfig.isChanged()) {
+			Runtime.getRuntime().removeInput(recognizer);
+			switch (guitarInputConfig.getMode()) {
+			case BELOW:
+				Runtime.getRuntime().addBelowSplitInput(recognizer, guitarInputConfig.getMidiIn());
+				break;
+			case ABOVE:
+				Runtime.getRuntime().addAboveSplitInput(recognizer, guitarInputConfig.getMidiIn());
+				break;
+			case ALL:
+				Runtime.getRuntime().addInput(recognizer, guitarInputConfig.getMidiIn());
+				break;
+			case OFF:
+			default:
+				break;
+			}
+			recognizer.setMidiChannel(guitarInputConfig.getChannel());
+			guitarInputConfig.applied();
+		}
 	}
 }

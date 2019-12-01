@@ -438,8 +438,8 @@ public class Runtime {
 		}
 	}
 
-	public void removeInput(final Receiver receiver, final int device) {
-		if (device >= 0 && device < outputChannels.length) {
+	public void removeInput(final Receiver receiver) {
+		for (int device = 0; device < outputChannels.length; ++device) {
 			inputChannels[device].removeInput(receiver);
 		}
 	}

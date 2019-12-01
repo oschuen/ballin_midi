@@ -75,7 +75,7 @@ public class SongLayer extends HintDialog implements BarListener {
 					model.getPercussionChannelConfig());
 			screen.putLayer(3, layer, () -> {
 				screen.removeLayer(layer);
-				Runtime.getRuntime().applyChannelConfig(model.getPercussionChannelConfig());
+				orchester.applyConfigs();
 			});
 			layer.start();
 			getRuntime().invalidate();
@@ -100,6 +100,7 @@ public class SongLayer extends HintDialog implements BarListener {
 					model.getGuitarInputConfig());
 			screen.putLayer(3, layer, () -> {
 				screen.removeLayer(layer);
+				orchester.applyConfigs();
 			});
 			layer.start();
 			getRuntime().invalidate();
@@ -109,7 +110,7 @@ public class SongLayer extends HintDialog implements BarListener {
 					model.getGuitarChannelConfig());
 			screen.putLayer(3, layer, () -> {
 				screen.removeLayer(layer);
-				Runtime.getRuntime().applyChannelConfig(model.getGuitarChannelConfig());
+				orchester.applyConfigs();
 			});
 			layer.start();
 			getRuntime().invalidate();
