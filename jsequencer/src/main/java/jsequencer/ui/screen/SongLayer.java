@@ -155,6 +155,11 @@ public class SongLayer extends HintDialog implements BarListener {
 		return super.getNumControlButton(x);
 	}
 
+	@Override
+	public Optional<ControlButton> getAbcControlButton(final int y) {
+		return Optional.empty();
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 

@@ -50,15 +50,46 @@ public class Controller implements Receiver {
 					+ shortMessage.getData2());
 			if (ShortMessage.CONTROL_CHANGE == shortMessage.getCommand()) {
 				switch (shortMessage.getData1()) {
-				case 73:
+				case 73: // Fader 1
 					orchester.getPercussionChannelConfig().setVolume(shortMessage.getData2());
 					break;
-				case 74:
+				case 75: // Fader 2
+					orchester.getGuitarChannelConfig().setVolume(shortMessage.getData2());
+					break;
+				case 79: // Fader 3
+					break;
+				case 72: // Fader 4
+					break;
+				case 80: // Fader 5
+					break;
+				case 81: // Fader 6
+					break;
+				case 82: // Fader 7
+					break;
+				case 83: // Fader 8
+					break;
+				case 74: // Poti 1
 					orchester.getPercussionChannelConfig().setReverb(shortMessage.getData2());
 					break;
-				case 85:
+				case 71: // Poti 2
+					orchester.getGuitarChannelConfig().setReverb(shortMessage.getData2());
+					break;
+				case 76: // Poti 3
+					break;
+				case 77: // Poti 4
+					break;
+				case 93: // Poti 5
+					break;
+				case 18: // Poti 6
+					break;
+				case 19: // Poti 7
+					break;
+				case 16: // Poti 8
+					break;
+				case 85: // Main Fader
 					orchester.getGuitar().setVelocity(shortMessage.getData2());
 					orchester.getPercussion().setVelocity(shortMessage.getData2());
+					break;
 				}
 			}
 		} else {
