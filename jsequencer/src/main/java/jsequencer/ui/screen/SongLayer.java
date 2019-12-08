@@ -29,6 +29,8 @@ import jsequencer.ui.dialog.setting.LooperInputDialog;
 import jsequencer.ui.model.SongModel;
 import midi.loop.beat.Beat;
 import midi.loop.beat.Beat.BarListener;
+import midi.loop.config.InputChannelConfig;
+import midi.loop.config.InputChannelConfig.InputMode;
 import midi.pad.ui.Color;
 import midi.pad.ui.Screen;
 import midi.pad.ui.dialogs.HintDialog;
@@ -48,6 +50,7 @@ public class SongLayer extends HintDialog implements BarListener {
 	private final Orchester orchester;
 	private int currentLayer = 0;
 	private int nextLayer = 0;
+	private final InputModeControlButton guitarInputModeControlButton;
 
 	/**
 	 * @param hint
@@ -57,6 +60,7 @@ public class SongLayer extends HintDialog implements BarListener {
 		this.model = model;
 		this.beat = beat;
 		this.orchester = orchester;
+		guitarInputModeControlButton = new InputModeControlButton(orchester.getGuitarInputConfig());
 		config[0] = new TrackConfig(0, () -> {
 			final DrumLoopLayer layer = new DrumLoopLayer(
 					this.model.getPercussionModel(currentLayer));
@@ -166,6 +170,9 @@ public class SongLayer extends HintDialog implements BarListener {
 
 	@Override
 	public Optional<ControlButton> getAbcControlButton(final int y) {
+		if (y == 1) {
+			return Optional.of(guitarInputModeControlButton);
+		}
 		return Optional.empty();
 	}
 
@@ -191,5 +198,58 @@ public class SongLayer extends HintDialog implements BarListener {
 			orchester.setLayer(currentLayer);
 		}
 		nextLayer = -1;
+	}
+
+	private static class InputModeControlButton extends ControlButton {
+		private static SwitchRunnable runnable;
+
+		public InputModeControlButton(final InputChannelConfig config) {
+			super(getColor(config), () -> runnable.run());
+			runnable = new SwitchRunnable(config);
+		}
+
+		private static Color getColor(final InputChannelConfig config) {
+			switch (config.getMode()) {
+			case ABOVE:
+				return Color.FULL_YELLOW;
+			case ALL:
+				return Color.FULL_GREEN;
+			case BELOW:
+				return Color.FULL_RED;
+			case OFF:
+			default:
+				return Color.BLACK;
+			}
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see midi.pad.ui.widgets.ControlButton#getColor()
+		 */
+		@Override
+		public Color getColor() {
+			return getColor(runnable.getConfig());
+		}
+
+		private static class SwitchRunnable implements Runnable {
+			private final InputChannelConfig config;
+
+			public SwitchRunnable(final InputChannelConfig config) {
+				super();
+				this.config = config;
+			}
+
+			@Override
+			public void run() {
+				final InputMode[] values = InputMode.values();
+				config.setMode(values[(config.getMode().ordinal() + 1) % values.length]);
+				Runtime.getRuntime().invalidate();
+			}
+
+			public InputChannelConfig getConfig() {
+				return config;
+			}
+		}
 	}
 }

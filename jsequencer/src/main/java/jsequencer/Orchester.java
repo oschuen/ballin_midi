@@ -133,4 +133,11 @@ public class Orchester {
 			guitarInputConfig.applied();
 		}
 	}
+
+	/**
+	 * @return the guitarInputConfig
+	 */
+	public InputChannelConfig getGuitarInputConfig() {
+		return guitarInputConfig;
+	}
 }

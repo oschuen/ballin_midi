@@ -84,7 +84,7 @@ public class InputChannelConfig {
 	 *            the mode to set
 	 */
 	public void setMode(final InputMode mode) {
-		if (this.mode.equals(mode)) {
+		if (!this.mode.equals(mode)) {
 			this.mode = mode;
 			changed = true;
 		}
