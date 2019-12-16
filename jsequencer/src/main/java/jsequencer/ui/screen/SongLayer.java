@@ -51,6 +51,7 @@ public class SongLayer extends HintDialog implements BarListener {
 	private int currentLayer = 0;
 	private int nextLayer = 0;
 	private final InputModeControlButton guitarInputModeControlButton;
+	private final InputModeControlButton[] sequencerInputModeControlButton = new InputModeControlButton[6];
 
 	/**
 	 * @param hint
@@ -166,6 +167,10 @@ public class SongLayer extends HintDialog implements BarListener {
 		for (int i = 1; i < 8; i++) {
 			config[i].setIn(true);
 		}
+		for (int i = 0; i < 6; i++) {
+			sequencerInputModeControlButton[i] = new InputModeControlButton(
+					new SwitchRunnable(orchester.getSequencerInputConfig(i)));
+		}
 		start();
 	}
 
@@ -201,6 +206,9 @@ public class SongLayer extends HintDialog implements BarListener {
 	public Optional<ControlButton> getAbcControlButton(final int y) {
 		if (y == 1) {
 			return Optional.of(guitarInputModeControlButton);
+		}
+		if (y >= 2 && y < 8) {
+			return Optional.of(sequencerInputModeControlButton[y - 2]);
 		}
 		return Optional.empty();
 	}

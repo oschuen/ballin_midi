@@ -23,6 +23,7 @@ import jsequencer.ui.model.SongModel;
 import midi.chord.ChordRecognizer;
 import midi.instrument.Guitar;
 import midi.instrument.Percussion;
+import midi.instrument.Sequencer;
 import midi.loop.beat.Beat;
 import midi.loop.config.ChannelConfig;
 import midi.loop.config.InputChannelConfig;
@@ -40,6 +41,7 @@ public class Orchester {
 	private final ChannelConfig percussionChannelConfig;
 	private final ChannelConfig guitarChannelConfig;
 	private final InputChannelConfig guitarInputConfig;
+	private final Sequencer[] sequencer;
 
 	public Orchester(final SongModel model, final Beat beat) {
 		super();
@@ -63,11 +65,23 @@ public class Orchester {
 		recognizer.setMidiChannel(guitarInputConfig.getChannel());
 		Runtime.getRuntime().addBelowSplitInput(recognizer, guitarInputConfig.getMidiIn());
 
+		sequencer = new Sequencer[model.getNumberOfSequencer()];
+		for (int i = 0; i < sequencer.length; i++) {
+			sequencer[i] = new Sequencer(
+					Runtime.getRuntime().getOutput(model.getSequencerChannelConfig(i)),
+					model.getSequencerChannelConfig(i));
+			final Sequencer seq = sequencer[i];
+			seq.setModel(model.getSequencerModel(i, 0));
+			Runtime.getRuntime().addAboveSplitInput(seq,
+					model.getSequencerInputChannelConfig(i).getMidiIn());
+		}
+
 		// Apply Models to instruments
 		percussion.setModel(model.getPercussionModel(0));
 		guitar.setModel(model.getGuitarModel(0));
 		beat.addBeatListener(percussion);
 		beat.addBeatListener(guitar);
+
 	}
 
 	public void setLayer(final int layer) {
@@ -104,6 +118,21 @@ public class Orchester {
 		return guitarChannelConfig;
 	}
 
+	public ChannelConfig getSequencerChannelConfig(final int sequencer) {
+		return model.getSequencerChannelConfig(sequencer);
+	}
+
+	/**
+	 * @return the guitarInputConfig
+	 */
+	public InputChannelConfig getGuitarInputConfig() {
+		return guitarInputConfig;
+	}
+
+	public InputChannelConfig getSequencerInputConfig(final int sequencer) {
+		return model.getSequencerInputChannelConfig(sequencer);
+	}
+
 	public void applyConfigs() {
 		if (percussionChannelConfig.isChanged()) {
 			Runtime.getRuntime().applyChannelConfig(percussionChannelConfig);
@@ -132,12 +161,34 @@ public class Orchester {
 			recognizer.setMidiChannel(guitarInputConfig.getChannel());
 			guitarInputConfig.applied();
 		}
-	}
 
-	/**
-	 * @return the guitarInputConfig
-	 */
-	public InputChannelConfig getGuitarInputConfig() {
-		return guitarInputConfig;
+		for (int i = 0; i < sequencer.length; i++) {
+			final Sequencer seq = sequencer[i];
+			final ChannelConfig config = model.getSequencerChannelConfig(i);
+			if (config.isChanged()) {
+				Runtime.getRuntime().applyChannelConfig(config);
+				config.applied();
+			}
+			final InputChannelConfig inConfig = model.getSequencerInputChannelConfig(i);
+			if (inConfig.isChanged()) {
+				Runtime.getRuntime().removeInput(seq);
+				switch (inConfig.getMode()) {
+				case BELOW:
+					Runtime.getRuntime().addBelowSplitInput(seq, inConfig.getMidiIn());
+					break;
+				case ABOVE:
+					Runtime.getRuntime().addAboveSplitInput(seq, inConfig.getMidiIn());
+					break;
+				case ALL:
+					Runtime.getRuntime().addInput(seq, inConfig.getMidiIn());
+					break;
+				case OFF:
+				default:
+					break;
+				}
+				seq.setMidiInChannel(inConfig.getChannel());
+				inConfig.applied();
+			}
+		}
 	}
 }

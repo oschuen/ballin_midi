@@ -23,9 +23,10 @@ public class SongModel {
 
 	private final ChannelConfig[] channelConfig;
 	private final InputChannelConfig[] inputChannelConfig;
+	private final int numberOfSequencer;
 
 	public SongModel(final int numberOfLoops, final int numberOfLayer) {
-		final int numberOfSequencer = numberOfLoops - 2;
+		numberOfSequencer = numberOfLoops - 2;
 		layerModel = new LayerModel[numberOfLoops];
 		guitarModel = new GuitarModel[numberOfLayer];
 		percussionModel = new PercussionModel[numberOfLayer];
@@ -52,7 +53,7 @@ public class SongModel {
 		config.setChoir(0);
 		config.setReverb(0);
 		config.setMidiOut(0);
-		config.setVolume(127);
+		config.setVolume(80);
 		Runtime.getRuntime().applyChannelConfig(config);
 
 		config = channelConfig[1];
@@ -60,13 +61,28 @@ public class SongModel {
 		config.setProgram(24);
 		config.setChannel(4);
 		config.setChoir(0);
-		config.setReverb(127);
+		config.setReverb(0);
 		config.setMidiOut(0);
-		config.setVolume(127);
+		config.setVolume(80);
 		Runtime.getRuntime().applyChannelConfig(config);
-		final InputChannelConfig inConfig = inputChannelConfig[1];
-		inConfig.setMidiIn(0);
-		inConfig.setChannel(4);
+
+		for (int i = 2; i < numberOfLoops; ++i) {
+			config = channelConfig[i];
+			config.setBank(0);
+			config.setProgram(0);
+			config.setChannel(0);
+			config.setChoir(0);
+			config.setReverb(0);
+			config.setMidiOut(0);
+			config.setVolume(80);
+			Runtime.getRuntime().applyChannelConfig(config);
+		}
+
+		for (int i = 1; i < numberOfLoops; ++i) {
+			final InputChannelConfig inConfig = inputChannelConfig[i];
+			inConfig.setMidiIn(0);
+			inConfig.setChannel(4);
+		}
 	}
 
 	public PercussionModel getPercussionModel(final int layer) {
@@ -156,6 +172,13 @@ public class SongModel {
 		for (int i = 0; i < jlayer.size(); ++i) {
 			layerModel[i].fromJson(jlayer.getJsonObject(i));
 		}
+	}
+
+	/**
+	 * @return the numberOfSequencer
+	 */
+	public int getNumberOfSequencer() {
+		return numberOfSequencer;
 	}
 
 }
