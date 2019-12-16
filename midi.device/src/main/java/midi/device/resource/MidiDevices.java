@@ -46,8 +46,10 @@ public final class MidiDevices {
 		devTrans = new MidiDevice[infos.length];
 		for (int i = 0; i < infos.length; i++) {
 			if (logger.isDebugEnabled()) {
-				logger.debug(i + " name='" + infos[i].getName() + "' (" + infos[i].getVendor() + ")");
+				logger.debug(
+						i + " name='" + infos[i].getName() + "' (" + infos[i].getVendor() + ")");
 			}
+			logger.info(i + " name='" + infos[i].getName() + "' (" + infos[i].getVendor() + ")");
 		}
 	}
 
@@ -55,7 +57,7 @@ public final class MidiDevices {
 		super();
 	}
 
-	private static void readDevicesByName(String name) {
+	private static void readDevicesByName(final String name) {
 		try {
 			for (int i = 0; i < infos.length; i++) {
 				if (name.equals(infos[i].getName()) && devTrans[i] == null && devRecv[i] == null) {
@@ -68,15 +70,16 @@ public final class MidiDevices {
 					}
 				}
 			}
-		} catch (MidiUnavailableException e) {
+		} catch (final MidiUnavailableException e) {
 			logger.error(e.getMessage(), e);
 		}
 	}
 
-	private static void readDevicesByRegex(String regex) {
+	private static void readDevicesByRegex(final String regex) {
 		try {
 			for (int i = 0; i < infos.length; i++) {
-				if (infos[i].getName().matches(regex) && devTrans[i] == null && devRecv[i] == null) {
+				if (infos[i].getName().matches(regex) && devTrans[i] == null
+						&& devRecv[i] == null) {
 					final MidiDevice device = MidiSystem.getMidiDevice(infos[i]);
 					if (Math.abs(device.getMaxTransmitters()) > 0) {
 						devTrans[i] = device;
@@ -86,7 +89,7 @@ public final class MidiDevices {
 					}
 				}
 			}
-		} catch (MidiUnavailableException e) {
+		} catch (final MidiUnavailableException e) {
 			logger.error(e.getMessage(), e);
 		}
 	}
@@ -104,7 +107,7 @@ public final class MidiDevices {
 					}
 				}
 			}
-		} catch (MidiUnavailableException e) {
+		} catch (final MidiUnavailableException e) {
 			logger.error(e.getMessage(), e);
 		}
 	}
@@ -159,7 +162,9 @@ public final class MidiDevices {
 		readAllDevices();
 		final List<String> transmitters = new ArrayList<>();
 		for (final MidiDevice transmitter : devTrans) {
-			transmitters.add(transmitter.getDeviceInfo().getName());
+			if (transmitter != null) {
+				transmitters.add(transmitter.getDeviceInfo().getName());
+			}
 		}
 		return transmitters;
 	}
@@ -167,8 +172,10 @@ public final class MidiDevices {
 	public static List<String> getReceiverNames() {
 		readAllDevices();
 		final List<String> receivers = new ArrayList<>();
-		for (final MidiDevice reveiver : devRecv) {
-			receivers.add(reveiver.getDeviceInfo().getName());
+		for (final MidiDevice receiver : devRecv) {
+			if (receiver != null) {
+				receivers.add(receiver.getDeviceInfo().getName());
+			}
 		}
 		return receivers;
 	}

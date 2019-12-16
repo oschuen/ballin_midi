@@ -39,8 +39,11 @@ import java.io.FileOutputStream;
 import java.util.Properties;
 import java.util.prefs.Preferences;
 
+import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiUnavailableException;
+import javax.sound.midi.Receiver;
+import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Transmitter;
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -100,6 +103,7 @@ public class MainFrame extends JFrame {
 	private final ValuePanel quarterPanel;
 	private final ValuePanel pagePanel;
 	private final ValuePanel divisionPanel;
+	private final ValuePanel instrumentPanel;
 	private final Beat beat = new Beat();
 	private final ChannelConfig guitarConfig = new ChannelConfig();
 	private final ChannelConfig percussionConfig = new ChannelConfig();
@@ -439,6 +443,24 @@ public class MainFrame extends JFrame {
 			}
 		});
 
+		instrumentPanel = new ValuePanel();
+		panel.add(instrumentPanel);
+		instrumentPanel.setLabel("Intrument");
+		instrumentPanel.setValue(1);
+		instrumentPanel.setMinValue(0);
+		instrumentPanel.setMaxValue(127);
+		instrumentPanel.addValueObserver(new ValueObserver() {
+
+			@Override
+			public void valueChanged(final int newValue) {
+				try {
+					setupMidi();
+				} catch (final MidiUnavailableException e) {
+					logger.error("Can't change program");
+				}
+			}
+		});
+
 		setupMidi();
 
 		pack();
@@ -589,11 +611,27 @@ public class MainFrame extends JFrame {
 		beat.addBeatListener(beatListener);
 
 		if (!(midiThroughInputDevice == null || midiThroughOutputDevice == null)) {
-			filter = new MidiThroughFilter(midiThroughOutputDevice.getReceiver());
+			final Receiver outputReceiver = midiThroughOutputDevice.getReceiver();
+			filter = new MidiThroughFilter(outputReceiver);
 			filterTransmitter = midiThroughInputDevice.getTransmitter();
 			filterTransmitter.setReceiver(filter);
 			filter.setFilterChord(ConfigDialog.isFilterChord());
 			filter.setMidiThrough(ConfigDialog.isMidiThrough());
+
+			try {
+				logger.info("Set program {}", instrumentPanel.getValue());
+				final ShortMessage bsmsb = new ShortMessage();
+				bsmsb.setMessage(ShortMessage.CONTROL_CHANGE, 0, 0x00, 0);
+				outputReceiver.send(bsmsb, 0);
+				final ShortMessage bslsb = new ShortMessage();
+				bslsb.setMessage(ShortMessage.CONTROL_CHANGE, 0, 0x20, 0);
+				outputReceiver.send(bslsb, 0);
+				final ShortMessage pc = new ShortMessage();
+				pc.setMessage(ShortMessage.PROGRAM_CHANGE, 0, instrumentPanel.getValue(), 0);
+				outputReceiver.send(pc, 0);
+			} catch (final InvalidMidiDataException e) {
+				logger.error("Couldn't set program");
+			}
 		}
 		copyLoopPanelInfo();
 	}
@@ -628,6 +666,7 @@ public class MainFrame extends JFrame {
 	private final static String PAGE_KEY = "page";
 	private final static String QUARTER_KEY = "quarter";
 	private final static String DIVISION_KEY = "division";
+	private final static String INSTRUMENT_KEY = "intrument";
 
 	private Properties getProperties() {
 		final Properties props = new Properties();
@@ -636,6 +675,7 @@ public class MainFrame extends JFrame {
 		props.setProperty(PAGE_KEY, Integer.toString(pagePanel.getValue()));
 		props.setProperty(QUARTER_KEY, Integer.toString(quarterPanel.getValue()));
 		props.setProperty(DIVISION_KEY, Integer.toString(divisionPanel.getValue()));
+		props.setProperty(INSTRUMENT_KEY, Integer.toString(instrumentPanel.getValue()));
 
 		for (int i = 0; i < loopPanel.length; i++) {
 			props.setProperty("P" + i + "_" + LoopPanel.ACCENT.name() + VELOCITY_KEY,
@@ -668,6 +708,7 @@ public class MainFrame extends JFrame {
 		pagePanel.setValue(Integer.parseInt(props.getProperty(PAGE_KEY, "1")));
 		quarterPanel.setValue(Integer.parseInt(props.getProperty(QUARTER_KEY, "4")));
 		divisionPanel.setValue(Integer.parseInt(props.getProperty(DIVISION_KEY, "4")));
+		instrumentPanel.setValue(Integer.parseInt(props.getProperty(INSTRUMENT_KEY, "1")));
 
 		for (int i = 0; i < loopPanel.length; ++i) {
 			loopPanel[i].setNumberOfPages(pagePanel.getValue());
@@ -703,6 +744,11 @@ public class MainFrame extends JFrame {
 		beat.setBpM(bpmPanel.getValue());
 		beat.setDivision(divisionPanel.getValue());
 		copyLoopPanelInfo();
+		try {
+			setupMidi();
+		} catch (final MidiUnavailableException e) {
+			logger.error("Setup Midi failed", e);
+		}
 		repaint();
 	}
 
