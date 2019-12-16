@@ -124,11 +124,39 @@ public class SongLayer extends HintDialog implements BarListener {
 		}, model.getLayerModel(1));
 
 		for (int i = 2; i < config.length; i++) {
+			final int seqNum = i - 2;
 			config[i] = new TrackConfig(i, () -> {
+				final SequencerLoopLayer layer = new SequencerLoopLayer("Seq " + (seqNum + 1),
+						this.model.getSequencerModel(seqNum, currentLayer));
+				final Screen screen = Runtime.getRuntime().getScreen();
+
+				this.beat.addBeatListener(layer);
+				screen.putLayer(3, layer, () -> {
+					beat.removeBeatListener(layer);
+					screen.removeLayer(layer);
+				});
+				layer.start();
 				getRuntime().invalidate();
 			}, () -> {
+				final Screen screen = Runtime.getRuntime().getScreen();
+				final LooperInputDialog layer = new LooperInputDialog(
+						"Seq " + (seqNum + 1) + " Input",
+						model.getSequencerInputChannelConfig(seqNum));
+				screen.putLayer(3, layer, () -> {
+					screen.removeLayer(layer);
+					orchester.applyConfigs();
+				});
+				layer.start();
 				getRuntime().invalidate();
 			}, () -> {
+				final Screen screen = Runtime.getRuntime().getScreen();
+				final LooperConfigDialog layer = new LooperConfigDialog(
+						"Seq " + (seqNum + 1) + " Output", model.getSequencerChannelConfig(seqNum));
+				screen.putLayer(3, layer, () -> {
+					screen.removeLayer(layer);
+					orchester.applyConfigs();
+				});
+				layer.start();
 				getRuntime().invalidate();
 			}, () -> {
 				getRuntime().invalidate();

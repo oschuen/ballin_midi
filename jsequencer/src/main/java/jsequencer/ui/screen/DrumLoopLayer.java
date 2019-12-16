@@ -31,10 +31,10 @@ import midi.pad.ui.Screen;
 import midi.pad.ui.dialogs.HintDialog;
 import midi.pad.ui.dialogs.NumberDialog;
 import midi.pad.ui.event.Runtime;
+import midi.pad.ui.widgets.ControlButton;
 import midi.pad.ui.widgets.InstrumentSelector;
 import midi.pad.ui.widgets.LoopConfig;
 import midi.pad.ui.widgets.SimpleLooper;
-import midi.pad.ui.widgets.SinglePixelButton;
 
 /**
  * @author oliver
@@ -47,8 +47,8 @@ public class DrumLoopLayer extends HintDialog implements BeatListener {
 	private final PercussionModel model;
 	private final SimpleLooper looper;
 	private final SimpleLooper accent;
-	private final SinglePixelButton drumVelocity;
-	private final SinglePixelButton accentVelocity;
+	private final ControlButton accentButton;
+	private final ControlButton instrumentButton;
 
 	public DrumLoopLayer(final PercussionModel model) {
 		super("Drums");
@@ -88,10 +88,10 @@ public class DrumLoopLayer extends HintDialog implements BeatListener {
 		final Optional<LoopModel> loopModel = model.getLoopModel(selector.getInstrument());
 		loopModel.ifPresent(m -> looper.setLoopModel(m));
 		accent.setLoopModel(model.getAccentModel());
-		accentVelocity = new SinglePixelButton(0, 7, Color.FULL_GREEN,
-				new ConfigureAccentVelocity());
-		drumVelocity = new SinglePixelButton(2, 7, Color.FULL_GREEN, new ConfigureDrumVelocity());
-		setWidgets(config, selector, accent, looper, accentVelocity, drumVelocity);
+		setWidgets(config, selector, accent, looper);
+		accentButton = new ControlButton(Color.GREEN, new ConfigureAccentVelocity());
+		instrumentButton = new ControlButton(Color.GREEN, new ConfigureDrumVelocity());
+
 	}
 
 	/*
@@ -104,6 +104,22 @@ public class DrumLoopLayer extends HintDialog implements BeatListener {
 		config.accept(beat);
 		accent.accept(beat);
 		looper.accept(beat);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see midi.pad.ui.Layer#getAbcControlButton(int)
+	 */
+	@Override
+	public Optional<ControlButton> getAbcControlButton(final int y) {
+		if (y == 5) {
+			return Optional.of(accentButton);
+
+		} else if (y == 6) {
+			return Optional.of(instrumentButton);
+		}
+		return Optional.empty();
 	}
 
 	private final class ConfigureAccentVelocity implements Runnable {
