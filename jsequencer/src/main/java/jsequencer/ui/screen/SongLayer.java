@@ -60,7 +60,8 @@ public class SongLayer extends HintDialog implements BarListener {
 		this.model = model;
 		this.beat = beat;
 		this.orchester = orchester;
-		guitarInputModeControlButton = new InputModeControlButton(orchester.getGuitarInputConfig());
+		guitarInputModeControlButton = new InputModeControlButton(
+				new SwitchRunnable(orchester.getGuitarInputConfig()));
 		config[0] = new TrackConfig(0, () -> {
 			final DrumLoopLayer layer = new DrumLoopLayer(
 					this.model.getPercussionModel(currentLayer));
@@ -200,12 +201,33 @@ public class SongLayer extends HintDialog implements BarListener {
 		nextLayer = -1;
 	}
 
-	private static class InputModeControlButton extends ControlButton {
-		private static SwitchRunnable runnable;
+	public class SwitchRunnable implements Runnable {
+		private final InputChannelConfig config;
 
-		public InputModeControlButton(final InputChannelConfig config) {
-			super(getColor(config), () -> runnable.run());
-			runnable = new SwitchRunnable(config);
+		public SwitchRunnable(final InputChannelConfig config) {
+			super();
+			this.config = config;
+		}
+
+		@Override
+		public void run() {
+			final InputMode[] values = InputMode.values();
+			config.setMode(values[(config.getMode().ordinal() + 1) % values.length]);
+			orchester.applyConfigs();
+			Runtime.getRuntime().invalidate();
+		}
+
+		public InputChannelConfig getConfig() {
+			return config;
+		}
+	}
+
+	private static class InputModeControlButton extends ControlButton {
+		private final SwitchRunnable runnable;
+
+		public InputModeControlButton(final SwitchRunnable runnable) {
+			super(getColor(runnable.getConfig()), runnable);
+			this.runnable = runnable;
 		}
 
 		private static Color getColor(final InputChannelConfig config) {
@@ -230,26 +252,6 @@ public class SongLayer extends HintDialog implements BarListener {
 		@Override
 		public Color getColor() {
 			return getColor(runnable.getConfig());
-		}
-
-		private static class SwitchRunnable implements Runnable {
-			private final InputChannelConfig config;
-
-			public SwitchRunnable(final InputChannelConfig config) {
-				super();
-				this.config = config;
-			}
-
-			@Override
-			public void run() {
-				final InputMode[] values = InputMode.values();
-				config.setMode(values[(config.getMode().ordinal() + 1) % values.length]);
-				Runtime.getRuntime().invalidate();
-			}
-
-			public InputChannelConfig getConfig() {
-				return config;
-			}
 		}
 	}
 }
