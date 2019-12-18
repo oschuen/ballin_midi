@@ -25,8 +25,8 @@ import midi.instrument.Guitar;
 import midi.instrument.Percussion;
 import midi.instrument.Sequencer;
 import midi.loop.beat.Beat;
-import midi.loop.config.OutputChannelConfig;
 import midi.loop.config.InputChannelConfig;
+import midi.loop.config.OutputChannelConfig;
 import midi.pad.ui.event.Runtime;
 
 /**
@@ -69,7 +69,7 @@ public class Orchester {
 		for (int i = 0; i < sequencer.length; i++) {
 			sequencer[i] = new Sequencer(
 					Runtime.getRuntime().getOutput(model.getSequencerChannelConfig(i)),
-					model.getSequencerChannelConfig(i));
+					model.getSequencerChannelConfig(i), model.getSequencerInputChannelConfig(i));
 			final Sequencer seq = sequencer[i];
 			seq.setModel(model.getSequencerModel(i, 0));
 			Runtime.getRuntime().addAboveSplitInput(seq,
@@ -88,6 +88,10 @@ public class Orchester {
 		percussion.setModel(model.getPercussionModel(layer));
 		guitar.setModel(model.getGuitarModel(layer));
 		recognizer.setListener(model.getGuitarModel(layer));
+		for (int i = 0; i < sequencer.length; i++) {
+			final Sequencer seq = sequencer[i];
+			seq.setModel(model.getSequencerModel(i, layer));
+		}
 	}
 
 	/**

@@ -40,7 +40,7 @@ public class LooperConfigDialog extends HintDialog {
 
 	private enum MODE {
 
-		BANK("Bank", 16129), PROGRAM("Program", 127), MIDIOUT("Midi Out", 3), CHANNEL("Channel",
+		BANK("Bank", 16383), PROGRAM("Program", 127), MIDIOUT("Midi Out", 3), CHANNEL("Channel",
 				15), REVERB("Reverb", 127), CHOIR("Choir", 127), VOLUME("Volume", 127);
 
 		private MODE(final String hint, final int max) {

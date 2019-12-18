@@ -172,4 +172,29 @@ public class LoopEvent {
 	public static LoopEvent getNullEvent() {
 		return nullEvent;
 	}
+
+	public static LoopEvent fromShortMessage(final ShortMessage message) {
+		COMMAND command = COMMAND.IGNORE;
+		int velocity;
+		int note;
+		if (message.getCommand() == ShortMessage.NOTE_ON) {
+			if (message.getData2() == 0) {
+				command = COMMAND.NOTE_OFF;
+				velocity = 0;
+			} else {
+				command = COMMAND.NOTE_ON;
+				velocity = message.getData2();
+			}
+			note = message.getData1();
+		} else if (message.getCommand() == ShortMessage.NOTE_OFF) {
+			command = COMMAND.NOTE_OFF;
+			velocity = message.getData2();
+			note = message.getData1();
+		} else {
+			command = COMMAND.IGNORE;
+			note = message.getData1();
+			velocity = message.getData2();
+		}
+		return new LoopEvent(command, velocity, note);
+	}
 }

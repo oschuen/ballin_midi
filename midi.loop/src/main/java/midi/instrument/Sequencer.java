@@ -33,7 +33,9 @@ import midi.instrument.model.SequencerModel;
 import midi.loop.LoopEvent;
 import midi.loop.beat.Beat;
 import midi.loop.beat.Beat.BeatListener;
+import midi.loop.config.InputChannelConfig;
 import midi.loop.config.OutputChannelConfig;
+import midi.loop.config.OutputChannelConfig.PlayMode;
 
 /**
  * @author oliver
@@ -43,16 +45,19 @@ public class Sequencer implements BeatListener, Receiver {
 
 	private final Receiver receiver;
 	private final OutputChannelConfig config;
+	private final InputChannelConfig inConfig;
 	private SequencerModel model;
 	private static final Logger logger = LoggerFactory.getLogger(Sequencer.class);
 	private final int velocity = 127;
 	private final SequencerModel defaultModel = new SequencerModel();
 	private int midiInChannel = 0;
 
-	public Sequencer(final Receiver receiver, final OutputChannelConfig config) {
+	public Sequencer(final Receiver receiver, final OutputChannelConfig config,
+			final InputChannelConfig inConfig) {
 		super();
 		this.receiver = receiver;
 		this.config = config;
+		this.inConfig = inConfig;
 	}
 
 	/**
@@ -75,8 +80,17 @@ public class Sequencer implements BeatListener, Receiver {
 	 */
 	@Override
 	public void send(final MidiMessage message, final long timeStamp) {
-		// TODO Auto-generated method stub
-
+		if (config.getMode() == PlayMode.THROUGH && message instanceof ShortMessage) {
+			final ShortMessage shortMessage = (ShortMessage) message;
+			if (shortMessage.getChannel() == inConfig.getChannel()) {
+				final LoopEvent event = LoopEvent.fromShortMessage(shortMessage);
+				try {
+					event.playEvent(receiver, config.getChannel());
+				} catch (final InvalidMidiDataException e) {
+					logger.error("Couldn't play Event", event.toString());
+				}
+			}
+		}
 	}
 
 	/**
@@ -104,14 +118,16 @@ public class Sequencer implements BeatListener, Receiver {
 	}
 
 	public void step(final int step) {
-		final Optional<LoopEvent> event = model.getModel().getStepEvent(step);
-		event.ifPresent(it -> {
-			try {
-				it.asWeightedEvent(velocity).playEvent(receiver, config.getChannel());
-			} catch (final InvalidMidiDataException e) {
-				logger.error("Couldn't play event", e);
-			}
-		});
+		if (config.getMode() == PlayMode.LOOP) {
+			final Optional<LoopEvent> event = model.getModel().getStepEvent(step);
+			event.ifPresent(it -> {
+				try {
+					it.asWeightedEvent(velocity).playEvent(receiver, config.getChannel());
+				} catch (final InvalidMidiDataException e) {
+					logger.error("Couldn't play event", e);
+				}
+			});
+		}
 	}
 
 	/**
