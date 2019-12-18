@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 import midi.device.resource.InputDevice;
 import midi.device.resource.NullReceiver;
 import midi.device.resource.OutputDevice;
-import midi.loop.config.ChannelConfig;
+import midi.loop.config.OutputChannelConfig;
 import midi.pad.ui.Screen;
 
 /**
@@ -230,7 +230,7 @@ public class Runtime {
 		}
 	}
 
-	public void applyChannelConfig(final ChannelConfig config) {
+	public void applyChannelConfig(final OutputChannelConfig config) {
 		logger.info(config.toString());
 		if (config.getMidiOut() >= 0 && config.getMidiOut() < outputChannels.length) {
 			try {
@@ -416,7 +416,7 @@ public class Runtime {
 		return nullReceiver;
 	}
 
-	public Receiver getOutput(final ChannelConfig config) {
+	public Receiver getOutput(final OutputChannelConfig config) {
 		return new ConfiguredReceiver(config);
 	}
 
@@ -455,10 +455,10 @@ public class Runtime {
 	private class ConfiguredReceiver implements Receiver {
 		private int channel;
 		private Receiver receiver;
-		private final ChannelConfig config;
+		private final OutputChannelConfig config;
 		private boolean close = false;
 
-		public ConfiguredReceiver(final ChannelConfig config) {
+		public ConfiguredReceiver(final OutputChannelConfig config) {
 			this.config = config;
 			channel = config.getMidiOut();
 			receiver = getOutput(channel);

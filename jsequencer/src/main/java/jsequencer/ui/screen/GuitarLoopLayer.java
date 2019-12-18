@@ -35,6 +35,7 @@ import midi.pad.ui.dialogs.NumberDialog;
 import midi.pad.ui.event.Runtime;
 import midi.pad.ui.widgets.ControlButton;
 import midi.pad.ui.widgets.LoopConfig;
+import midi.pad.ui.widgets.SimpleControlButton;
 import midi.pad.ui.widgets.SimpleLooper;
 
 /**
@@ -51,11 +52,11 @@ public class GuitarLoopLayer extends HintDialog implements BeatListener {
 	private final SimpleLooper eLooper = new SimpleLooper(0, 7);
 	private final List<SimpleLooper> guitarLoopers = Arrays.asList(bassLooper, gLooper, bLooper,
 			eLooper);
-	private final ControlButton accentButton;
-	private final ControlButton bassButton;
-	private final ControlButton gButton;
-	private final ControlButton bButton;
-	private final ControlButton eButton;
+	private final SimpleControlButton accentButton;
+	private final SimpleControlButton bassButton;
+	private final SimpleControlButton gButton;
+	private final SimpleControlButton bButton;
+	private final SimpleControlButton eButton;
 
 	public GuitarLoopLayer(final GuitarModel model) {
 		super("Guitar");
@@ -88,14 +89,14 @@ public class GuitarLoopLayer extends HintDialog implements BeatListener {
 		model.getLoopModel(GuitarInstrument.B_STRING).ifPresent(m -> bLooper.setLoopModel(m));
 		model.getLoopModel(GuitarInstrument.E_STRING).ifPresent(m -> eLooper.setLoopModel(m));
 		setWidgets(config, accent, bassLooper, gLooper, bLooper, eLooper);
-		accentButton = new ControlButton(Color.GREEN, new ConfigureAccentVelocity());
-		bassButton = new ControlButton(Color.GREEN,
+		accentButton = new SimpleControlButton(Color.GREEN, new ConfigureAccentVelocity());
+		bassButton = new SimpleControlButton(Color.GREEN,
 				new ConfigureInstrumentVelocity(GuitarInstrument.BASS_STRING));
-		gButton = new ControlButton(Color.GREEN,
+		gButton = new SimpleControlButton(Color.GREEN,
 				new ConfigureInstrumentVelocity(GuitarInstrument.G_STRING));
-		bButton = new ControlButton(Color.GREEN,
+		bButton = new SimpleControlButton(Color.GREEN,
 				new ConfigureInstrumentVelocity(GuitarInstrument.B_STRING));
-		eButton = new ControlButton(Color.GREEN,
+		eButton = new SimpleControlButton(Color.GREEN,
 				new ConfigureInstrumentVelocity(GuitarInstrument.E_STRING));
 		start();
 	}

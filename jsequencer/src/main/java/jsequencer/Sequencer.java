@@ -49,7 +49,7 @@ import midi.instrument.model.GuitarModel;
 import midi.instrument.model.PercussionModel;
 import midi.loop.beat.Beat;
 import midi.loop.beat.Beat.BeatListener;
-import midi.loop.config.ChannelConfig;
+import midi.loop.config.OutputChannelConfig;
 import midi.pad.ui.Screen;
 import midi.pad.ui.event.Runtime;
 
@@ -67,7 +67,7 @@ public class Sequencer {
 		final Transmitter transmitter;
 		final int midiChannel = 4;
 
-		final ChannelConfig config = new ChannelConfig();
+		final OutputChannelConfig config = new OutputChannelConfig();
 		config.setBank(0);
 		config.setProgram(24);
 		config.setChannel(midiChannel);
@@ -133,7 +133,7 @@ public class Sequencer {
 		final int midiDevice = 0;
 
 		Runtime.getRuntime().addInput(recognizer, midiDevice);
-		final ChannelConfig config = new ChannelConfig();
+		final OutputChannelConfig config = new OutputChannelConfig();
 		config.setBank(128);
 		config.setProgram(9);
 		config.setChannel(midiChannel);

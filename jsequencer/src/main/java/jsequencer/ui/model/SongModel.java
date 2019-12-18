@@ -11,8 +11,9 @@ import jmidi.gui.model.LayerModel;
 import midi.instrument.model.GuitarModel;
 import midi.instrument.model.PercussionModel;
 import midi.instrument.model.SequencerModel;
-import midi.loop.config.ChannelConfig;
 import midi.loop.config.InputChannelConfig;
+import midi.loop.config.OutputChannelConfig;
+import midi.loop.config.OutputChannelConfig.PlayMode;
 import midi.pad.ui.event.Runtime;
 
 public class SongModel {
@@ -21,7 +22,7 @@ public class SongModel {
 	private final SequencerModel[][] sequencerModel;
 	private final LayerModel[] layerModel;
 
-	private final ChannelConfig[] channelConfig;
+	private final OutputChannelConfig[] channelConfig;
 	private final InputChannelConfig[] inputChannelConfig;
 	private final int numberOfSequencer;
 
@@ -32,10 +33,10 @@ public class SongModel {
 		percussionModel = new PercussionModel[numberOfLayer];
 		sequencerModel = new SequencerModel[numberOfSequencer][numberOfLayer];
 
-		channelConfig = new ChannelConfig[numberOfLoops];
+		channelConfig = new OutputChannelConfig[numberOfLoops];
 		inputChannelConfig = new InputChannelConfig[numberOfLoops];
 		for (int i = 0; i < numberOfLoops; i++) {
-			channelConfig[i] = new ChannelConfig();
+			channelConfig[i] = new OutputChannelConfig();
 			inputChannelConfig[i] = new InputChannelConfig();
 			layerModel[i] = new LayerModel(numberOfLayer);
 		}
@@ -46,7 +47,7 @@ public class SongModel {
 				sequencerModel[j][i] = new SequencerModel();
 			}
 		}
-		ChannelConfig config = channelConfig[0];
+		OutputChannelConfig config = channelConfig[0];
 		config.setBank(128);
 		config.setProgram(9);
 		config.setChannel(0);
@@ -54,6 +55,7 @@ public class SongModel {
 		config.setReverb(0);
 		config.setMidiOut(0);
 		config.setVolume(80);
+		config.setMode(PlayMode.LOOP);
 		Runtime.getRuntime().applyChannelConfig(config);
 
 		config = channelConfig[1];
@@ -64,6 +66,7 @@ public class SongModel {
 		config.setReverb(0);
 		config.setMidiOut(0);
 		config.setVolume(80);
+		config.setMode(PlayMode.THROUGH);
 		Runtime.getRuntime().applyChannelConfig(config);
 
 		for (int i = 2; i < numberOfLoops; ++i) {
@@ -97,11 +100,11 @@ public class SongModel {
 		return sequencerModel[sequencer][layerModel[2 + sequencer].getLayer(layer)];
 	}
 
-	public ChannelConfig getPercussionChannelConfig() {
+	public OutputChannelConfig getPercussionChannelConfig() {
 		return channelConfig[0];
 	}
 
-	public ChannelConfig getGuitarChannelConfig() {
+	public OutputChannelConfig getGuitarChannelConfig() {
 		return channelConfig[1];
 	}
 
@@ -109,7 +112,7 @@ public class SongModel {
 		return inputChannelConfig[1];
 	}
 
-	public ChannelConfig getSequencerChannelConfig(final int sequencer) {
+	public OutputChannelConfig getSequencerChannelConfig(final int sequencer) {
 		return channelConfig[2 + sequencer];
 	}
 
@@ -128,7 +131,7 @@ public class SongModel {
 		final JsonArrayBuilder jguitar = Json.createArrayBuilder();
 		final JsonArrayBuilder jsequencer = Json.createArrayBuilder();
 		final JsonArrayBuilder jlayer = Json.createArrayBuilder();
-		Arrays.stream(channelConfig).map(ChannelConfig::toJson).forEach(jconfig::add);
+		Arrays.stream(channelConfig).map(OutputChannelConfig::toJson).forEach(jconfig::add);
 		Arrays.stream(inputChannelConfig).map(InputChannelConfig::toJson).forEach(jInconfig::add);
 		Arrays.stream(percussionModel).map(PercussionModel::toJson).forEach(jpercussion::add);
 		Arrays.stream(guitarModel).map(GuitarModel::toJson).forEach(jguitar::add);

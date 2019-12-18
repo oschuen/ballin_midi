@@ -30,6 +30,7 @@ import midi.pad.ui.dialogs.NumberDialog;
 import midi.pad.ui.event.Runtime;
 import midi.pad.ui.widgets.ControlButton;
 import midi.pad.ui.widgets.LoopConfig;
+import midi.pad.ui.widgets.SimpleControlButton;
 import midi.pad.ui.widgets.SimpleLooper;
 
 /**
@@ -41,7 +42,7 @@ public class SequencerLoopLayer extends HintDialog implements BeatListener {
 	private final LoopConfig config;
 	private final SequencerModel model;
 	private final SimpleLooper looper = new SimpleLooper(0, 4);
-	private final ControlButton velocityButton;
+	private final SimpleControlButton velocityButton;
 
 	public SequencerLoopLayer(final String name, final SequencerModel model) {
 		super(name);
@@ -64,7 +65,7 @@ public class SequencerLoopLayer extends HintDialog implements BeatListener {
 		});
 		looper.setLoopModel(this.model.getModel());
 		setWidgets(config, looper);
-		velocityButton = new ControlButton(Color.GREEN, new ConfigureInstrumentVelocity());
+		velocityButton = new SimpleControlButton(Color.GREEN, new ConfigureInstrumentVelocity());
 	}
 
 	/*

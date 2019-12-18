@@ -41,7 +41,7 @@ public class Layer extends Widget {
 		super();
 		this.exclusive = exclusive;
 	}
- 
+
 	/*
 	 * (non-Javadoc)
 	 * 

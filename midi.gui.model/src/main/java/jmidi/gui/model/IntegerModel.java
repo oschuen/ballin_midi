@@ -19,7 +19,6 @@
  */
 package jmidi.gui.model;
 
-import java.awt.EventQueue;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -174,18 +173,12 @@ public class IntegerModel {
 		void valueChanged(int newValue);
 	}
 
-	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	public void fireNewValue() {
 		lock.lock();
 		try {
 			final int newValue = getValue();
 			for (final ValueObserver observer : observers) {
-				EventQueue.invokeLater(new Runnable() {
-					@Override
-					public void run() {
-						observer.valueChanged(newValue);
-					}
-				});
+				observer.valueChanged(newValue);
 			}
 		} finally {
 			lock.unlock();

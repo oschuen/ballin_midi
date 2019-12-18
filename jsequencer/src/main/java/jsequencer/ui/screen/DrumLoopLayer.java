@@ -34,6 +34,7 @@ import midi.pad.ui.event.Runtime;
 import midi.pad.ui.widgets.ControlButton;
 import midi.pad.ui.widgets.InstrumentSelector;
 import midi.pad.ui.widgets.LoopConfig;
+import midi.pad.ui.widgets.SimpleControlButton;
 import midi.pad.ui.widgets.SimpleLooper;
 
 /**
@@ -47,8 +48,8 @@ public class DrumLoopLayer extends HintDialog implements BeatListener {
 	private final PercussionModel model;
 	private final SimpleLooper looper;
 	private final SimpleLooper accent;
-	private final ControlButton accentButton;
-	private final ControlButton instrumentButton;
+	private final SimpleControlButton accentButton;
+	private final SimpleControlButton instrumentButton;
 
 	public DrumLoopLayer(final PercussionModel model) {
 		super("Drums");
@@ -89,8 +90,8 @@ public class DrumLoopLayer extends HintDialog implements BeatListener {
 		loopModel.ifPresent(m -> looper.setLoopModel(m));
 		accent.setLoopModel(model.getAccentModel());
 		setWidgets(config, selector, accent, looper);
-		accentButton = new ControlButton(Color.GREEN, new ConfigureAccentVelocity());
-		instrumentButton = new ControlButton(Color.GREEN, new ConfigureDrumVelocity());
+		accentButton = new SimpleControlButton(Color.GREEN, new ConfigureAccentVelocity());
+		instrumentButton = new SimpleControlButton(Color.GREEN, new ConfigureDrumVelocity());
 
 	}
 

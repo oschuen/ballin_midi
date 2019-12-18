@@ -33,7 +33,7 @@ import midi.instrument.model.SequencerModel;
 import midi.loop.LoopEvent;
 import midi.loop.beat.Beat;
 import midi.loop.beat.Beat.BeatListener;
-import midi.loop.config.ChannelConfig;
+import midi.loop.config.OutputChannelConfig;
 
 /**
  * @author oliver
@@ -42,14 +42,14 @@ import midi.loop.config.ChannelConfig;
 public class Sequencer implements BeatListener, Receiver {
 
 	private final Receiver receiver;
-	private final ChannelConfig config;
+	private final OutputChannelConfig config;
 	private SequencerModel model;
 	private static final Logger logger = LoggerFactory.getLogger(Sequencer.class);
 	private final int velocity = 127;
 	private final SequencerModel defaultModel = new SequencerModel();
 	private int midiInChannel = 0;
 
-	public Sequencer(final Receiver receiver, final ChannelConfig config) {
+	public Sequencer(final Receiver receiver, final OutputChannelConfig config) {
 		super();
 		this.receiver = receiver;
 		this.config = config;

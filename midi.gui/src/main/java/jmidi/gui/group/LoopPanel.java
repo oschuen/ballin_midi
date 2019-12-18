@@ -21,6 +21,7 @@ package jmidi.gui.group;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
@@ -30,8 +31,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -77,7 +76,6 @@ public class LoopPanel extends JPanel {
 	private final Map<Instrument, ValuePanel> velocityMap = new HashMap<>();
 	private final List<ActionListener> listeners = new ArrayList<>();
 	private final Lock lock = new ReentrantLock();
-	private final Executor executor = Executors.newSingleThreadExecutor();
 	private PatternPanel beatPanel = null;
 	private int numberOfPages = 1;
 	private int quarterPerPage = 4;
@@ -272,12 +270,8 @@ public class LoopPanel extends JPanel {
 		lock.lock();
 		try {
 			for (final ActionListener listener : listeners) {
-				executor.execute(new Runnable() {
-
-					@Override
-					public void run() {
-						listener.actionPerformed(event);
-					}
+				EventQueue.invokeLater(() -> {
+					listener.actionPerformed(event);
 				});
 			}
 		} finally {

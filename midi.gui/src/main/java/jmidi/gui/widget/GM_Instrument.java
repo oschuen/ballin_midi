@@ -20,6 +20,7 @@
 package jmidi.gui.widget;
 
 import java.awt.Color;
+import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -83,8 +84,10 @@ public class GM_Instrument extends Component {
 		model.addValueObserver(new ValueObserver() {
 			@Override
 			public void valueChanged(final int newValue) {
-				repaint();
-				firePropertyChange("instrument", null, getInstrument());
+				EventQueue.invokeLater(() -> {
+					repaint();
+					firePropertyChange("instrument", null, getInstrument());
+				});
 			}
 		});
 	}

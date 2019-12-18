@@ -34,7 +34,8 @@ import midi.loop.LoopEvent;
 import midi.loop.LoopModel;
 import midi.loop.beat.Beat;
 import midi.loop.beat.Beat.BeatListener;
-import midi.loop.config.ChannelConfig;
+import midi.loop.config.OutputChannelConfig;
+import midi.loop.config.OutputChannelConfig.PlayMode;
 
 /**
  * @author oliver
@@ -43,7 +44,7 @@ import midi.loop.config.ChannelConfig;
 public class Percussion implements BeatListener {
 
 	private final Receiver receiver;
-	private final ChannelConfig config;
+	private final OutputChannelConfig config;
 	private PercussionModel model;
 	private static final Logger logger = LoggerFactory.getLogger(Percussion.class);
 	private int velocity = 127;
@@ -53,7 +54,7 @@ public class Percussion implements BeatListener {
 
 	private final PercussionModel defaultModel = new PercussionModel();
 
-	public Percussion(final Receiver receiver, final ChannelConfig config) {
+	public Percussion(final Receiver receiver, final OutputChannelConfig config) {
 		super();
 		this.receiver = receiver;
 		this.config = config;
@@ -102,17 +103,19 @@ public class Percussion implements BeatListener {
 
 	public void step(final int step) {
 		final int accent = model.getAccentStepEvent(step).getVelocity() * velocity / 127;
-		for (int i = 0; i < instruments.length; i++) {
-			final int var = i;
-			final Optional<LoopEvent> event = loopModel[i].getStepEvent(step);
-			event.ifPresent(it -> {
-				try {
-					it.asWeightedEvent(accent).playEvent(receiver, config.getChannel());
-				} catch (final InvalidMidiDataException e) {
-					logger.error("Couldn't play event", e);
-				}
-				lastPlayed[var] = it.asOffEvent();
-			});
+		if (PlayMode.LOOP.equals(config.getMode())) {
+			for (int i = 0; i < instruments.length; i++) {
+				final int var = i;
+				final Optional<LoopEvent> event = loopModel[i].getStepEvent(step);
+				event.ifPresent(it -> {
+					try {
+						it.asWeightedEvent(accent).playEvent(receiver, config.getChannel());
+					} catch (final InvalidMidiDataException e) {
+						logger.error("Couldn't play event", e);
+					}
+					lastPlayed[var] = it.asOffEvent();
+				});
+			}
 		}
 	}
 

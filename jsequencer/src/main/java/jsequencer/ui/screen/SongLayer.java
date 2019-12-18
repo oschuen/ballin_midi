@@ -23,6 +23,8 @@ import static midi.pad.ui.event.Runtime.getRuntime;
 
 import java.util.Optional;
 
+import jmidi.gui.model.TimedIntegerModel;
+import jmidi.gui.model.TimedIntegerModel.ValueObserver;
 import jsequencer.Orchester;
 import jsequencer.ui.dialog.setting.LooperConfigDialog;
 import jsequencer.ui.dialog.setting.LooperInputDialog;
@@ -31,11 +33,15 @@ import midi.loop.beat.Beat;
 import midi.loop.beat.Beat.BarListener;
 import midi.loop.config.InputChannelConfig;
 import midi.loop.config.InputChannelConfig.InputMode;
+import midi.loop.config.OutputChannelConfig.PlayMode;
 import midi.pad.ui.Color;
 import midi.pad.ui.Screen;
 import midi.pad.ui.dialogs.HintDialog;
+import midi.pad.ui.event.AbcButtonEvent;
+import midi.pad.ui.event.Event;
 import midi.pad.ui.event.Runtime;
 import midi.pad.ui.widgets.ControlButton;
+import midi.pad.ui.widgets.SimpleControlButton;
 import midi.pad.ui.widgets.TrackConfig;
 
 /**
@@ -61,8 +67,8 @@ public class SongLayer extends HintDialog implements BarListener {
 		this.model = model;
 		this.beat = beat;
 		this.orchester = orchester;
-		guitarInputModeControlButton = new InputModeControlButton(
-				new SwitchRunnable(orchester.getGuitarInputConfig()));
+		guitarInputModeControlButton = new InputModeControlButton(orchester.getGuitarInputConfig());
+
 		config[0] = new TrackConfig(0, () -> {
 			final DrumLoopLayer layer = new DrumLoopLayer(
 					this.model.getPercussionModel(currentLayer));
@@ -88,7 +94,7 @@ public class SongLayer extends HintDialog implements BarListener {
 			getRuntime().invalidate();
 		}, () -> {
 			getRuntime().invalidate();
-		}, model.getLayerModel(0));
+		}, model.getPercussionChannelConfig(), model.getLayerModel(0), PlayMode.LOOP);
 
 		config[1] = new TrackConfig(1, () -> {
 			final GuitarLoopLayer layer = new GuitarLoopLayer(
@@ -122,7 +128,7 @@ public class SongLayer extends HintDialog implements BarListener {
 			getRuntime().invalidate();
 		}, () -> {
 			getRuntime().invalidate();
-		}, model.getLayerModel(1));
+		}, model.getGuitarChannelConfig(), model.getLayerModel(1), PlayMode.THROUGH);
 
 		for (int i = 2; i < config.length; i++) {
 			final int seqNum = i - 2;
@@ -161,7 +167,7 @@ public class SongLayer extends HintDialog implements BarListener {
 				getRuntime().invalidate();
 			}, () -> {
 				getRuntime().invalidate();
-			}, model.getLayerModel(i));
+			}, model.getSequencerChannelConfig(seqNum), model.getLayerModel(i));
 		}
 		setWidgets(config);
 		for (int i = 1; i < 8; i++) {
@@ -169,7 +175,7 @@ public class SongLayer extends HintDialog implements BarListener {
 		}
 		for (int i = 0; i < 6; i++) {
 			sequencerInputModeControlButton[i] = new InputModeControlButton(
-					new SwitchRunnable(orchester.getSequencerInputConfig(i)));
+					orchester.getSequencerInputConfig(i));
 		}
 		start();
 	}
@@ -187,13 +193,13 @@ public class SongLayer extends HintDialog implements BarListener {
 				} else {
 					color = Color.BLACK;
 				}
-				return Optional.of(new ControlButton(color, () -> {
+				return Optional.of(new SimpleControlButton(color, () -> {
 					nextLayer = x - 4;
 				}));
 			}
 		} else {
 			if (x == 0) {
-				return Optional.of(new ControlButton(Color.GREEN, () -> {
+				return Optional.of(new SimpleControlButton(Color.GREEN, () -> {
 					screen.showBottomLayer();
 					getRuntime().invalidate();
 				}));
@@ -237,36 +243,20 @@ public class SongLayer extends HintDialog implements BarListener {
 		nextLayer = -1;
 	}
 
-	public class SwitchRunnable implements Runnable {
-		private final InputChannelConfig config;
+	private class InputModeControlButton implements ControlButton, ValueObserver<InputMode> {
 
-		public SwitchRunnable(final InputChannelConfig config) {
-			super();
+		private final InputChannelConfig config;
+		private final TimedIntegerModel<InputMode> mode = new TimedIntegerModel<>(InputMode.OFF,
+				InputMode.BELOW, InputMode.ABOVE, InputMode.ALL);
+
+		public InputModeControlButton(final InputChannelConfig config) {
 			this.config = config;
+			mode.setValue(this.config.getMode());
+			mode.addValueObserver(this);
 		}
 
 		@Override
-		public void run() {
-			final InputMode[] values = InputMode.values();
-			config.setMode(values[(config.getMode().ordinal() + 1) % values.length]);
-			orchester.applyConfigs();
-			Runtime.getRuntime().invalidate();
-		}
-
-		public InputChannelConfig getConfig() {
-			return config;
-		}
-	}
-
-	private static class InputModeControlButton extends ControlButton {
-		private final SwitchRunnable runnable;
-
-		public InputModeControlButton(final SwitchRunnable runnable) {
-			super(getColor(runnable.getConfig()), runnable);
-			this.runnable = runnable;
-		}
-
-		private static Color getColor(final InputChannelConfig config) {
+		public Color getColor() {
 			switch (config.getMode()) {
 			case ABOVE:
 				return Color.FULL_YELLOW;
@@ -283,11 +273,40 @@ public class SongLayer extends HintDialog implements BarListener {
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see midi.pad.ui.widgets.ControlButton#getColor()
+		 * @see
+		 * midi.pad.ui.widgets.ControlButton#eventOccured(midi.pad.ui.event.
+		 * Event)
 		 */
 		@Override
-		public Color getColor() {
-			return getColor(runnable.getConfig());
+		public boolean eventOccured(final Event event) {
+			if (AbcButtonEvent.isEventOfThisType(event)) {
+				final AbcButtonEvent buttonEvent = AbcButtonEvent.getEvent(event);
+				if (AbcButtonEvent.EVENT_TYPE.ABC_PRESSED.equals(buttonEvent.getEventType())) {
+					mode.increment();
+				} else if (AbcButtonEvent.EVENT_TYPE.ABC_HOLD.equals(buttonEvent.getEventType())) {
+					mode.startIncrementing();
+				} else if (AbcButtonEvent.EVENT_TYPE.ABC_RELEASED
+						.equals(buttonEvent.getEventType())) {
+					mode.stopIncrementing();
+				}
+			}
+			return true;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * jmidi.gui.model.TimedIntegerModel.ValueObserver#valueChanged(java.
+		 * lang.Object)
+		 */
+		@Override
+		public void valueChanged(final InputMode newValue) {
+			Runtime.getRuntime().schedule(() -> {
+				config.setMode(newValue);
+				orchester.applyConfigs();
+				Runtime.getRuntime().invalidate();
+			});
 		}
 	}
 }

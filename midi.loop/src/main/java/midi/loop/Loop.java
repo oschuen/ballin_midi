@@ -20,7 +20,7 @@
 package midi.loop;
 
 import midi.loop.beat.Beat.BeatListener;
-import midi.loop.config.ChannelConfig;
+import midi.loop.config.OutputChannelConfig;
 
 /**
  * @author oliver
@@ -28,10 +28,10 @@ import midi.loop.config.ChannelConfig;
  */
 public class Loop implements BeatListener {
 
-	private final ChannelConfig config;
+	private final OutputChannelConfig config;
 	private final LoopModel model;
 
-	public Loop(final ChannelConfig config, final LoopModel model) {
+	public Loop(final OutputChannelConfig config, final LoopModel model) {
 		super();
 		this.config = config;
 		this.model = model;

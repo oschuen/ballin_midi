@@ -35,7 +35,8 @@ import midi.loop.LoopEvent.COMMAND;
 import midi.loop.LoopModel;
 import midi.loop.beat.Beat;
 import midi.loop.beat.Beat.BeatListener;
-import midi.loop.config.ChannelConfig;
+import midi.loop.config.OutputChannelConfig;
+import midi.loop.config.OutputChannelConfig.PlayMode;
 
 /**
  * Guitar accompaniment playing picking patterns. Pattern must be provided for
@@ -46,7 +47,7 @@ import midi.loop.config.ChannelConfig;
 public class Guitar implements BeatListener {
 
 	private final Receiver receiver;
-	private final ChannelConfig config;
+	private final OutputChannelConfig config;
 	private GuitarModel model;
 	private static final Logger logger = LoggerFactory.getLogger(Guitar.class);
 	private int velocity = 127;
@@ -58,7 +59,7 @@ public class Guitar implements BeatListener {
 
 	private final GuitarModel defaultModel = new GuitarModel();
 
-	public Guitar(final Receiver receiver, final ChannelConfig config) {
+	public Guitar(final Receiver receiver, final OutputChannelConfig config) {
 		super();
 		this.receiver = receiver;
 		this.config = config;
@@ -107,53 +108,55 @@ public class Guitar implements BeatListener {
 
 	public void step(final int step) {
 		final int accent = model.getAccentStepEvent(step).getVelocity() * velocity / 127;
-		for (int i = 0; i < instruments.length; i++) {
-			final int var = i;
-			if (lostTime[var] > 0 && i == 0) {
-				logger.info("lostCount {}", lostTime[var]);
-			}
-			final Optional<LoopEvent> optEvent = loopModel[i].getStepEvent(step);
-			if (optEvent.isPresent()) {
-				final LoopEvent event = optEvent.get();
-				if (COMMAND.IGNORE == event.getCommand()) {
-					lostStep[var] = step;
-					lostTime[var] = 2;
-					if (var == 0) {
-						logger.info("Remember {}", step);
-					}
-				} else {
-					lostTime[var] = 0;
-					try {
-						event.asWeightedEvent(accent).playEvent(receiver, config.getChannel());
-					} catch (final InvalidMidiDataException e) {
-						logger.error("Couldn't play event", e);
-					}
-					lastPlayed[var] = event.asOffEvent();
+		if (PlayMode.THROUGH.equals(config.getMode())) {
+			for (int i = 0; i < instruments.length; i++) {
+				final int var = i;
+				if (lostTime[var] > 0 && i == 0) {
+					logger.info("lostCount {}", lostTime[var]);
 				}
-			} else {
-				final int lStep;
-				if (lostTime[i] > 0) {
-					lStep = lostStep[i];
-					lostTime[i] = lostTime[i] - 1;
-					if (var == 0) {
-						logger.info("Restore {}", lStep);
-					}
-				} else {
-					lStep = step;
-					lostTime[i] = 0;
-				}
-				final Optional<LoopEvent> event = loopModel[i].getStepEvent(lStep);
-				event.ifPresent(it -> {
-					if (COMMAND.IGNORE != it.getCommand()) {
+				final Optional<LoopEvent> optEvent = loopModel[i].getStepEvent(step);
+				if (optEvent.isPresent()) {
+					final LoopEvent event = optEvent.get();
+					if (COMMAND.IGNORE == event.getCommand()) {
+						lostStep[var] = step;
+						lostTime[var] = 2;
+						if (var == 0) {
+							logger.info("Remember {}", step);
+						}
+					} else {
+						lostTime[var] = 0;
 						try {
-							it.asWeightedEvent(accent).playEvent(receiver, config.getChannel());
+							event.asWeightedEvent(accent).playEvent(receiver, config.getChannel());
 						} catch (final InvalidMidiDataException e) {
 							logger.error("Couldn't play event", e);
 						}
-						lastPlayed[var] = it.asOffEvent();
-						lostTime[var] = 0;
+						lastPlayed[var] = event.asOffEvent();
 					}
-				});
+				} else {
+					final int lStep;
+					if (lostTime[i] > 0) {
+						lStep = lostStep[i];
+						lostTime[i] = lostTime[i] - 1;
+						if (var == 0) {
+							logger.info("Restore {}", lStep);
+						}
+					} else {
+						lStep = step;
+						lostTime[i] = 0;
+					}
+					final Optional<LoopEvent> event = loopModel[i].getStepEvent(lStep);
+					event.ifPresent(it -> {
+						if (COMMAND.IGNORE != it.getCommand()) {
+							try {
+								it.asWeightedEvent(accent).playEvent(receiver, config.getChannel());
+							} catch (final InvalidMidiDataException e) {
+								logger.error("Couldn't play event", e);
+							}
+							lastPlayed[var] = it.asOffEvent();
+							lostTime[var] = 0;
+						}
+					});
+				}
 			}
 		}
 	}

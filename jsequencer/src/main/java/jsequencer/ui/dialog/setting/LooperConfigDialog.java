@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jmidi.gui.model.IntegerModel;
-import midi.loop.config.ChannelConfig;
+import midi.loop.config.OutputChannelConfig;
 import midi.pad.ui.Color;
 import midi.pad.ui.Screen;
 import midi.pad.ui.dialogs.HintDialog;
@@ -40,7 +40,7 @@ public class LooperConfigDialog extends HintDialog {
 
 	private enum MODE {
 
-		BANK("Bank", 127), PROGRAM("Program", 127), MIDIOUT("Midi Out", 3), CHANNEL("Channel",
+		BANK("Bank", 16129), PROGRAM("Program", 127), MIDIOUT("Midi Out", 3), CHANNEL("Channel",
 				15), REVERB("Reverb", 127), CHOIR("Choir", 127), VOLUME("Volume", 127);
 
 		private MODE(final String hint, final int max) {
@@ -66,12 +66,12 @@ public class LooperConfigDialog extends HintDialog {
 		}
 	}
 
-	private final ChannelConfig config;
+	private final OutputChannelConfig config;
 
 	/**
 	 * @param hint
 	 */
-	public LooperConfigDialog(final String hint, final ChannelConfig config) {
+	public LooperConfigDialog(final String hint, final OutputChannelConfig config) {
 		super(hint);
 		this.config = config;
 		setWidgets(getButton(0, 2, MODE.MIDIOUT), getButton(1, 2, Color.FULL_AMBER, MODE.CHANNEL),
@@ -90,7 +90,7 @@ public class LooperConfigDialog extends HintDialog {
 		return new SinglePixelButton(x, y, color, new ConfigureRunnable(mode));
 	}
 
-	private int getValue(final ChannelConfig config, final MODE mode) {
+	private int getValue(final OutputChannelConfig config, final MODE mode) {
 		switch (mode) {
 		case BANK:
 			return config.getBank();
@@ -112,7 +112,7 @@ public class LooperConfigDialog extends HintDialog {
 		}
 	}
 
-	private void setValue(final ChannelConfig config, final MODE mode, final int value) {
+	private void setValue(final OutputChannelConfig config, final MODE mode, final int value) {
 		switch (mode) {
 		case BANK:
 			config.setBank(Math.min(mode.getMax(), value));

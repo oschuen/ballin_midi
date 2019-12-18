@@ -26,7 +26,7 @@ import javax.json.JsonObject;
  * @author oliver
  *
  */
-public class ChannelConfig {
+public class OutputChannelConfig {
 	private int bank;
 	private int program;
 	private int midiOut;
@@ -34,7 +34,12 @@ public class ChannelConfig {
 	private int choir;
 	private int channel;
 	private int volume;
+	private PlayMode mode = PlayMode.OFF;
 	private boolean changed;
+
+	public enum PlayMode {
+		OFF, THROUGH, LOOP
+	}
 
 	/**
 	 * @return the bank
@@ -188,17 +193,33 @@ public class ChannelConfig {
 	public JsonObject toJson() {
 		return Json.createObjectBuilder().add("bank", bank).add("program", program)
 				.add("reverb", reverb).add("choir", choir).add("channel", channel)
-				.add("midiOut", midiOut).add("volume", volume).build();
+				.add("midiOut", midiOut).add("volume", volume).add("mode", mode.ordinal()).build();
 	}
 
 	public void fromJson(final JsonObject json) {
-		bank = json.getInt("bank");
-		program = json.getInt("program");
-		midiOut = json.getInt("midiOut");
-		reverb = json.getInt("reverb");
-		choir = json.getInt("choir");
-		channel = json.getInt("channel");
-		volume = json.getInt("volume");
+		bank = json.getInt("bank", 0);
+		program = json.getInt("program", 0);
+		midiOut = json.getInt("midiOut", 0);
+		reverb = json.getInt("reverb", 0);
+		choir = json.getInt("choir", 0);
+		channel = json.getInt("channel", 0);
+		volume = json.getInt("volume", 80);
+		mode = PlayMode.values()[json.getInt("mode", 0)];
 		changed = true;
+	}
+
+	/**
+	 * @return the mode
+	 */
+	public PlayMode getMode() {
+		return mode;
+	}
+
+	/**
+	 * @param mode
+	 *            the mode to set
+	 */
+	public void setMode(final PlayMode mode) {
+		this.mode = mode;
 	}
 }

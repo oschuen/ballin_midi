@@ -74,7 +74,7 @@ import midi.instrument.Instrument;
 import midi.instrument.Percussion;
 import midi.instrument.model.GuitarModel;
 import midi.instrument.model.PercussionModel;
-import midi.loop.config.ChannelConfig;
+import midi.loop.config.OutputChannelConfig;
 
 /**
  * Main application frame
@@ -105,8 +105,8 @@ public class MainFrame extends JFrame {
 	private final ValuePanel divisionPanel;
 	private final ValuePanel instrumentPanel;
 	private final Beat beat = new Beat();
-	private final ChannelConfig guitarConfig = new ChannelConfig();
-	private final ChannelConfig percussionConfig = new ChannelConfig();
+	private final OutputChannelConfig guitarConfig = new OutputChannelConfig();
+	private final OutputChannelConfig percussionConfig = new OutputChannelConfig();
 
 	private static final String LAST_FILE_KEY = "last file";
 
@@ -369,10 +369,12 @@ public class MainFrame extends JFrame {
 
 			@Override
 			public void valueChanged(final int newValue) {
-				for (final LoopPanel loopPanel : MainFrame.this.loopPanel) {
-					loopPanel.setNumberOfPages(newValue);
-				}
-				copyLoopPanelInfo();
+				EventQueue.invokeLater(() -> {
+					for (final LoopPanel loopPanel : MainFrame.this.loopPanel) {
+						loopPanel.setNumberOfPages(newValue);
+					}
+					copyLoopPanelInfo();
+				});
 			}
 		});
 
@@ -387,10 +389,12 @@ public class MainFrame extends JFrame {
 
 			@Override
 			public void valueChanged(final int newValue) {
-				for (final LoopPanel loopPanel : MainFrame.this.loopPanel) {
-					loopPanel.setQuarterPerPage(newValue);
-				}
-				copyLoopPanelInfo();
+				EventQueue.invokeLater(() -> {
+					for (final LoopPanel loopPanel : MainFrame.this.loopPanel) {
+						loopPanel.setQuarterPerPage(newValue);
+					}
+					copyLoopPanelInfo();
+				});
 			}
 		});
 
@@ -405,11 +409,13 @@ public class MainFrame extends JFrame {
 
 			@Override
 			public void valueChanged(final int newValue) {
-				for (final LoopPanel loopPanel : MainFrame.this.loopPanel) {
-					loopPanel.setQuarterDivision(newValue);
-				}
-				copyLoopPanelInfo();
-				beat.setDivision(newValue);
+				EventQueue.invokeLater(() -> {
+					for (final LoopPanel loopPanel : MainFrame.this.loopPanel) {
+						loopPanel.setQuarterDivision(newValue);
+					}
+					copyLoopPanelInfo();
+					beat.setDivision(newValue);
+				});
 			}
 		});
 
@@ -423,8 +429,10 @@ public class MainFrame extends JFrame {
 
 			@Override
 			public void valueChanged(final int newValue) {
-				beat.setBpM(newValue);
-				copyLoopPanelInfo();
+				EventQueue.invokeLater(() -> {
+					beat.setBpM(newValue);
+					copyLoopPanelInfo();
+				});
 			}
 		});
 
@@ -439,7 +447,9 @@ public class MainFrame extends JFrame {
 
 			@Override
 			public void valueChanged(final int newValue) {
-				copyLoopPanelInfo();
+				EventQueue.invokeLater(() -> {
+					copyLoopPanelInfo();
+				});
 			}
 		});
 
@@ -453,11 +463,13 @@ public class MainFrame extends JFrame {
 
 			@Override
 			public void valueChanged(final int newValue) {
-				try {
-					setupMidi();
-				} catch (final MidiUnavailableException e) {
-					logger.error("Can't change program");
-				}
+				EventQueue.invokeLater(() -> {
+					try {
+						setupMidi();
+					} catch (final MidiUnavailableException e) {
+						logger.error("Can't change program");
+					}
+				});
 			}
 		});
 

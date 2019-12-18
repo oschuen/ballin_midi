@@ -256,8 +256,8 @@ public class Screen {
 			getTopLayer().ifPresent(l -> l.getAbcControlButton(abcEvent.getY())
 					.ifPresent(b -> b.eventOccured(event)));
 		} else if (NumButtonEvent.isEventOfThisType(event)) {
-			final NumButtonEvent abcEvent = NumButtonEvent.getEvent(event);
-			getBottomLayer().ifPresent(l -> l.getNumControlButton(abcEvent.getX())
+			final NumButtonEvent numEvent = NumButtonEvent.getEvent(event);
+			getBottomLayer().ifPresent(l -> l.getNumControlButton(numEvent.getX())
 					.ifPresent(b -> b.eventOccured(event)));
 		}
 	}

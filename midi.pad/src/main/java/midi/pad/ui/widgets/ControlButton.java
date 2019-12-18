@@ -13,51 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * 
- * @since 02.06.2019
+ * @since 17.12.2019
  * @version 1.0
  * @author oliver
  */
 package midi.pad.ui.widgets;
 
-import static midi.pad.ui.event.Runtime.getRuntime;
-
 import midi.pad.ui.Color;
-import midi.pad.ui.event.AbcButtonEvent;
 import midi.pad.ui.event.Event;
-import midi.pad.ui.event.NumButtonEvent;
 
 /**
  * @author oliver
  *
  */
-public class ControlButton {
-	private final Runnable pressRunner;
-	private final Color color;
+public interface ControlButton {
+	Color getColor();
 
-	public ControlButton(final Color c, final Runnable pressRunner) {
-		this.pressRunner = pressRunner;
-		color = c;
-	}
-
-	public boolean eventOccured(final Event event) {
-		if (AbcButtonEvent.isEventOfThisType(event)) {
-			final AbcButtonEvent buttonEvent = AbcButtonEvent.getEvent(event);
-			if (AbcButtonEvent.EVENT_TYPE.ABC_RELEASED.equals(buttonEvent.getEventType())) {
-				getRuntime().schedule(pressRunner);
-			}
-		} else if (NumButtonEvent.isEventOfThisType(event)) {
-			final NumButtonEvent buttonEvent = NumButtonEvent.getEvent(event);
-			if (NumButtonEvent.EVENT_TYPE.NUM_RELEASED.equals(buttonEvent.getEventType())) {
-				getRuntime().schedule(pressRunner);
-			}
-		}
-		return true;
-	}
-
-	/**
-	 * @return the color
-	 */
-	public Color getColor() {
-		return color;
-	}
+	boolean eventOccured(final Event event);
 }

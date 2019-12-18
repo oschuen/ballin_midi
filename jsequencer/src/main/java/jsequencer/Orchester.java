@@ -25,7 +25,7 @@ import midi.instrument.Guitar;
 import midi.instrument.Percussion;
 import midi.instrument.Sequencer;
 import midi.loop.beat.Beat;
-import midi.loop.config.ChannelConfig;
+import midi.loop.config.OutputChannelConfig;
 import midi.loop.config.InputChannelConfig;
 import midi.pad.ui.event.Runtime;
 
@@ -38,8 +38,8 @@ public class Orchester {
 	private final Percussion percussion;
 	private final Guitar guitar;
 	private final ChordRecognizer recognizer;
-	private final ChannelConfig percussionChannelConfig;
-	private final ChannelConfig guitarChannelConfig;
+	private final OutputChannelConfig percussionChannelConfig;
+	private final OutputChannelConfig guitarChannelConfig;
 	private final InputChannelConfig guitarInputConfig;
 	private final Sequencer[] sequencer;
 
@@ -107,18 +107,18 @@ public class Orchester {
 	/**
 	 * @return the percussionChannelConfig
 	 */
-	public ChannelConfig getPercussionChannelConfig() {
+	public OutputChannelConfig getPercussionChannelConfig() {
 		return percussionChannelConfig;
 	}
 
 	/**
 	 * @return the guitarChannelConfig
 	 */
-	public ChannelConfig getGuitarChannelConfig() {
+	public OutputChannelConfig getGuitarChannelConfig() {
 		return guitarChannelConfig;
 	}
 
-	public ChannelConfig getSequencerChannelConfig(final int sequencer) {
+	public OutputChannelConfig getSequencerChannelConfig(final int sequencer) {
 		return model.getSequencerChannelConfig(sequencer);
 	}
 
@@ -164,7 +164,7 @@ public class Orchester {
 
 		for (int i = 0; i < sequencer.length; i++) {
 			final Sequencer seq = sequencer[i];
-			final ChannelConfig config = model.getSequencerChannelConfig(i);
+			final OutputChannelConfig config = model.getSequencerChannelConfig(i);
 			if (config.isChanged()) {
 				Runtime.getRuntime().applyChannelConfig(config);
 				config.applied();
