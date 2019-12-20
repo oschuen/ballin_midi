@@ -23,12 +23,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jmidi.gui.model.IntegerModel;
+import jsequencer.ui.model.SongModel;
 import midi.loop.config.OutputChannelConfig;
 import midi.pad.ui.Color;
 import midi.pad.ui.Screen;
 import midi.pad.ui.dialogs.HintDialog;
 import midi.pad.ui.dialogs.NumberDialog;
 import midi.pad.ui.event.Runtime;
+import midi.pad.ui.widgets.ChannelSelection;
+import midi.pad.ui.widgets.MidiDeviceSelection;
 import midi.pad.ui.widgets.SinglePixelButton;
 
 /**
@@ -40,8 +43,8 @@ public class LooperConfigDialog extends HintDialog {
 
 	private enum MODE {
 
-		BANK("Bank", 16383), PROGRAM("Program", 127), MIDIOUT("Midi Out", 3), CHANNEL("Channel",
-				15), REVERB("Reverb", 127), CHOIR("Choir", 127), VOLUME("Volume", 127);
+		BANK("Bank", 16383), PROGRAM("Program", 127), REVERB("Reverb", 127), CHOIR("Choir",
+				127), VOLUME("Volume", 127);
 
 		private MODE(final String hint, final int max) {
 			this.hint = hint;
@@ -67,17 +70,25 @@ public class LooperConfigDialog extends HintDialog {
 	}
 
 	private final OutputChannelConfig config;
+	private final ChannelSelection channelSelection;
+	private final MidiDeviceSelection midiSelection;
+	private final SongModel songModel;
 
 	/**
 	 * @param hint
 	 */
-	public LooperConfigDialog(final String hint, final OutputChannelConfig config) {
+	public LooperConfigDialog(final String hint, final SongModel songModel,
+			final OutputChannelConfig config) {
 		super(hint);
 		this.config = config;
-		setWidgets(getButton(0, 2, MODE.MIDIOUT), getButton(1, 2, Color.FULL_AMBER, MODE.CHANNEL),
-				getButton(2, 2, MODE.BANK), getButton(3, 2, Color.RED, MODE.PROGRAM),
-				getButton(4, 2, MODE.VOLUME), getButton(5, 2, MODE.REVERB),
-				getButton(6, 2, MODE.CHOIR));
+		this.songModel = songModel;
+		channelSelection = new ChannelSelection(0, 5, config.getChannel(), new GetUsedProvider(),
+				new SetChannelRunnable());
+		midiSelection = new MidiDeviceSelection(0, 3, config.getMidiOut(),
+				new SetMidiDeviceRunnable());
+		setWidgets(channelSelection, midiSelection, getButton(0, 1, MODE.BANK),
+				getButton(1, 1, Color.RED, MODE.PROGRAM), getButton(3, 1, MODE.VOLUME),
+				getButton(4, 1, MODE.REVERB), getButton(5, 1, MODE.CHOIR));
 		start();
 	}
 
@@ -94,12 +105,8 @@ public class LooperConfigDialog extends HintDialog {
 		switch (mode) {
 		case BANK:
 			return config.getBank();
-		case CHANNEL:
-			return config.getChannel();
 		case CHOIR:
 			return config.getChoir();
-		case MIDIOUT:
-			return config.getMidiOut();
 		case PROGRAM:
 			return config.getProgram();
 		case REVERB:
@@ -117,14 +124,8 @@ public class LooperConfigDialog extends HintDialog {
 		case BANK:
 			config.setBank(Math.min(mode.getMax(), value));
 			break;
-		case CHANNEL:
-			config.setChannel(Math.min(mode.getMax(), value));
-			break;
 		case CHOIR:
 			config.setChoir(Math.min(mode.getMax(), value));
-			break;
-		case MIDIOUT:
-			config.setMidiOut(Math.min(mode.getMax(), value));
 			break;
 		case PROGRAM:
 			config.setProgram(Math.min(mode.getMax(), value));
@@ -137,6 +138,49 @@ public class LooperConfigDialog extends HintDialog {
 			break;
 		default:
 			logger.error("Unkown mode: " + mode.name());
+		}
+	}
+
+	private final class GetUsedProvider implements ChannelSelection.UsedProvider {
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see midi.pad.ui.widgets.ChannelSelection.UsedProvider#getUsed()
+		 */
+		@Override
+		public boolean[] getUsed() {
+			return songModel.getUsedOutChannels(config.getMidiOut());
+		}
+	}
+
+	private final class SetChannelRunnable implements Runnable {
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see java.lang.Runnable#run()
+		 */
+		@Override
+		public void run() {
+			config.setChannel(channelSelection.getCurrentChannel());
+			extraHint("Channel " + channelSelection.getCurrentChannel());
+			Runtime.getRuntime().invalidate();
+		}
+	}
+
+	private final class SetMidiDeviceRunnable implements Runnable {
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see java.lang.Runnable#run()
+		 */
+		@Override
+		public void run() {
+			config.setMidiOut(midiSelection.getCurrentMidi());
+			extraHint("Device " + midiSelection.getCurrentMidi());
+			Runtime.getRuntime().invalidate();
 		}
 	}
 

@@ -19,51 +19,19 @@
  */
 package jsequencer.ui.dialog.setting;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import jmidi.gui.model.IntegerModel;
 import midi.loop.config.InputChannelConfig;
-import midi.pad.ui.Color;
-import midi.pad.ui.Screen;
 import midi.pad.ui.dialogs.HintDialog;
-import midi.pad.ui.dialogs.NumberDialog;
 import midi.pad.ui.event.Runtime;
-import midi.pad.ui.widgets.SinglePixelButton;
+import midi.pad.ui.widgets.ChannelSelection;
+import midi.pad.ui.widgets.MidiDeviceSelection;
 
 /**
  * @author oliver
  *
  */
 public class LooperInputDialog extends HintDialog {
-	private final static Logger logger = LoggerFactory.getLogger(LooperInputDialog.class);
-
-	private enum MODE {
-
-		MIDIIN("Midi In", 3), CHANNEL("Channel", 15);
-
-		private MODE(final String hint, final int max) {
-			this.hint = hint;
-			this.max = max;
-		}
-
-		private final String hint;
-		private final int max;
-
-		/**
-		 * return the hint;
-		 */
-		public String getHint() {
-			return hint;
-		}
-
-		/**
-		 * @return the max
-		 */
-		public int getMax() {
-			return max;
-		}
-	}
+	private final ChannelSelection channelSelection;
+	private final MidiDeviceSelection midiSelection;
 
 	private final InputChannelConfig config;
 
@@ -73,51 +41,16 @@ public class LooperInputDialog extends HintDialog {
 	public LooperInputDialog(final String hint, final InputChannelConfig config) {
 		super(hint);
 		this.config = config;
-		setWidgets(getButton(0, 2, MODE.MIDIIN), getButton(1, 2, Color.FULL_AMBER, MODE.CHANNEL));
+		midiSelection = new MidiDeviceSelection(0, 1, config.getMidiIn(),
+				new SetMidiDeviceRunnable());
+		channelSelection = new ChannelSelection(0, 3, config.getChannel(), new GetUsedProvider(),
+				new SetChannelRunnable());
+
+		setWidgets(channelSelection, midiSelection);
 		start();
 	}
 
-	private SinglePixelButton getButton(final int x, final int y, final MODE mode) {
-		return new SinglePixelButton(x, y, Color.FULL_GREEN, new ConfigureRunnable(mode));
-	}
-
-	private SinglePixelButton getButton(final int x, final int y, final Color color,
-			final MODE mode) {
-		return new SinglePixelButton(x, y, color, new ConfigureRunnable(mode));
-	}
-
-	private int getValue(final InputChannelConfig config, final MODE mode) {
-		switch (mode) {
-		case CHANNEL:
-			return config.getChannel();
-		case MIDIIN:
-			return config.getMidiIn();
-		default:
-			logger.error("Unkown mode: " + mode.name());
-			return 0;
-		}
-	}
-
-	private void setValue(final InputChannelConfig config, final MODE mode, final int value) {
-		switch (mode) {
-		case CHANNEL:
-			config.setChannel(Math.min(mode.getMax(), value));
-			break;
-		case MIDIIN:
-			config.setMidiIn(Math.min(mode.getMax(), value));
-			break;
-		default:
-			logger.error("Unkown mode: " + mode.name());
-		}
-	}
-
-	private final class ConfigureRunnable implements Runnable {
-		private final MODE mode;
-
-		public ConfigureRunnable(final MODE mode) {
-			super();
-			this.mode = mode;
-		}
+	private final class SetChannelRunnable implements Runnable {
 
 		/*
 		 * (non-Javadoc)
@@ -126,12 +59,38 @@ public class LooperInputDialog extends HintDialog {
 		 */
 		@Override
 		public void run() {
-			final Screen screen = Runtime.getRuntime().getScreen();
-			final IntegerModel model = new IntegerModel(0, mode.getMax(), getValue(config, mode));
-			screen.putLayer(4, new NumberDialog(mode.getHint(), model, () -> {
-				setValue(config, mode, model.getValue());
-				screen.removeLayer(4);
-			}));
+			config.setChannel(channelSelection.getCurrentChannel());
+			extraHint("Channel " + channelSelection.getCurrentChannel());
+			Runtime.getRuntime().invalidate();
 		}
 	}
+
+	private final class SetMidiDeviceRunnable implements Runnable {
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see java.lang.Runnable#run()
+		 */
+		@Override
+		public void run() {
+			config.setMidiIn(midiSelection.getCurrentMidi());
+			extraHint("Device " + midiSelection.getCurrentMidi());
+			Runtime.getRuntime().invalidate();
+		}
+	}
+
+	private final class GetUsedProvider implements ChannelSelection.UsedProvider {
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see midi.pad.ui.widgets.ChannelSelection.UsedProvider#getUsed()
+		 */
+		@Override
+		public boolean[] getUsed() {
+			return new boolean[16];
+		}
+	}
+
 }

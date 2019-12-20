@@ -57,16 +57,22 @@ public class Controller implements Receiver {
 					orchester.getGuitarChannelConfig().setVolume(shortMessage.getData2());
 					break;
 				case 79: // Fader 3
+					orchester.getSequencerChannelConfig(0).setVolume(shortMessage.getData2());
 					break;
 				case 72: // Fader 4
+					orchester.getSequencerChannelConfig(1).setVolume(shortMessage.getData2());
 					break;
 				case 80: // Fader 5
+					orchester.getSequencerChannelConfig(2).setVolume(shortMessage.getData2());
 					break;
 				case 81: // Fader 6
+					orchester.getSequencerChannelConfig(3).setVolume(shortMessage.getData2());
 					break;
 				case 82: // Fader 7
+					orchester.getSequencerChannelConfig(4).setVolume(shortMessage.getData2());
 					break;
 				case 83: // Fader 8
+					orchester.getSequencerChannelConfig(5).setVolume(shortMessage.getData2());
 					break;
 				case 74: // Poti 1
 					orchester.getPercussionChannelConfig().setReverb(shortMessage.getData2());
@@ -75,20 +81,30 @@ public class Controller implements Receiver {
 					orchester.getGuitarChannelConfig().setReverb(shortMessage.getData2());
 					break;
 				case 76: // Poti 3
+					orchester.getSequencerChannelConfig(0).setReverb(shortMessage.getData2());
 					break;
 				case 77: // Poti 4
+					orchester.getSequencerChannelConfig(1).setReverb(shortMessage.getData2());
 					break;
 				case 93: // Poti 5
+					orchester.getSequencerChannelConfig(2).setReverb(shortMessage.getData2());
 					break;
 				case 18: // Poti 6
+					orchester.getSequencerChannelConfig(3).setReverb(shortMessage.getData2());
 					break;
 				case 19: // Poti 7
+					orchester.getSequencerChannelConfig(4).setReverb(shortMessage.getData2());
 					break;
 				case 16: // Poti 8
+					orchester.getSequencerChannelConfig(5).setReverb(shortMessage.getData2());
 					break;
 				case 85: // Main Fader
 					orchester.getGuitar().setVelocity(shortMessage.getData2());
 					orchester.getPercussion().setVelocity(shortMessage.getData2());
+					for (int i = 0; i < 6; ++i) {
+						orchester.getSequencer(i).setVelocity(shortMessage.getData2());
+					}
+
 					break;
 				}
 			}

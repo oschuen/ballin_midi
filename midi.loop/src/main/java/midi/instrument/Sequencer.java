@@ -48,7 +48,7 @@ public class Sequencer implements BeatListener, Receiver {
 	private final InputChannelConfig inConfig;
 	private SequencerModel model;
 	private static final Logger logger = LoggerFactory.getLogger(Sequencer.class);
-	private final int velocity = 127;
+	private int velocity = 127;
 	private final SequencerModel defaultModel = new SequencerModel();
 	private int midiInChannel = 0;
 
@@ -85,7 +85,7 @@ public class Sequencer implements BeatListener, Receiver {
 			if (shortMessage.getChannel() == inConfig.getChannel()) {
 				final LoopEvent event = LoopEvent.fromShortMessage(shortMessage);
 				try {
-					event.playEvent(receiver, config.getChannel());
+					event.asWeightedEvent(velocity).playEvent(receiver, config.getChannel());
 				} catch (final InvalidMidiDataException e) {
 					logger.error("Couldn't play Event", event.toString());
 				}
@@ -162,5 +162,20 @@ public class Sequencer implements BeatListener, Receiver {
 	 */
 	public void setMidiInChannel(final int midiInChannel) {
 		this.midiInChannel = midiInChannel;
+	}
+
+	/**
+	 * @return the velocity
+	 */
+	public int getVelocity() {
+		return velocity;
+	}
+
+	/**
+	 * @param velocity
+	 *            the velocity to set
+	 */
+	public void setVelocity(final int velocity) {
+		this.velocity = velocity;
 	}
 }

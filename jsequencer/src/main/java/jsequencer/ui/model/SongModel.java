@@ -14,7 +14,6 @@ import midi.instrument.model.SequencerModel;
 import midi.loop.config.InputChannelConfig;
 import midi.loop.config.OutputChannelConfig;
 import midi.loop.config.OutputChannelConfig.PlayMode;
-import midi.pad.ui.event.Runtime;
 
 public class SongModel {
 	private final GuitarModel[] guitarModel;
@@ -50,35 +49,32 @@ public class SongModel {
 		OutputChannelConfig config = channelConfig[0];
 		config.setBank(128);
 		config.setProgram(9);
-		config.setChannel(0);
+		config.setChannel(9);
 		config.setChoir(0);
 		config.setReverb(0);
 		config.setMidiOut(0);
 		config.setVolume(80);
 		config.setMode(PlayMode.LOOP);
-		Runtime.getRuntime().applyChannelConfig(config);
 
 		config = channelConfig[1];
 		config.setBank(0);
 		config.setProgram(24);
-		config.setChannel(4);
+		config.setChannel(0);
 		config.setChoir(0);
 		config.setReverb(0);
 		config.setMidiOut(0);
 		config.setVolume(80);
 		config.setMode(PlayMode.THROUGH);
-		Runtime.getRuntime().applyChannelConfig(config);
 
 		for (int i = 2; i < numberOfLoops; ++i) {
 			config = channelConfig[i];
 			config.setBank(0);
 			config.setProgram(0);
-			config.setChannel(0);
+			config.setChannel(i);
 			config.setChoir(0);
 			config.setReverb(0);
 			config.setMidiOut(0);
 			config.setVolume(80);
-			Runtime.getRuntime().applyChannelConfig(config);
 		}
 
 		for (int i = 1; i < numberOfLoops; ++i) {
@@ -122,6 +118,17 @@ public class SongModel {
 
 	public LayerModel getLayerModel(final int loop) {
 		return layerModel[loop];
+	}
+
+	public boolean[] getUsedOutChannels(final int midiOut) {
+		final boolean[] used = new boolean[16];
+		for (int i = 0; i < channelConfig.length; i++) {
+			final OutputChannelConfig outputChannelConfig = channelConfig[i];
+			if (outputChannelConfig.getMidiOut() == midiOut) {
+				used[outputChannelConfig.getChannel()] = true;
+			}
+		}
+		return used;
 	}
 
 	public JsonObject toJson() {

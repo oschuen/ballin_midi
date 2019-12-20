@@ -83,7 +83,7 @@ public class SongLayer extends HintDialog implements BarListener {
 			getRuntime().invalidate();
 		}, () -> {
 			final Screen screen = Runtime.getRuntime().getScreen();
-			final LooperConfigDialog layer = new LooperConfigDialog("Percussion Output",
+			final LooperConfigDialog layer = new LooperConfigDialog("Percussion Output", model,
 					model.getPercussionChannelConfig());
 			screen.putLayer(3, layer, () -> {
 				screen.removeLayer(layer);
@@ -118,7 +118,7 @@ public class SongLayer extends HintDialog implements BarListener {
 			getRuntime().invalidate();
 		}, () -> {
 			final Screen screen = Runtime.getRuntime().getScreen();
-			final LooperConfigDialog layer = new LooperConfigDialog("Guitar Output",
+			final LooperConfigDialog layer = new LooperConfigDialog("Guitar Output", model,
 					model.getGuitarChannelConfig());
 			screen.putLayer(3, layer, () -> {
 				screen.removeLayer(layer);
@@ -158,7 +158,8 @@ public class SongLayer extends HintDialog implements BarListener {
 			}, () -> {
 				final Screen screen = Runtime.getRuntime().getScreen();
 				final LooperConfigDialog layer = new LooperConfigDialog(
-						"Seq " + (seqNum + 1) + " Output", model.getSequencerChannelConfig(seqNum));
+						"Seq " + (seqNum + 1) + " Output", model,
+						model.getSequencerChannelConfig(seqNum));
 				screen.putLayer(3, layer, () -> {
 					screen.removeLayer(layer);
 					orchester.applyConfigs();

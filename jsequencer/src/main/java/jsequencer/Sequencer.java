@@ -186,9 +186,8 @@ public class Sequencer {
 		final Orchester orchester = new Orchester(model, beat);
 		final Controller controller = new Controller(orchester);
 		Runtime.getRuntime().addControlInput(controller);
-
+		orchester.applyConfigs();
 		beat.start();
-
 		Runtime.getRuntime().schedule(() -> {
 			final SongLayer layer = new SongLayer(orchester, model, beat);
 			screen.putLayer(1, layer);
