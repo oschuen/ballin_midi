@@ -67,6 +67,7 @@ public class Persistence {
 
 	public Persistence(final SongModel model, final int currentSong) {
 		this.model = model;
+		this.currentSong = currentSong;
 		final Map<String, Object> properties = new HashMap<>();
 		properties.put(JsonGenerator.PRETTY_PRINTING, true);
 		writerFactory = Json.createWriterFactory(properties);
@@ -118,19 +119,30 @@ public class Persistence {
 		}
 	}
 
+	public int getCurrentSong() {
+		return currentSong;
+	}
+
+	public boolean[] getSongMatrix() {
+		final boolean[] matrix = new boolean[64];
+		for (int i = 0; i < matrix.length; i++) {
+			final Path songPath = getSongPath(i, 0);
+			matrix[i] = Files.exists(songPath);
+		}
+		return matrix;
+	}
+
 	public void writeSong() {
 		String songJson = null;
 		boolean identical = true;
-		int song = -1;
 		lock.lock();
 		try {
-			song = currentSong;
 			songJson = modelToString(model);
 			identical = Objects.equals(songJson, currentJson);
 			currentJson = songJson;
 			if (!(identical || songJson == null || songJson == null)) {
-				moveRevisions(song);
-				try (FileWriter fw = new FileWriter(getSongPath(song, 0).toFile())) {
+				moveRevisions(currentSong);
+				try (FileWriter fw = new FileWriter(getSongPath(currentSong, 0).toFile())) {
 					fw.write(songJson);
 				} catch (final IOException e) {
 					logger.error("Write Song failed", e);
@@ -165,5 +177,57 @@ public class Persistence {
 		} finally {
 			lock.unlock();
 		}
+	}
+
+	public void deleteSong(final int song) {
+		lock.lock();
+		try {
+			if (song == currentSong) {
+				writeSong();
+			}
+			moveRevisions(song);
+			try (FileWriter fw = new FileWriter(getSongPath(song, 0).toFile())) {
+				fw.write(defaultJsonString);
+			} catch (final IOException e) {
+				logger.error("Write Song failed", e);
+			}
+			if (song == currentSong) {
+				loadSong(song);
+			}
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	public void copySong(final int fromSong, final int toSong) {
+		lock.lock();
+		try {
+			if (toSong == currentSong) {
+				writeSong();
+			}
+			moveRevisions(toSong);
+			final Path songPath = getSongPath(fromSong, 0);
+			try {
+				final String newJson;
+				if (Files.exists(songPath)) {
+					newJson = FileUtils.readFileToString(songPath.toFile(), StandardCharsets.UTF_8);
+				} else {
+					newJson = defaultJsonString;
+				}
+				try (FileWriter fw = new FileWriter(getSongPath(toSong, 0).toFile())) {
+					fw.write(newJson);
+				} catch (final IOException e) {
+					logger.error("Write Song failed", e);
+				}
+			} catch (final IOException e) {
+				logger.error("Failed to copy song");
+			}
+			if (toSong == currentSong) {
+				loadSong(toSong);
+			}
+		} finally {
+			lock.unlock();
+		}
+
 	}
 }

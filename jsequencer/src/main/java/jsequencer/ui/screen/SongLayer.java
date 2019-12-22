@@ -26,6 +26,7 @@ import java.util.Optional;
 import jmidi.gui.model.TimedIntegerModel;
 import jmidi.gui.model.TimedIntegerModel.ValueObserver;
 import jsequencer.Orchester;
+import jsequencer.persistence.Persistence;
 import jsequencer.ui.dialog.setting.LooperConfigDialog;
 import jsequencer.ui.dialog.setting.LooperInputDialog;
 import jsequencer.ui.model.SongModel;
@@ -53,6 +54,7 @@ public class SongLayer extends HintDialog implements BarListener {
 	private final TrackConfig[] config = new TrackConfig[8];
 	private final SongModel model;
 	private final Beat beat;
+	private final Persistence persistence;
 	private final Orchester orchester;
 	private int currentLayer = 0;
 	private int nextLayer = 0;
@@ -62,11 +64,13 @@ public class SongLayer extends HintDialog implements BarListener {
 	/**
 	 * @param hint
 	 */
-	public SongLayer(final Orchester orchester, final SongModel model, final Beat beat) {
+	public SongLayer(final Orchester orchester, final SongModel model,
+			final Persistence persistence, final Beat beat) {
 		super("J 1.0");
 		this.model = model;
 		this.beat = beat;
 		this.orchester = orchester;
+		this.persistence = persistence;
 		guitarInputModeControlButton = new InputModeControlButton(orchester.getGuitarInputConfig());
 
 		config[0] = new TrackConfig(0, () -> {
@@ -181,11 +185,25 @@ public class SongLayer extends HintDialog implements BarListener {
 		start();
 	}
 
+	private void updateModels() {
+		for (final TrackConfig trackConfig : config) {
+			trackConfig.updateMode();
+		}
+	}
+
 	@Override
 	public Optional<ControlButton> getNumControlButton(final int x) {
 		final Screen screen = Runtime.getRuntime().getScreen();
 		if (screen.isTopLayer(this)) {
-			if (x >= 4) {
+			if (x == 0) {
+				return Optional.of(new SimpleControlButton(Color.FULL_RED, () -> {
+					final SongSelectionLayer songSelLayer = new SongSelectionLayer(persistence);
+					screen.putLayer(3, songSelLayer, () -> {
+						updateModels();
+						screen.removeLayer(songSelLayer);
+					});
+				}));
+			} else if (x >= 4) {
 				final Color color;
 				if (x - 4 == nextLayer) {
 					color = new Color(Color.LOW_GREEN, true, false);

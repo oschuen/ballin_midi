@@ -43,19 +43,29 @@ public class HintDialog extends Layer {
 
 	private final List<Widget> currentWidgets = new ArrayList<>();
 	private final List<Widget> widgets = new ArrayList<>();
-	private final TextField textField;
+	private TextField textField;
 	private final SinglePixelButton stopButton;
 	private MODE currentMode = MODE.NONE;
 	private final ToggleWidgets toggletoWidgets;
 	private final ToggleWidgets toggletoHint;
 
 	public HintDialog(final String hint) {
+		this(hint, true);
+	}
+
+	public HintDialog(final String hint, final boolean interruptable) {
 		super(true);
 		toggletoWidgets = new ToggleWidgets(widgets, MODE.WIDGET);
 		stopButton = new SinglePixelButton(0, 0, new Color(Color.FULL_RED, true, true),
 				toggletoWidgets);
 		textField = new TextField(0, 0, hint, toggletoWidgets);
-		toggletoHint = new ToggleWidgets(Arrays.asList(stopButton, textField), MODE.HINT) {
+		List<Widget> hintWidgets;
+		if (interruptable) {
+			hintWidgets = Arrays.asList(stopButton, textField);
+		} else {
+			hintWidgets = Arrays.asList(textField);
+		}
+		toggletoHint = new ToggleWidgets(hintWidgets, MODE.HINT) {
 			/*
 			 * (non-Javadoc)
 			 * 
@@ -82,9 +92,21 @@ public class HintDialog extends Layer {
 		if (MODE.WIDGET.equals(currentMode)) {
 			final SinglePixelButton stopButton = new SinglePixelButton(0, 0,
 					new Color(Color.FULL_RED, true, true), toggletoWidgets);
-			final TextField hintField = new TextField(0, 0, extraHint, toggletoWidgets);
+			textField = new TextField(0, 0, extraHint, toggletoWidgets);
 			getRuntime().schedule(
-					new ToggleWidgets(Arrays.asList(stopButton, hintField), MODE.EXTRA_HINT));
+					new ToggleWidgets(Arrays.asList(stopButton, textField), MODE.EXTRA_HINT) {
+						/*
+						 * (non-Javadoc)
+						 * 
+						 * @see
+						 * midi.pad.ui.dialogs.HintDialog.ToggleWidgets#run()
+						 */
+						@Override
+						public void run() {
+							super.run();
+							textField.start();
+						}
+					});
 		}
 	}
 
@@ -105,6 +127,9 @@ public class HintDialog extends Layer {
 			currentWidgets.addAll(widgets);
 			addAllWidget(currentWidgets);
 			currentMode = finalMode;
+			if (textField != null) {
+				textField.stop();
+			}
 		}
 	};
 }

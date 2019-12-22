@@ -209,6 +209,10 @@ public class TrackConfig extends Widget {
 		return playModeModel.getValue();
 	}
 
+	public void updateMode() {
+		playModeModel.setValue(outConfig.getMode());
+	}
+
 	/**
 	 * @return the model
 	 */

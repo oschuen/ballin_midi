@@ -173,7 +173,7 @@ public class Sequencer {
 
 		final Properties props = new Properties();
 
-		new Persistence(model, 0);
+		final Persistence persistence = new Persistence(model, 0);
 		try {
 			try (InputStream stream = new FileInputStream(file)) {
 				props.load(stream);
@@ -189,7 +189,7 @@ public class Sequencer {
 		orchester.applyConfigs();
 		beat.start();
 		Runtime.getRuntime().schedule(() -> {
-			final SongLayer layer = new SongLayer(orchester, model, beat);
+			final SongLayer layer = new SongLayer(orchester, model, persistence, beat);
 			screen.putLayer(1, layer);
 			beat.addBarListener(layer);
 		});
