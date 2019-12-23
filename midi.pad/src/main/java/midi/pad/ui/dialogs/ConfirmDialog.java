@@ -30,7 +30,7 @@ public class ConfirmDialog extends HintDialog {
 
 	public ConfirmDialog(final String question, final Runnable confirmRunner,
 			final Runnable regretRunner) {
-		super(question, false);
+		super(question);
 		setWidgets(new YesButton(4, 4, confirmRunner), new NoButton(0, 4, regretRunner));
 		start();
 	}

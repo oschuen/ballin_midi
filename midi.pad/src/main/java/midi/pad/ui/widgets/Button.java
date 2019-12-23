@@ -33,6 +33,7 @@ import midi.pad.ui.event.PadEvent.EVENT_TYPE;
 public abstract class Button extends Widget {
 
 	private final Runnable pressRunner;
+	private boolean sawPress = false;
 
 	public Button(final int x, final int y, final int width, final int height,
 			final Runnable pressRunner) {
@@ -58,7 +59,11 @@ public abstract class Button extends Widget {
 	 */
 	@Override
 	public boolean eventOccured(final Event event) {
-		if (event != null && EVENT_TYPE.PAD_RELEASED.equals(event.getEventType())) {
+		if (event != null && EVENT_TYPE.PAD_PRESSED.equals(event.getEventType())) {
+			sawPress = true;
+		}
+		if (event != null && sawPress && EVENT_TYPE.PAD_RELEASED.equals(event.getEventType())) {
+			sawPress = false;
 			getRuntime().schedule(pressRunner);
 		}
 		return true;

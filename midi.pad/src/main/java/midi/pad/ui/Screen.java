@@ -197,6 +197,9 @@ public class Screen {
 
 	public void removeLayer(final int level) {
 		if (level >= 0 && level < layers.length) {
+			if (layers[level] != null) {
+				layers[level].stopLayer();
+			}
 			layers[level] = null;
 			graphics[level] = null;
 			if (finishRunnable[level] != null) {

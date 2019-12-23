@@ -78,6 +78,10 @@ public class Layer extends Widget {
 		return exclusive;
 	}
 
+	public void stopLayer() {
+
+	}
+
 	/**
 	 * @return
 	 * @see java.util.List#size()

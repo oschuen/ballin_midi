@@ -138,7 +138,7 @@ public class SongLayer extends HintDialog implements BarListener {
 			final int seqNum = i - 2;
 			config[i] = new TrackConfig(i, () -> {
 				final SequencerLoopLayer layer = new SequencerLoopLayer("Seq " + (seqNum + 1),
-						this.model.getSequencerModel(seqNum, currentLayer));
+						this.orchester.getSequencer(seqNum));
 				final Screen screen = Runtime.getRuntime().getScreen();
 
 				this.beat.addBeatListener(layer);

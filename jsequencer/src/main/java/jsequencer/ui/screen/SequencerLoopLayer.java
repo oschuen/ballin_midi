@@ -21,6 +21,7 @@ package jsequencer.ui.screen;
 
 import java.util.Optional;
 
+import midi.instrument.Sequencer;
 import midi.instrument.model.SequencerModel;
 import midi.loop.beat.Beat.BeatListener;
 import midi.pad.ui.Color;
@@ -30,6 +31,7 @@ import midi.pad.ui.dialogs.NumberDialog;
 import midi.pad.ui.event.Runtime;
 import midi.pad.ui.widgets.ControlButton;
 import midi.pad.ui.widgets.LoopConfig;
+import midi.pad.ui.widgets.LoopRecordWidget;
 import midi.pad.ui.widgets.SimpleControlButton;
 import midi.pad.ui.widgets.SimpleLooper;
 
@@ -40,13 +42,16 @@ import midi.pad.ui.widgets.SimpleLooper;
 public class SequencerLoopLayer extends HintDialog implements BeatListener {
 
 	private final LoopConfig config;
+	private final Sequencer sequencer;
 	private final SequencerModel model;
 	private final SimpleLooper looper = new SimpleLooper(0, 4);
 	private final SimpleControlButton velocityButton;
+	private final LoopRecordWidget loopRecordWidget;
 
-	public SequencerLoopLayer(final String name, final SequencerModel model) {
+	public SequencerLoopLayer(final String name, final Sequencer sequencer) {
 		super(name);
-		this.model = model;
+		this.sequencer = sequencer;
+		model = sequencer.getModel();
 		config = new LoopConfig(0, 0, new Runnable() {
 			@Override
 			public void run() {
@@ -63,8 +68,11 @@ public class SequencerLoopLayer extends HintDialog implements BeatListener {
 				looper.setHoldQuarter(config.getHoldQuarter());
 			}
 		});
-		looper.setLoopModel(this.model.getModel());
-		setWidgets(config, looper);
+		loopRecordWidget = new LoopRecordWidget(3, () -> {
+		});
+
+		looper.setLoopModel(model.getModel());
+		setWidgets(config, loopRecordWidget, looper);
 		velocityButton = new SimpleControlButton(Color.GREEN, new ConfigureInstrumentVelocity());
 	}
 

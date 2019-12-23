@@ -50,22 +50,12 @@ public class HintDialog extends Layer {
 	private final ToggleWidgets toggletoHint;
 
 	public HintDialog(final String hint) {
-		this(hint, true);
-	}
-
-	public HintDialog(final String hint, final boolean interruptable) {
 		super(true);
 		toggletoWidgets = new ToggleWidgets(widgets, MODE.WIDGET);
 		stopButton = new SinglePixelButton(0, 0, new Color(Color.FULL_RED, true, true),
 				toggletoWidgets);
 		textField = new TextField(0, 0, hint, toggletoWidgets);
-		List<Widget> hintWidgets;
-		if (interruptable) {
-			hintWidgets = Arrays.asList(stopButton, textField);
-		} else {
-			hintWidgets = Arrays.asList(textField);
-		}
-		toggletoHint = new ToggleWidgets(hintWidgets, MODE.HINT) {
+		toggletoHint = new ToggleWidgets(Arrays.asList(stopButton, textField), MODE.HINT) {
 			/*
 			 * (non-Javadoc)
 			 * 
