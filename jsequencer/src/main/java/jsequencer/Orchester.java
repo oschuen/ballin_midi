@@ -67,6 +67,7 @@ public class Orchester {
 					model.getSequencerChannelConfig(i), model.getSequencerInputChannelConfig(i));
 			final Sequencer seq = sequencer[i];
 			seq.setModel(model.getSequencerModel(i, 0));
+			beat.addBeatListener(seq);
 		}
 
 		// Apply Models to instruments

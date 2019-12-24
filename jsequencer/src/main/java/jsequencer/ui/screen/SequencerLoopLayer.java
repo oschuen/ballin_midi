@@ -21,7 +21,9 @@ package jsequencer.ui.screen;
 
 import java.util.Optional;
 
+import jmidi.gui.model.IntegerModel;
 import midi.instrument.Sequencer;
+import midi.instrument.Sequencer.RecordMode;
 import midi.instrument.model.SequencerModel;
 import midi.loop.beat.Beat.BeatListener;
 import midi.pad.ui.Color;
@@ -32,8 +34,8 @@ import midi.pad.ui.event.Runtime;
 import midi.pad.ui.widgets.ControlButton;
 import midi.pad.ui.widgets.LoopConfig;
 import midi.pad.ui.widgets.LoopRecordWidget;
+import midi.pad.ui.widgets.RecordLooper;
 import midi.pad.ui.widgets.SimpleControlButton;
-import midi.pad.ui.widgets.SimpleLooper;
 
 /**
  * @author oliver
@@ -44,20 +46,26 @@ public class SequencerLoopLayer extends HintDialog implements BeatListener {
 	private final LoopConfig config;
 	private final Sequencer sequencer;
 	private final SequencerModel model;
-	private final SimpleLooper looper = new SimpleLooper(0, 4);
+	private final RecordLooper looper = new RecordLooper(0, 4);
 	private final SimpleControlButton velocityButton;
 	private final LoopRecordWidget loopRecordWidget;
+	private final IntegerModel recStepModel = new IntegerModel(0, 0, 0);
+	private final RecordModeChangeRunnable modeChangeRunnable = new RecordModeChangeRunnable();
 
 	public SequencerLoopLayer(final String name, final Sequencer sequencer) {
 		super(name);
 		this.sequencer = sequencer;
 		model = sequencer.getModel();
+		recStepModel.setMaxValue(
+				model.getNumberOfPages() * model.getQuarterPerPage() * model.getQuarterDivision());
 		config = new LoopConfig(0, 0, new Runnable() {
 			@Override
 			public void run() {
 				model.setNumberOfPages(config.getNumberOfPages());
 				model.setQuarterDivision(config.getQuarterDivision());
 				model.setQuarterPerPage(config.getQuarterPerPage());
+				recStepModel.setMaxValue(model.getNumberOfPages() * model.getQuarterPerPage()
+						* model.getQuarterDivision());
 			}
 		}, new Runnable() {
 
@@ -69,11 +77,14 @@ public class SequencerLoopLayer extends HintDialog implements BeatListener {
 			}
 		});
 		loopRecordWidget = new LoopRecordWidget(3, () -> {
+			Runtime.getRuntime().schedule(modeChangeRunnable);
 		});
 
 		looper.setLoopModel(model.getModel());
 		setWidgets(config, loopRecordWidget, looper);
 		velocityButton = new SimpleControlButton(Color.GREEN, new ConfigureInstrumentVelocity());
+		sequencer.setRecStepModel(recStepModel);
+		looper.setRecStepModel(recStepModel);
 	}
 
 	/*
@@ -85,7 +96,43 @@ public class SequencerLoopLayer extends HintDialog implements BeatListener {
 	public void accept(final long beat) {
 		config.accept(beat);
 		looper.accept(beat);
+	}
 
+	private final class RecordModeChangeRunnable implements Runnable {
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see java.lang.Runnable#run()
+		 */
+		@Override
+		public void run() {
+			switch (loopRecordWidget.getMode()) {
+			case CLEAR:
+				break;
+			case FILL:
+				break;
+			case FILL_RANDOM:
+				break;
+			case NOTE_HOLD:
+				sequencer.setStepWidth(loopRecordWidget.getSteps());
+				sequencer.setRecMode(RecordMode.NOTE_HOLD);
+				break;
+			case NOTE_OFF:
+				sequencer.setStepWidth(loopRecordWidget.getSteps());
+				sequencer.setRecMode(RecordMode.NOTE_OFF);
+				break;
+			case NOTE_ON:
+				sequencer.setStepWidth(loopRecordWidget.getSteps());
+				sequencer.setRecMode(RecordMode.NOTE_ON);
+				break;
+			case OFF:
+				sequencer.setRecMode(RecordMode.OFF);
+				break;
+			default:
+				break;
+			}
+		}
 	}
 
 	/*
@@ -120,5 +167,17 @@ public class SequencerLoopLayer extends HintDialog implements BeatListener {
 					() -> screen.removeLayer(4)));
 
 		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see midi.pad.ui.Layer#stopLayer()
+	 */
+	@Override
+	public void stopLayer() {
+		sequencer.setRecStepModel(null);
+		looper.setRecStepModel(null);
+		sequencer.setRecMode(RecordMode.OFF);
 	}
 }

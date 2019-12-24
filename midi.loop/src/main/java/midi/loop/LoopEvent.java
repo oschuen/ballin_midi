@@ -119,15 +119,20 @@ public class LoopEvent {
 	}
 
 	public LoopEvent asOffEvent() {
-		return new LoopEvent(COMMAND.NOTE_OFF, 0, notes);
+		return asCommandEvent(COMMAND.NOTE_OFF);
 	}
 
 	public LoopEvent asOnEvent() {
-		return new LoopEvent(COMMAND.NOTE_ON, velocity, notes);
+		return asCommandEvent(COMMAND.NOTE_ON);
 	}
 
 	public LoopEvent asWeightedEvent(final int velocity) {
-		return new LoopEvent(command, this.velocity * velocity / 127, notes);
+		return new LoopEvent(command, this.velocity * velocity / 127,
+				new ArrayList<Integer>(notes));
+	}
+
+	public LoopEvent asCommandEvent(final COMMAND command) {
+		return new LoopEvent(command, velocity, new ArrayList<Integer>(notes));
 	}
 
 	/*
@@ -196,5 +201,13 @@ public class LoopEvent {
 			velocity = message.getData2();
 		}
 		return new LoopEvent(command, velocity, note);
+	}
+
+	/**
+	 * @param command
+	 *            the command to set
+	 */
+	public void setCommand(final COMMAND command) {
+		this.command = command;
 	}
 }
