@@ -30,6 +30,7 @@ import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 
 import jmidi.gui.model.IntegerModel;
+import midi.loop.LoopEvent.COMMAND;
 
 /**
  * @author oliver
@@ -152,6 +153,16 @@ public class LoopModel {
 			lock.unlock();
 		}
 		return Optional.empty();
+	}
+
+	public void clear() {
+		for (int i = 0; i < steps; ++i) {
+			final LoopEvent event = events[i];
+			if (event != null) {
+				event.setCommand(COMMAND.IGNORE);
+				event.getNotes().clear();
+			}
+		}
 	}
 
 	/**

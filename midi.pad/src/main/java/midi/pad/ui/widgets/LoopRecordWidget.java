@@ -42,6 +42,7 @@ import midi.pad.ui.event.Runtime;
 public class LoopRecordWidget extends Widget {
 
 	private int steps = 0;
+	private int length = 0;
 
 	public enum RECORD_MODE {
 		OFF, NOTE_ON, NOTE_OFF, NOTE_HOLD, FILL, FILL_RANDOM, CLEAR
@@ -50,13 +51,11 @@ public class LoopRecordWidget extends Widget {
 	private RECORD_MODE mode = OFF;
 	private final Runnable modeChangeRunner;
 
-	private boolean selectStepLength = false;
-
 	public LoopRecordWidget(final int y, final Runnable modeChangeRunner) {
 		bounds.x = 0;
 		bounds.y = y;
 		bounds.width = 8;
-		bounds.height = 1;
+		bounds.height = 3;
 		this.modeChangeRunner = modeChangeRunner;
 	}
 
@@ -67,51 +66,54 @@ public class LoopRecordWidget extends Widget {
 	 */
 	@Override
 	public void paint(final Graphic g) {
-		if (selectStepLength) {
-			g.fill(Color.FULL_AMBER);
-			if (steps == 0) {
-				g.setPixel(0, 0, Color.GREEN);
-			} else {
-				g.setPixel(1 + steps, 0, Color.FULL_GREEN);
-			}
-			g.setPixel(1, 0, Color.BLACK);
+		g.fill(Color.FULL_AMBER);
+		if (steps == 0) {
+			g.setPixel(0, 1, Color.FULL_GREEN);
 		} else {
-			g.fill(Color.BLACK);
-			if (mode == OFF) {
-				g.setPixel(0, 0, Color.FULL_AMBER);
-			} else {
-				g.setPixel(0, 0, Color.LOW_AMBER);
-			}
-			if (mode == NOTE_ON) {
-				g.setPixel(1, 0, Color.FULL_GREEN);
-			} else {
-				g.setPixel(1, 0, Color.LOW_GREEN);
-			}
-			if (mode == NOTE_OFF) {
-				g.setPixel(2, 0, Color.FULL_RED);
-			} else {
-				g.setPixel(2, 0, Color.LOW_RED);
-			}
-			if (mode == NOTE_HOLD) {
-				g.setPixel(3, 0, Color.FULL_AMBER);
-			} else {
-				g.setPixel(3, 0, Color.LOW_AMBER);
-			}
-			if (mode == FILL) {
-				g.setPixel(4, 0, Color.FULL_GREEN);
-			} else {
-				g.setPixel(4, 0, Color.LOW_GREEN);
-			}
-			if (mode == FILL_RANDOM) {
-				g.setPixel(5, 0, Color.FULL_GREEN);
-			} else {
-				g.setPixel(5, 0, Color.LOW_GREEN);
-			}
-			if (mode == CLEAR) {
-				g.setPixel(6, 0, Color.FULL_RED);
-			} else {
-				g.setPixel(6, 0, Color.LOW_RED);
-			}
+			g.setPixel(1 + steps, 1, Color.FULL_GREEN);
+		}
+		if (length == 0) {
+			g.setPixel(0, 2, Color.FULL_RED);
+		} else {
+			g.setPixel(1 + length, 2, Color.FULL_RED);
+		}
+		g.setPixel(1, 1, Color.BLACK);
+		g.setPixel(1, 2, Color.BLACK);
+		g.setPixel(7, 0, Color.BLACK);
+		if (mode == OFF) {
+			g.setPixel(0, 0, Color.FULL_AMBER);
+		} else {
+			g.setPixel(0, 0, Color.LOW_AMBER);
+		}
+		if (mode == NOTE_ON) {
+			g.setPixel(1, 0, Color.FULL_GREEN);
+		} else {
+			g.setPixel(1, 0, Color.LOW_GREEN);
+		}
+		if (mode == NOTE_OFF) {
+			g.setPixel(2, 0, Color.FULL_RED);
+		} else {
+			g.setPixel(2, 0, Color.LOW_RED);
+		}
+		if (mode == NOTE_HOLD) {
+			g.setPixel(3, 0, Color.FULL_AMBER);
+		} else {
+			g.setPixel(3, 0, Color.LOW_AMBER);
+		}
+		if (mode == FILL) {
+			g.setPixel(4, 0, Color.FULL_GREEN);
+		} else {
+			g.setPixel(4, 0, Color.LOW_GREEN);
+		}
+		if (mode == FILL_RANDOM) {
+			g.setPixel(5, 0, Color.FULL_GREEN);
+		} else {
+			g.setPixel(5, 0, Color.LOW_GREEN);
+		}
+		if (mode == CLEAR) {
+			g.setPixel(6, 0, Color.FULL_RED);
+		} else {
+			g.setPixel(6, 0, Color.LOW_RED);
 		}
 	}
 
@@ -124,51 +126,46 @@ public class LoopRecordWidget extends Widget {
 	public boolean eventOccured(final Event event) {
 		if (EVENT_TYPE.PAD_RELEASED.equals(event.getEventType())) {
 			final PadEvent padEvent = (PadEvent) event;
-			if (selectStepLength) {
+			if (padEvent.getY() == 1) {
 				if (padEvent.getX() == 0) {
 					steps = 0;
-				} else {
+				} else if (padEvent.getX() > 1) {
 					steps = padEvent.getX() - 1;
 				}
-				selectStepLength = false;
-				Runtime.getRuntime().schedule(modeChangeRunner);
+			} else if (padEvent.getY() == 2) {
+				if (padEvent.getX() == 0) {
+					length = 0;
+				} else if (padEvent.getX() > 1) {
+					length = padEvent.getX() - 1;
+				}
 			} else {
 				switch (padEvent.getX()) {
 				case 0:
 					mode = OFF;
-					selectStepLength = false;
 					break;
 				case 1:
 					mode = NOTE_ON;
-					selectStepLength = true;
 					break;
 				case 2:
 					mode = NOTE_OFF;
-					selectStepLength = true;
 					break;
 				case 3:
 					mode = NOTE_HOLD;
-					selectStepLength = true;
 					break;
 				case 4:
 					mode = FILL;
-					selectStepLength = false;
 					break;
 				case 5:
 					mode = FILL_RANDOM;
-					selectStepLength = false;
 					break;
 				case 6:
 					mode = CLEAR;
-					selectStepLength = false;
 					break;
 				default:
 					break;
 				}
-				if (!selectStepLength && padEvent.getX() <= 6) {
-					Runtime.getRuntime().schedule(modeChangeRunner);
-				}
 			}
+			Runtime.getRuntime().schedule(modeChangeRunner);
 		}
 		return true;
 	}
@@ -185,6 +182,13 @@ public class LoopRecordWidget extends Widget {
 	 */
 	public RECORD_MODE getMode() {
 		return mode;
+	}
+
+	/**
+	 * @return the length
+	 */
+	public int getLength() {
+		return length;
 	}
 
 }

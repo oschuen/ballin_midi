@@ -91,6 +91,10 @@ public class SequencerModel {
 		return model;
 	}
 
+	public void clear() {
+		model.clear();
+	}
+
 	public JsonObject toJson() {
 		final JsonObjectBuilder json = Json.createObjectBuilder();
 		json.add("model", model.toJson());

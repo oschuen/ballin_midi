@@ -19,6 +19,8 @@
  */
 package jsequencer.ui.screen;
 
+import static midi.pad.ui.event.Runtime.getRuntime;
+
 import java.util.Optional;
 
 import jmidi.gui.model.IntegerModel;
@@ -28,6 +30,7 @@ import midi.instrument.model.SequencerModel;
 import midi.loop.beat.Beat.BeatListener;
 import midi.pad.ui.Color;
 import midi.pad.ui.Screen;
+import midi.pad.ui.dialogs.ConfirmDialog;
 import midi.pad.ui.dialogs.HintDialog;
 import midi.pad.ui.dialogs.NumberDialog;
 import midi.pad.ui.event.Runtime;
@@ -46,11 +49,12 @@ public class SequencerLoopLayer extends HintDialog implements BeatListener {
 	private final LoopConfig config;
 	private final Sequencer sequencer;
 	private final SequencerModel model;
-	private final RecordLooper looper = new RecordLooper(0, 4);
+	private final RecordLooper looper = new RecordLooper(0, 7);
 	private final SimpleControlButton velocityButton;
 	private final LoopRecordWidget loopRecordWidget;
-	private final IntegerModel recStepModel = new IntegerModel(0, 0, 0);
+	private final IntegerModel recStepModel = new IntegerModel(-1, 0, 0);
 	private final RecordModeChangeRunnable modeChangeRunnable = new RecordModeChangeRunnable();
+	private ConfirmDialog dialog;
 
 	public SequencerLoopLayer(final String name, final Sequencer sequencer) {
 		super(name);
@@ -98,6 +102,19 @@ public class SequencerLoopLayer extends HintDialog implements BeatListener {
 		looper.accept(beat);
 	}
 
+	private void delete() {
+		final Screen screen = getRuntime().getScreen();
+		dialog = new ConfirmDialog("Delete?", () -> {
+			model.clear();
+			screen.removeLayer(dialog);
+			getRuntime().invalidate();
+		}, () -> {
+			screen.removeLayer(dialog);
+		});
+		screen.putLayer(4, dialog);
+
+	}
+
 	private final class RecordModeChangeRunnable implements Runnable {
 
 		/*
@@ -109,21 +126,21 @@ public class SequencerLoopLayer extends HintDialog implements BeatListener {
 		public void run() {
 			switch (loopRecordWidget.getMode()) {
 			case CLEAR:
+				delete();
 				break;
 			case FILL:
+				sequencer.setRecMode(RecordMode.FILL);
 				break;
 			case FILL_RANDOM:
+				sequencer.setRecMode(RecordMode.FILL_RANDOM);
 				break;
 			case NOTE_HOLD:
-				sequencer.setStepWidth(loopRecordWidget.getSteps());
 				sequencer.setRecMode(RecordMode.NOTE_HOLD);
 				break;
 			case NOTE_OFF:
-				sequencer.setStepWidth(loopRecordWidget.getSteps());
 				sequencer.setRecMode(RecordMode.NOTE_OFF);
 				break;
 			case NOTE_ON:
-				sequencer.setStepWidth(loopRecordWidget.getSteps());
 				sequencer.setRecMode(RecordMode.NOTE_ON);
 				break;
 			case OFF:
@@ -132,6 +149,8 @@ public class SequencerLoopLayer extends HintDialog implements BeatListener {
 			default:
 				break;
 			}
+			sequencer.setStepWidth(loopRecordWidget.getSteps());
+			sequencer.setStepLength(loopRecordWidget.getLength());
 		}
 	}
 

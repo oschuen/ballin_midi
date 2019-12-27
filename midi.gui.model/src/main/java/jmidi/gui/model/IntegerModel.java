@@ -55,7 +55,11 @@ public class IntegerModel {
 	public void setValue(final int value) {
 		lock.lock();
 		try {
+			final int oldValue = this.value;
 			this.value = Math.min(maxValue, Math.max(minValue, value));
+			if (oldValue != this.value) {
+				fireNewValue();
+			}
 		} finally {
 			lock.unlock();
 		}
@@ -73,7 +77,6 @@ public class IntegerModel {
 		lock.lock();
 		try {
 			setValue(value + Math.abs(steps));
-			fireNewValue();
 		} finally {
 			lock.unlock();
 		}
@@ -87,7 +90,6 @@ public class IntegerModel {
 		lock.lock();
 		try {
 			setValue(value - Math.abs(steps));
-			fireNewValue();
 		} finally {
 			lock.unlock();
 		}
@@ -110,7 +112,6 @@ public class IntegerModel {
 						increment(5);
 					}
 					addNumber++;
-					fireNewValue();
 				}
 			}, 2 * REPEAT_TIME, REPEAT_TIME, TimeUnit.MILLISECONDS);
 		} finally {
@@ -148,13 +149,11 @@ public class IntegerModel {
 						decrement(5);
 					}
 					addNumber++;
-					fireNewValue();
 				}
 			}, 2 * REPEAT_TIME, REPEAT_TIME, TimeUnit.MILLISECONDS);
 		} finally {
 			lock.unlock();
 		}
-
 	}
 
 	public void stopDecrementing() {

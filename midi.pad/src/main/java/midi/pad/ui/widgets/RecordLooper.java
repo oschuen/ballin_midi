@@ -82,19 +82,23 @@ public class RecordLooper extends Widget implements BeatListener {
 		for (int i = 0; i < bounds.width; ++i) {
 			final int step = i + (page * quarterPerPage + quarter) * quarterDivision;
 			final boolean even = (step / quarterDivision) % 2 == 0;
-			if (step == recStepModel.getValue()) {
-				g.setPixel(i, 0, new Color(Color.FULL_RED, true, true));
-			} else if (loopModel.getStepEvent(step).isPresent()) {
+			final Color color;
+			if (loopModel.getStepEvent(step).isPresent()) {
 				final LoopEvent event = loopModel.getStepEvent(step).get();
 				if (COMMAND.NOTE_ON == event.getCommand()) {
-					g.setPixel(i, 0, even ? Color.LOW_GREEN : Color.GREEN);
+					color = even ? Color.LOW_GREEN : Color.FULL_GREEN;
 				} else if (COMMAND.NOTE_OFF == event.getCommand()) {
-					g.setPixel(i, 0, even ? Color.LOW_RED : Color.RED);
+					color = even ? Color.LOW_RED : Color.FULL_RED;
 				} else {
-					g.setPixel(i, 0, even ? Color.LOW_AMBER : Color.FULL_AMBER);
+					color = even ? Color.LOW_AMBER : Color.FULL_AMBER;
 				}
 			} else {
-				g.setPixel(i, 0, even ? Color.LOW_AMBER : Color.FULL_AMBER);
+				color = even ? Color.LOW_AMBER : Color.FULL_AMBER;
+			}
+			if (step == recStepModel.getValue()) {
+				g.setPixel(i, 0, new Color(color, true, true));
+			} else {
+				g.setPixel(i, 0, color);
 			}
 		}
 	}
