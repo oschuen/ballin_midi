@@ -58,6 +58,7 @@ public class Guitar implements BeatListener {
 	final long[] lostTime = new long[instruments.length];
 
 	private final GuitarModel defaultModel = new GuitarModel();
+	private PlayMode lastMode = PlayMode.OFF;
 
 	public Guitar(final Receiver receiver, final OutputChannelConfig config) {
 		super();
@@ -158,7 +159,10 @@ public class Guitar implements BeatListener {
 					});
 				}
 			}
+		} else if (lastMode != PlayMode.OFF && config.getMode() == PlayMode.OFF) {
+			panic();
 		}
+		lastMode = config.getMode();
 	}
 
 	/**

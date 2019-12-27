@@ -62,7 +62,7 @@ public class Sequencer implements BeatListener, Receiver {
 	private int midiInChannel = 0;
 	private final MultiNoteRecorder recorder = new MultiNoteRecorder(new RecordStepRunnable());
 
-	private final IntegerModel defaultRecStep = new IntegerModel(-1, 0, 0);
+	private final IntegerModel defaultRecStep = new IntegerModel(-1, -1, -1);
 	private IntegerModel recStepModel = defaultRecStep;
 	private int stepWidth = 0;
 	private int stepLength = 0;
@@ -72,6 +72,7 @@ public class Sequencer implements BeatListener, Receiver {
 	private final LoopEvent ignoreEvent = new LoopEvent(IGNORE, 0);
 	private boolean dropEvent = true;
 	private final Random random = new Random(System.nanoTime());
+	private PlayMode lastMode = PlayMode.OFF;
 
 	public enum RecordMode {
 		OFF, NOTE_ON, NOTE_OFF, NOTE_HOLD, FILL, FILL_RANDOM
@@ -107,7 +108,9 @@ public class Sequencer implements BeatListener, Receiver {
 	public void send(final MidiMessage message, final long timeStamp) {
 		if (config.getMode() != PlayMode.OFF && message instanceof ShortMessage) {
 			final ShortMessage shortMessage = (ShortMessage) message;
-			recorder.send(shortMessage);
+			if (recMode != RecordMode.OFF && config.getMode() == PlayMode.LOOP) {
+				recorder.send(shortMessage);
+			}
 			if (shortMessage.getChannel() == inConfig.getChannel()) {
 				final LoopEvent event = LoopEvent.fromShortMessage(shortMessage);
 				try {
@@ -161,9 +164,10 @@ public class Sequencer implements BeatListener, Receiver {
 			} catch (final InvalidMidiDataException e) {
 				logger.error("Couldn't play event", e);
 			}
-
+		} else if (lastMode != PlayMode.OFF && config.getMode() == PlayMode.OFF) {
+			panic();
 		}
-
+		lastMode = config.getMode();
 	}
 
 	/**

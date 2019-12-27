@@ -60,7 +60,7 @@ public class MultiNoteRecorder {
 			if (pressed.isEmpty()) {
 				step(event);
 			}
-		} else if (shortMessage.getCommand() == ShortMessage.NOTE_OFF) {
+		} else if (shortMessage.getCommand() == ShortMessage.NOTE_ON) {
 			pressed.add(Integer.valueOf(data1));
 		}
 	}

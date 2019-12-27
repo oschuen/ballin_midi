@@ -53,6 +53,7 @@ public class Percussion implements BeatListener {
 	final LoopModel[] loopModel = new LoopModel[instruments.length];
 
 	private final PercussionModel defaultModel = new PercussionModel();
+	private PlayMode lastMode = PlayMode.OFF;
 
 	public Percussion(final Receiver receiver, final OutputChannelConfig config) {
 		super();
@@ -116,7 +117,10 @@ public class Percussion implements BeatListener {
 					lastPlayed[var] = it.asOffEvent();
 				});
 			}
+		} else if (lastMode != PlayMode.OFF && config.getMode() == PlayMode.OFF) {
+			panic();
 		}
+		lastMode = config.getMode();
 	}
 
 	/**

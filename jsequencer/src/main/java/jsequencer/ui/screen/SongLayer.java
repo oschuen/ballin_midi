@@ -94,8 +94,6 @@ public class SongLayer extends HintDialog implements BarListener {
 				orchester.applyConfigs();
 			});
 			layer.start();
-			getRuntime().invalidate();
-			getRuntime().invalidate();
 		}, () -> {
 			getRuntime().invalidate();
 		}, model.getPercussionChannelConfig(), model.getLayerModel(0), PlayMode.LOOP);

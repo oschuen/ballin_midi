@@ -161,7 +161,7 @@ public class SequencerLoopLayer extends HintDialog implements BeatListener {
 	 */
 	@Override
 	public Optional<ControlButton> getAbcControlButton(final int y) {
-		if (y == 4) {
+		if (y == 8) {
 			return Optional.of(velocityButton);
 		}
 		return Optional.empty();
