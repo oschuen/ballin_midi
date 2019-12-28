@@ -24,8 +24,8 @@ import static midi.pad.ui.event.Runtime.getRuntime;
 import jmidi.gui.model.LayerModel;
 import jmidi.gui.model.TimedIntegerModel;
 import jmidi.gui.model.TimedIntegerModel.ValueObserver;
-import midi.loop.config.OutputChannelConfig;
-import midi.loop.config.OutputChannelConfig.PlayMode;
+import midi.loop.config.InputChannelConfig;
+import midi.loop.config.InputChannelConfig.InputMode;
 import midi.pad.ui.Color;
 import midi.pad.ui.Graphic;
 import midi.pad.ui.Widget;
@@ -40,13 +40,13 @@ import midi.pad.ui.event.Runtime;
  *  Note Edit
  *  Channel In Config
  *  Channel Out Config
- *  Loop, Through, off
  *  Model 1
  *  Model 2
  *  Model 3
  *  Model 4
- *  
- *  Receive (none, low, high, all)
+ *  Input: none, low, high, all
+ *    
+ *  Output: Loop, Through, off
  *  }
  * </pre>
  * 
@@ -60,22 +60,23 @@ public class TrackConfig extends Widget {
 	private final Runnable channelOutConfigRunnable;
 	private final Runnable changeRunnable;
 	private final LayerModel layerModel;
-	private final OutputChannelConfig outConfig;
+	private final InputChannelConfig inConfig;
 	private boolean in;
-	private final TimedIntegerModel<PlayMode> playModeModel;
+	private final TimedIntegerModel<InputMode> inputModeModel;
 
 	public TrackConfig(final int y, final Runnable noteEditRunnable,
 			final Runnable channelInConfigRunnable, final Runnable channelOutConfigRunnable,
-			final Runnable changeRunnable, final OutputChannelConfig outConfig,
+			final Runnable changeRunnable, final InputChannelConfig inConfig,
 			final LayerModel layerModel) {
 		this(y, noteEditRunnable, channelInConfigRunnable, channelOutConfigRunnable, changeRunnable,
-				outConfig, layerModel, PlayMode.THROUGH, PlayMode.LOOP);
+				inConfig, layerModel, InputMode.OFF, InputMode.BELOW, InputMode.ABOVE,
+				InputMode.ALL);
 	}
 
 	public TrackConfig(final int y, final Runnable noteEditRunnable,
 			final Runnable channelInConfigRunnable, final Runnable channelOutConfigRunnable,
-			final Runnable changeRunnable, final OutputChannelConfig outConfig,
-			final LayerModel layerModel, final PlayMode... modes) {
+			final Runnable changeRunnable, final InputChannelConfig outConfig,
+			final LayerModel layerModel, final InputMode... modes) {
 		super();
 		bounds.x = 0;
 		bounds.y = y;
@@ -86,14 +87,15 @@ public class TrackConfig extends Widget {
 		this.channelOutConfigRunnable = channelOutConfigRunnable;
 		this.changeRunnable = changeRunnable;
 		this.layerModel = layerModel;
-		this.outConfig = outConfig;
-		playModeModel = new TimedIntegerModel<>(PlayMode.OFF, modes);
-		playModeModel.setValue(this.outConfig.getMode());
-		playModeModel.addValueObserver(new ValueObserver<OutputChannelConfig.PlayMode>() {
+		inConfig = outConfig;
+		inputModeModel = new TimedIntegerModel<>(InputMode.OFF, modes);
+		inputModeModel.setValue(inConfig.getMode());
+		inputModeModel.addValueObserver(new ValueObserver<InputMode>() {
 			@Override
-			public void valueChanged(final PlayMode newValue) {
+			public void valueChanged(final InputMode newValue) {
 				Runtime.getRuntime().schedule(() -> {
 					outConfig.setMode(newValue);
+					getRuntime().schedule(changeRunnable);
 				});
 			}
 		});
@@ -109,29 +111,31 @@ public class TrackConfig extends Widget {
 		g.setPixel(0, 0, Color.GREEN);
 		g.setPixel(1, 0, in ? Color.RED : Color.BLACK);
 		g.setPixel(2, 0, Color.FULL_AMBER);
-		if (playModeModel.getValue() == PlayMode.OFF) {
-			g.setPixel(3, 0, Color.BLACK);
-		} else if (playModeModel.getValue() == PlayMode.THROUGH) {
-			g.setPixel(3, 0, Color.GREEN);
+		if (inputModeModel.getValue() == InputMode.OFF || !in) {
+			g.setPixel(7, 0, Color.BLACK);
+		} else if (inputModeModel.getValue() == InputMode.ABOVE) {
+			g.setPixel(7, 0, Color.FULL_GREEN);
+		} else if (inputModeModel.getValue() == InputMode.BELOW) {
+			g.setPixel(7, 0, Color.FULL_RED);
 		} else {
-			g.setPixel(3, 0, Color.RED);
+			g.setPixel(7, 0, Color.FULL_YELLOW);
 		}
 		for (int i = 0; i < 4; i++) {
 			switch (layerModel.getLayer(i)) {
 			case 0:
-				g.setPixel(4 + i, 0, Color.BLACK);
+				g.setPixel(3 + i, 0, Color.BLACK);
 				break;
 			case 1:
-				g.setPixel(4 + i, 0, Color.GREEN);
+				g.setPixel(3 + i, 0, Color.GREEN);
 				break;
 			case 2:
-				g.setPixel(4 + i, 0, Color.RED);
+				g.setPixel(3 + i, 0, Color.RED);
 				break;
 			case 3:
-				g.setPixel(4 + i, 0, Color.FULL_AMBER);
+				g.setPixel(3 + i, 0, Color.FULL_AMBER);
 				break;
 			case 4:
-				g.setPixel(4 + i, 0, Color.LOW_AMBER);
+				g.setPixel(3 + i, 0, Color.LOW_AMBER);
 				break;
 			}
 		}
@@ -160,25 +164,25 @@ public class TrackConfig extends Widget {
 			case 2:
 				getRuntime().schedule(channelOutConfigRunnable);
 				break;
-			case 3:
-				playModeModel.stopIncrementing();
+			case 7:
+				inputModeModel.stopIncrementing();
 				changed = true;
 				break;
 			default:
-				layerModel.increment(padEvent.getX() - 4);
+				layerModel.increment(padEvent.getX() - 3);
 				changed = true;
 			}
 		}
-		if (event != null && EVENT_TYPE.PAD_PRESSED.equals(event.getEventType())) {
+		if (in && event != null && EVENT_TYPE.PAD_PRESSED.equals(event.getEventType())) {
 			final PadEvent padEvent = PadEvent.getEvent(event);
-			if (padEvent.getX() == 3) {
-				playModeModel.increment();
+			if (padEvent.getX() == 7) {
+				inputModeModel.increment();
 			}
 		}
-		if (event != null && EVENT_TYPE.PAD_HOLD.equals(event.getEventType())) {
+		if (in && event != null && EVENT_TYPE.PAD_HOLD.equals(event.getEventType())) {
 			final PadEvent padEvent = PadEvent.getEvent(event);
-			if (padEvent.getX() == 3) {
-				playModeModel.startIncrementing();
+			if (padEvent.getX() == 7) {
+				inputModeModel.startIncrementing();
 			}
 		}
 		if (changed) {
@@ -205,12 +209,12 @@ public class TrackConfig extends Widget {
 	/**
 	 * @return the mode
 	 */
-	public PlayMode getMode() {
-		return playModeModel.getValue();
+	public InputMode getMode() {
+		return inputModeModel.getValue();
 	}
 
 	public void updateMode() {
-		playModeModel.setValue(outConfig.getMode());
+		inputModeModel.setValue(inConfig.getMode());
 	}
 
 	/**

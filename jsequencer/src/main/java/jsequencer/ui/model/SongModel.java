@@ -24,6 +24,7 @@ public class SongModel {
 	private final OutputChannelConfig[] channelConfig;
 	private final InputChannelConfig[] inputChannelConfig;
 	private final int numberOfSequencer;
+	private int bpM = 120;
 
 	public SongModel(final int numberOfLoops, final int numberOfLayer) {
 		numberOfSequencer = numberOfLoops - 2;
@@ -100,6 +101,10 @@ public class SongModel {
 		return channelConfig[0];
 	}
 
+	public InputChannelConfig getPercussionInputConfig() {
+		return inputChannelConfig[0];
+	}
+
 	public OutputChannelConfig getGuitarChannelConfig() {
 		return channelConfig[1];
 	}
@@ -151,7 +156,7 @@ public class SongModel {
 
 		return Json.createObjectBuilder().add("config", jconfig).add("percussion", jpercussion)
 				.add("guitar", jguitar).add("sequencer", jsequencer).add("layer", jlayer)
-				.add("input", jInconfig).build();
+				.add("input", jInconfig).add("bpm", bpM).build();
 	}
 
 	public void fromJson(final JsonObject json) {
@@ -182,6 +187,7 @@ public class SongModel {
 		for (int i = 0; i < jlayer.size(); ++i) {
 			layerModel[i].fromJson(jlayer.getJsonObject(i));
 		}
+		bpM = json.getInt("bpm", 120);
 	}
 
 	/**
@@ -189,6 +195,21 @@ public class SongModel {
 	 */
 	public int getNumberOfSequencer() {
 		return numberOfSequencer;
+	}
+
+	/**
+	 * @return the bpM
+	 */
+	public int getBpM() {
+		return bpM;
+	}
+
+	/**
+	 * @param bpM
+	 *            the bpM to set
+	 */
+	public void setBpM(final int bpM) {
+		this.bpM = bpM;
 	}
 
 }

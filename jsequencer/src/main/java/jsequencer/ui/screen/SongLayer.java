@@ -23,6 +23,7 @@ import static midi.pad.ui.event.Runtime.getRuntime;
 
 import java.util.Optional;
 
+import jmidi.gui.model.IntegerModel;
 import jmidi.gui.model.TimedIntegerModel;
 import jmidi.gui.model.TimedIntegerModel.ValueObserver;
 import jsequencer.Orchester;
@@ -32,14 +33,15 @@ import jsequencer.ui.dialog.setting.LooperInputDialog;
 import jsequencer.ui.model.SongModel;
 import midi.loop.beat.Beat;
 import midi.loop.beat.Beat.BarListener;
-import midi.loop.config.InputChannelConfig;
-import midi.loop.config.InputChannelConfig.InputMode;
+import midi.loop.config.OutputChannelConfig;
 import midi.loop.config.OutputChannelConfig.PlayMode;
 import midi.pad.ui.Color;
 import midi.pad.ui.Screen;
 import midi.pad.ui.dialogs.HintDialog;
+import midi.pad.ui.dialogs.NumberDialog;
 import midi.pad.ui.event.AbcButtonEvent;
 import midi.pad.ui.event.Event;
+import midi.pad.ui.event.NumButtonEvent;
 import midi.pad.ui.event.Runtime;
 import midi.pad.ui.widgets.ControlButton;
 import midi.pad.ui.widgets.SimpleControlButton;
@@ -58,8 +60,9 @@ public class SongLayer extends HintDialog implements BarListener {
 	private final Orchester orchester;
 	private int currentLayer = 0;
 	private int nextLayer = 0;
-	private final InputModeControlButton guitarInputModeControlButton;
-	private final InputModeControlButton[] sequencerInputModeControlButton = new InputModeControlButton[6];
+	private final OutModeControlButton percussionInputModeControlButton;
+	private final OutModeControlButton guitarInputModeControlButton;
+	private final OutModeControlButton[] sequencerInputModeControlButton = new OutModeControlButton[6];
 
 	/**
 	 * @param hint
@@ -71,7 +74,10 @@ public class SongLayer extends HintDialog implements BarListener {
 		this.beat = beat;
 		this.orchester = orchester;
 		this.persistence = persistence;
-		guitarInputModeControlButton = new InputModeControlButton(orchester.getGuitarInputConfig());
+		guitarInputModeControlButton = new OutModeControlButton(orchester.getGuitarChannelConfig(),
+				PlayMode.OFF, PlayMode.LOOP);
+		percussionInputModeControlButton = new OutModeControlButton(
+				orchester.getPercussionChannelConfig(), PlayMode.OFF, PlayMode.LOOP);
 
 		config[0] = new TrackConfig(0, () -> {
 			final DrumLoopLayer layer = new DrumLoopLayer(
@@ -96,7 +102,8 @@ public class SongLayer extends HintDialog implements BarListener {
 			layer.start();
 		}, () -> {
 			getRuntime().invalidate();
-		}, model.getPercussionChannelConfig(), model.getLayerModel(0), PlayMode.LOOP);
+			orchester.applyConfigs();
+		}, model.getPercussionInputConfig(), model.getLayerModel(0));
 
 		config[1] = new TrackConfig(1, () -> {
 			final GuitarLoopLayer layer = new GuitarLoopLayer(
@@ -129,8 +136,9 @@ public class SongLayer extends HintDialog implements BarListener {
 			layer.start();
 			getRuntime().invalidate();
 		}, () -> {
+			orchester.applyConfigs();
 			getRuntime().invalidate();
-		}, model.getGuitarChannelConfig(), model.getLayerModel(1), PlayMode.THROUGH);
+		}, model.getGuitarInputConfig(), model.getLayerModel(1));
 
 		for (int i = 2; i < config.length; i++) {
 			final int seqNum = i - 2;
@@ -169,16 +177,17 @@ public class SongLayer extends HintDialog implements BarListener {
 				layer.start();
 				getRuntime().invalidate();
 			}, () -> {
+				orchester.applyConfigs();
 				getRuntime().invalidate();
-			}, model.getSequencerChannelConfig(seqNum), model.getLayerModel(i));
+			}, model.getSequencerInputChannelConfig(seqNum), model.getLayerModel(i));
 		}
 		setWidgets(config);
 		for (int i = 1; i < 8; i++) {
 			config[i].setIn(true);
 		}
 		for (int i = 0; i < 6; i++) {
-			sequencerInputModeControlButton[i] = new InputModeControlButton(
-					orchester.getSequencerInputConfig(i));
+			sequencerInputModeControlButton[i] = new OutModeControlButton(
+					orchester.getSequencerChannelConfig(i));
 		}
 		start();
 	}
@@ -201,17 +210,17 @@ public class SongLayer extends HintDialog implements BarListener {
 						screen.removeLayer(songSelLayer);
 					});
 				}));
-			} else if (x >= 4) {
+			} else if (x >= 3 && x < 7) {
 				final Color color;
-				if (x - 4 == nextLayer) {
+				if (x - 3 == nextLayer) {
 					color = new Color(Color.LOW_GREEN, true, false);
-				} else if (x - 4 == currentLayer) {
+				} else if (x - 3 == currentLayer) {
 					color = Color.GREEN;
 				} else {
 					color = Color.BLACK;
 				}
 				return Optional.of(new SimpleControlButton(color, () -> {
-					nextLayer = x - 4;
+					nextLayer = x - 3;
 				}));
 			}
 		} else {
@@ -222,15 +231,34 @@ public class SongLayer extends HintDialog implements BarListener {
 				}));
 			}
 		}
+		if (x == 1) {
+			return Optional.of(new StartStopButton());
+		} else if (x == 2) {
+			return Optional.of(new SimpleControlButton(Color.FULL_AMBER, () -> {
+				final IntegerModel model = new IntegerModel(0, 240, beat.getBpm());
+				screen.putLayer(4, new NumberDialog("BpM", model, () -> {
+					beat.setBpm(Math.max(1, model.getValue()));
+					screen.removeLayer(4);
+				}));
+			}));
+		} else if (x == 7)
+
+		{
+			return Optional.of(new SimpleControlButton(Color.FULL_RED, () -> {
+				orchester.panic();
+			}));
+		}
+
 		return super.getNumControlButton(x);
 	}
 
 	@Override
 	public Optional<ControlButton> getAbcControlButton(final int y) {
-		if (y == 1) {
+		if (y == 0) {
+			return Optional.of(percussionInputModeControlButton);
+		} else if (y == 1) {
 			return Optional.of(guitarInputModeControlButton);
-		}
-		if (y >= 2 && y < 8) {
+		} else if (y >= 2 && y < 8) {
 			return Optional.of(sequencerInputModeControlButton[y - 2]);
 		}
 		return Optional.empty();
@@ -260,28 +288,67 @@ public class SongLayer extends HintDialog implements BarListener {
 		nextLayer = -1;
 	}
 
-	private class InputModeControlButton implements ControlButton, ValueObserver<InputMode> {
+	private class StartStopButton implements ControlButton {
+		@Override
+		public Color getColor() {
+			if (beat.isRunning()) {
+				return Color.FULL_GREEN;
+			} else {
+				return Color.FULL_RED;
+			}
+		}
 
-		private final InputChannelConfig config;
-		private final TimedIntegerModel<InputMode> mode = new TimedIntegerModel<>(InputMode.OFF,
-				InputMode.BELOW, InputMode.ABOVE, InputMode.ALL);
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * midi.pad.ui.widgets.ControlButton#eventOccured(midi.pad.ui.event.
+		 * Event)
+		 */
+		@Override
+		public boolean eventOccured(final Event event) {
+			if (NumButtonEvent.isEventOfThisType(event)) {
+				final NumButtonEvent buttonEvent = NumButtonEvent.getEvent(event);
+				if (NumButtonEvent.EVENT_TYPE.NUM_RELEASED.equals(buttonEvent.getEventType())) {
+					if (beat.isRunning()) {
+						beat.stop();
+					} else {
+						beat.start();
+					}
+					getRuntime().invalidate();
+				}
+			}
+			return true;
+		}
+	}
 
-		public InputModeControlButton(final InputChannelConfig config) {
+	private class OutModeControlButton implements ControlButton, ValueObserver<PlayMode> {
+
+		private final OutputChannelConfig config;
+		private final TimedIntegerModel<PlayMode> mode;
+
+		public OutModeControlButton(final OutputChannelConfig config) {
+			this(config, PlayMode.OFF, PlayMode.LOOP, PlayMode.THROUGH);
+		}
+
+		public OutModeControlButton(final OutputChannelConfig config, final PlayMode stableValue,
+				final PlayMode... modes) {
 			this.config = config;
+			mode = new TimedIntegerModel<>(stableValue, modes);
 			mode.setValue(this.config.getMode());
 			mode.addValueObserver(this);
+
 		}
 
 		@Override
 		public Color getColor() {
 			switch (config.getMode()) {
-			case ABOVE:
-				return Color.FULL_YELLOW;
-			case ALL:
-				return Color.FULL_GREEN;
-			case BELOW:
-				return Color.FULL_RED;
 			case OFF:
+				return Color.BLACK;
+			case LOOP:
+				return Color.FULL_RED;
+			case THROUGH:
+				return Color.FULL_GREEN;
 			default:
 				return Color.BLACK;
 			}
@@ -318,7 +385,7 @@ public class SongLayer extends HintDialog implements BarListener {
 		 * lang.Object)
 		 */
 		@Override
-		public void valueChanged(final InputMode newValue) {
+		public void valueChanged(final PlayMode newValue) {
 			Runtime.getRuntime().schedule(() -> {
 				config.setMode(newValue);
 				orchester.applyConfigs();

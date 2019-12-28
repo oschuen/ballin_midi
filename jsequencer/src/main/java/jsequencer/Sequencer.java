@@ -26,7 +26,6 @@ import java.io.InputStream;
 import java.util.Properties;
 
 import javax.sound.midi.MidiUnavailableException;
-import javax.sound.midi.Transmitter;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -34,22 +33,11 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import jsequencer.persistence.Persistence;
 import jsequencer.ui.model.SongModel;
-import jsequencer.ui.screen.DrumLoopLayer;
-import jsequencer.ui.screen.GuitarLoopLayer;
 import jsequencer.ui.screen.SongLayer;
-import midi.chord.ChordRecognizer;
-import midi.instrument.Guitar;
-import midi.instrument.Percussion;
-import midi.instrument.model.GuitarModel;
-import midi.instrument.model.PercussionModel;
 import midi.loop.beat.Beat;
-import midi.loop.beat.Beat.BeatListener;
-import midi.loop.config.OutputChannelConfig;
 import midi.pad.ui.Screen;
 import midi.pad.ui.event.Runtime;
 
@@ -58,122 +46,14 @@ import midi.pad.ui.event.Runtime;
  *
  */
 public class Sequencer {
-	private static final Logger logger = LoggerFactory.getLogger(Sequencer.class);
-
-	public static void mainPercussion(final String[] args) throws MidiUnavailableException {
-		final Screen screen = Runtime.getRuntime().getScreen();
-		final Percussion percussion;
-		final PercussionModel model = new PercussionModel();
-		final Transmitter transmitter;
-		final int midiChannel = 4;
-
-		final OutputChannelConfig config = new OutputChannelConfig();
-		config.setBank(0);
-		config.setProgram(24);
-		config.setChannel(midiChannel);
-		config.setChoir(0);
-		config.setReverb(127);
-		config.setMidiOut(0);
-		Runtime.getRuntime().applyChannelConfig(config);
-
-		percussion = new Percussion(Runtime.getRuntime().getOutput(config), config);
-
-		final Runnable finishRunnable = new Runnable() {
-
-			@Override
-			public void run() {
-				System.exit(0);
-			}
-		};
-		final Beat beat = new Beat();
-		beat.start();
-		percussion.setModel(model);
-		beat.addBeatListener(new BeatListener() {
-
-			@Override
-			public void accept(final long beat) {
-				percussion.accept(beat);
-			}
-		});
-		Runtime.getRuntime().schedule(new Runnable() {
-			@Override
-			public void run() {
-				final DrumLoopLayer layer = new DrumLoopLayer(model);
-				beat.addBeatListener(layer);
-				screen.putLayer(3,
-						// new ConfirmDialog("Zufrieden ?", finishRunnable,
-						// finishRunnable));
-						// new NumberDialog("Program", 127, 0, finishRunnable));
-						// new LooperConfigDialog("Track 1", config));
-						layer);
-
-			}
-		});
-
-	}
-
-	/**
-	 * @param args
-	 */
-	private static void mainGuitar(final File file) throws MidiUnavailableException {
-		final Screen screen = Runtime.getRuntime().getScreen();
-		final Properties props = new Properties();
-		try {
-			try (InputStream stream = new FileInputStream(file)) {
-				props.load(stream);
-			}
-		} catch (final IOException e) {
-		}
-		Runtime.setRuntimeConfig(props);
-		final Guitar guitar;
-		final GuitarModel model = new GuitarModel();
-		final ChordRecognizer recognizer = new ChordRecognizer();
-		recognizer.setListener(model);
-		final int midiChannel = 4;
-		final int midiDevice = 0;
-
-		Runtime.getRuntime().addInput(recognizer, midiDevice);
-		final OutputChannelConfig config = new OutputChannelConfig();
-		config.setBank(128);
-		config.setProgram(9);
-		config.setChannel(midiChannel);
-		config.setChoir(0);
-		config.setReverb(127);
-		config.setMidiOut(0);
-		Runtime.getRuntime().applyChannelConfig(config);
-		guitar = new Guitar(Runtime.getRuntime().getOutput(config), config);
-
-		final Beat beat = new Beat();
-		beat.start();
-		guitar.setModel(model);
-		beat.addBeatListener(new BeatListener() {
-
-			@Override
-			public void accept(final long beat) {
-				guitar.accept(beat);
-			}
-		});
-		Runtime.getRuntime().schedule(new Runnable() {
-			@Override
-			public void run() {
-				final GuitarLoopLayer layer = new GuitarLoopLayer(model);
-				beat.addBeatListener(layer);
-				// 3, new ConfirmDialog("Zufrieden ?", () -> {}, () -> {}));
-				// new NumberDialog("Program", 127, 0, finishRunnable));
-				// new LooperConfigDialog("Track 1", config));
-				screen.putLayer(3, layer);
-
-			}
-		});
-	}
 
 	private static void mainSong(final File file) throws MidiUnavailableException {
 		final Screen screen = Runtime.getRuntime().getScreen();
 		final SongModel model = new SongModel(8, 4);
-
+		final Beat beat = new Beat();
 		final Properties props = new Properties();
 
-		final Persistence persistence = new Persistence(model, 0);
+		final Persistence persistence = new Persistence(model, beat, 0);
 		try {
 			try (InputStream stream = new FileInputStream(file)) {
 				props.load(stream);
@@ -182,16 +62,27 @@ public class Sequencer {
 		}
 		Runtime.setRuntimeConfig(props);
 
-		final Beat beat = new Beat();
 		final Orchester orchester = new Orchester(model, beat);
 		final Controller controller = new Controller(orchester);
 		Runtime.getRuntime().addControlInput(controller);
 		orchester.applyConfigs();
-		beat.start();
+		beat.stop();
 		Runtime.getRuntime().schedule(() -> {
 			final SongLayer layer = new SongLayer(orchester, model, persistence, beat);
 			screen.putLayer(1, layer);
 			beat.addBarListener(layer);
+		});
+		java.lang.Runtime.getRuntime().addShutdownHook(new Thread() {
+
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see java.lang.Thread#run()
+			 */
+			@Override
+			public void run() {
+				orchester.panic();
+			}
 		});
 	}
 
@@ -218,7 +109,6 @@ public class Sequencer {
 			formatter.printHelp("Sequencer", options);
 		} else {
 			mainSong(file);
-			// mainGuitar(file);
 		}
 	}
 }

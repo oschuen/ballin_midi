@@ -49,6 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jsequencer.ui.model.SongModel;
+import midi.loop.beat.Beat;
 
 public class Persistence {
 
@@ -57,6 +58,7 @@ public class Persistence {
 	private final int MAX_COPIES = 10;
 	private String currentJson = "";
 
+	private final Beat beat;
 	private final SongModel model;
 	private final SongModel defaultModel;
 	private final String defaultJsonString;
@@ -65,8 +67,9 @@ public class Persistence {
 	private final Lock lock = new ReentrantLock();
 	private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
-	public Persistence(final SongModel model, final int currentSong) {
+	public Persistence(final SongModel model, final Beat beat, final int currentSong) {
 		this.model = model;
+		this.beat = beat;
 		this.currentSong = currentSong;
 		final Map<String, Object> properties = new HashMap<>();
 		properties.put(JsonGenerator.PRETTY_PRINTING, true);
@@ -137,6 +140,7 @@ public class Persistence {
 		boolean identical = true;
 		lock.lock();
 		try {
+			model.setBpM(beat.getBpm());
 			songJson = modelToString(model);
 			identical = Objects.equals(songJson, currentJson);
 			currentJson = songJson;
@@ -166,6 +170,7 @@ public class Persistence {
 					model.fromJson(json);
 					reader.close();
 					currentJson = newJson;
+					beat.setBpm(model.getBpM());
 				} catch (final IOException e) {
 					logger.error("Loading song failed", e);
 				}

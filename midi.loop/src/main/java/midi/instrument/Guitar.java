@@ -109,7 +109,7 @@ public class Guitar implements BeatListener {
 
 	public void step(final int step) {
 		final int accent = model.getAccentStepEvent(step).getVelocity() * velocity / 127;
-		if (PlayMode.THROUGH.equals(config.getMode())) {
+		if (PlayMode.LOOP.equals(config.getMode())) {
 			for (int i = 0; i < instruments.length; i++) {
 				final int var = i;
 				if (lostTime[var] > 0 && i == 0) {

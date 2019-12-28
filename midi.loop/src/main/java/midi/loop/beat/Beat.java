@@ -49,7 +49,7 @@ public class Beat {
 	private final List<BeatListener> listeners = new ArrayList<>();
 	private final List<BarListener> barListeners = new ArrayList<>();
 	private final Lock lock = new ReentrantLock();
- 
+
 	private final NextStepRunnable[] fractionSteps = { new NextBeat(), new IntermediateBeat(6, 1),
 			new IntermediateBeat(5, 1), new IntermediateBeat(4, 1), new IntermediateBeat(3, 1),
 			new IntermediateBeat(5, 2), new IntermediateBeat(2, 1), new IntermediateBeat(5, 3),
@@ -258,5 +258,12 @@ public class Beat {
 	 */
 	public void setBpm(final int bpm) {
 		this.bpm = bpm;
+	}
+
+	/**
+	 * @return the running
+	 */
+	public boolean isRunning() {
+		return running;
 	}
 }

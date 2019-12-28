@@ -204,4 +204,12 @@ public class Orchester {
 			}
 		}
 	}
+
+	public void panic() {
+		guitar.panic();
+		percussion.panic();
+		for (final Sequencer sequencer2 : sequencer) {
+			sequencer2.panic();
+		}
+	}
 }
