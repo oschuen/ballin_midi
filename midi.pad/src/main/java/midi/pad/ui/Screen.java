@@ -50,6 +50,7 @@ public class Screen {
 	private boolean firstpage = true;
 	private boolean blink = true;
 	private final Color[] numberButton = new Color[8];
+	private final char[] currentText = new char[80];
 
 	/**
 	 * 
@@ -125,6 +126,31 @@ public class Screen {
 		}
 
 		firstpage = !firstpage;
+	}
+
+	private void updateText(final Receiver receiver, final char[] text, final int pos,
+			final int length) {
+		for (int i = 0; i < length; ++i) {
+			final char c = i < text.length ? text[i] : ' ';
+			if (currentText[pos + i] != c) {
+				currentText[pos + i] = c;
+				try {
+					final ShortMessage msg = new ShortMessage();
+					msg.setMessage(ShortMessage.NOTE_ON, 4, pos + i, c);
+					receiver.send(msg, 0);
+				} catch (final InvalidMidiDataException e) {
+				}
+			}
+		}
+	}
+
+	public void drawText(final Receiver receiver) {
+		getTopLayer().ifPresent(it -> {
+			updateText(receiver, it.getTitle().toCharArray(), 0, 20);
+			updateText(receiver, it.getHint().toCharArray(), 20, 20);
+			updateText(receiver, it.getExtraHint().toCharArray(), 40, 20);
+			updateText(receiver, "".toCharArray(), 60, 20);
+		});
 	}
 
 	private Color getBlinkColor(final Color c) {

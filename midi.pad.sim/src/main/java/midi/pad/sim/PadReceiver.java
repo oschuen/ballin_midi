@@ -142,12 +142,18 @@ public class PadReceiver implements Receiver {
 					flipScreens(shortMessage.getData2());
 				}
 				counter = 0;
-			}
-			if (shortMessage.getCommand() == ShortMessage.NOTE_ON
+			} else if (shortMessage.getCommand() == ShortMessage.NOTE_ON
 					&& shortMessage.getChannel() == 2) {
 				setScreenColor(counter++, ((ShortMessage) message).getData1());
 				setScreenColor(counter++, ((ShortMessage) message).getData2());
+			} else if (shortMessage.getCommand() == ShortMessage.NOTE_ON
+					&& shortMessage.getChannel() == 4) {
+				screens[0].setChar(((ShortMessage) message).getData1(),
+						(char) ((ShortMessage) message).getData2());
+				screens[1].setChar(((ShortMessage) message).getData1(),
+						(char) ((ShortMessage) message).getData2());
 			}
+
 		}
 
 	}

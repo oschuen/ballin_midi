@@ -55,11 +55,13 @@ public class Runtime {
 	private static final Logger logger = LoggerFactory.getLogger(Runtime.class);
 
 	private Receiver padOutput = null;
+	private Receiver displayOutput = null;
 	private final Receiver padInput = new PadReceiver(screen);
 	private static boolean checkConfiguration = false;
 	private static String defaultDevice = "null";
-	private static String padInDevice = "VirMIDI \\[hw:\\d,2,0\\]";
-	private static String padOutDevice = "VirMIDI \\[hw:\\d,2,0\\]";
+	private static String padInDevice = "VirMIDI \\[hw:\\d,3,0\\]";
+	private static String padOutDevice = "VirMIDI \\[hw:\\d,3,0\\]";
+	private static String displayOutDevice = "VirMIDI \\[hw:\\d,3,0\\]";
 	private static String controlInDevice = "M2X2 \\[hw:\\d,0,0\\]";
 	private static String midi1InDevice = "M2X2 \\[hw:\\d,0,0\\]";
 	private static String midi1OutDevice = "M2X2 \\[hw:\\d,0,0\\]";
@@ -72,6 +74,7 @@ public class Runtime {
 	private static long flashPeriod = 500;
 	private boolean inRuntimeThread = false;
 
+	private final OutputDevice displayOutputDevice = new OutputDevice();
 	private final OutputDevice padOutputDevice = new OutputDevice();
 	private final InputDevice padInputDevice = new InputDevice();
 	private final InputDevice controlInputDevice = new InputDevice();
@@ -90,8 +93,10 @@ public class Runtime {
 	private static final NullReceiver nullReceiver = new NullReceiver();
 
 	public static String CFG_NUMBER_OF_LAYERS = "NUMBER_OF_LAYERS";
+	public static String CFG_HAS_EXTRA_DISPLAY = "HAS_EXTRA_DISPLAY";
 	public static String CFG_PAD_INPUT_DEVICE = "PAD_INPUT_DEVICE";
 	public static String CFG_PAD_OUTPUT_DEVICE = "PAD_OUTPUT_DEVICE";
+	public static String CFG_DISPLAY_OUTPUT_DEVICE = "DISPLAY_OUTPUT_DEVICE";
 	public static String CFG_CONTROL_INPUT_DEVICE = "CONTROL_INPUT_DEVICE";
 	public static String CFG_MIDI_1_INPUT_DEVICE = "MIDI_1_INPUT_DEVICE";
 	public static String CFG_MIDI_1_OUTPUT_DEVICE = "MIDI_1_OUTPUT_DEVICE";
@@ -106,9 +111,11 @@ public class Runtime {
 	private static Map<String, String> runtimeConfig = new HashMap<String, String>() {
 		{
 			put(CFG_NUMBER_OF_LAYERS, "5");
+			put(CFG_HAS_EXTRA_DISPLAY, "0");
 			put(CFG_PAD_INPUT_DEVICE, padInDevice);
 			put(CFG_CONTROL_INPUT_DEVICE, controlInDevice);
 			put(CFG_PAD_OUTPUT_DEVICE, padOutDevice);
+			put(CFG_DISPLAY_OUTPUT_DEVICE, displayOutDevice);
 			put(CFG_MIDI_1_INPUT_DEVICE, midi1InDevice);
 			put(CFG_MIDI_1_OUTPUT_DEVICE, midi1OutDevice);
 			put(CFG_MIDI_2_INPUT_DEVICE, midi2InDevice);
@@ -142,6 +149,7 @@ public class Runtime {
 	private Runtime() {
 		super();
 		padOutput = padOutputDevice.getOutput();
+		displayOutput = displayOutputDevice.getOutput();
 		padInputDevice.addInput(padInput);
 		scheduleAtFixedRate(flasher, flashPeriod, flashPeriod, TimeUnit.MILLISECONDS);
 	}
@@ -178,14 +186,18 @@ public class Runtime {
 		}
 	}
 
-	protected static Integer getIntConfig(final String key, final Integer defValue) {
+	public static Integer getIntConfig(final String key, final Integer defValue) {
 		final String raw = Runtime.runtimeConfig.get(key);
 		return raw == null ? defValue : Integer.parseInt(raw);
 	}
 
-	protected static String getStringConfig(final String key, final String defValue) {
+	public static String getStringConfig(final String key, final String defValue) {
 		final Object raw = Runtime.runtimeConfig.get(key);
 		return raw == null ? defValue : (String) raw;
+	}
+
+	public boolean hasExtraDisplay() {
+		return Runtime.getIntConfig(Runtime.CFG_HAS_EXTRA_DISPLAY, 0) > 0;
 	}
 
 	public static Runtime getRuntime() {
@@ -210,6 +222,8 @@ public class Runtime {
 			screen.setNumberOfLayers(numberOfLayers);
 			padInputDevice.setDeviceName(getStringConfig(CFG_PAD_INPUT_DEVICE, defaultDevice));
 			padOutputDevice.setDeviceName(getStringConfig(CFG_PAD_OUTPUT_DEVICE, defaultDevice));
+			displayOutputDevice
+					.setDeviceName(getStringConfig(CFG_DISPLAY_OUTPUT_DEVICE, defaultDevice));
 			controlInputDevice
 					.setDeviceName(getStringConfig(CFG_CONTROL_INPUT_DEVICE, defaultDevice));
 			midi1InputDevice.setDeviceName(getStringConfig(CFG_MIDI_1_INPUT_DEVICE, defaultDevice));
@@ -270,6 +284,9 @@ public class Runtime {
 	private void redraw() {
 		if (!(padOutput == null || screen == null)) {
 			screen.draw(padOutput);
+		}
+		if (!(displayOutDevice == null || screen == null)) {
+			screen.drawText(displayOutput);
 		}
 	}
 

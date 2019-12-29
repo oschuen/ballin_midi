@@ -39,17 +39,25 @@ public class PadFrame extends JFrame {
 	public static String CFG_MIDI_INPUT_DEVICE = "MIDI_INPUT_DEVICE";
 	public static String CFG_MIDI_OUTPUT_DEVICE = "MIDI_OUTPUT_DEVICE";
 	private static String defaultDevice = "null";
-	private final PadReceiver padReceiver = new PadReceiver(midiOutputDevice.getOutput(), () -> draw());
+	private final PadReceiver padReceiver = new PadReceiver(midiOutputDevice.getOutput(),
+			() -> draw());
 
 	private final MouseAdapter adapter = new MouseAdapter() {
+		private int pressX;
+		private int pressY;
+
 		@Override
 		public void mousePressed(final MouseEvent e) {
-			padReceiver.press(e.getX(), e.getY(), getContentPane().getWidth(), getContentPane().getHeight());
+			pressX = e.getX();
+			pressY = e.getY();
+			padReceiver.press(pressX, pressY, getContentPane().getWidth(),
+					getContentPane().getHeight());
 		}
 
 		@Override
 		public void mouseReleased(final MouseEvent e) {
-			padReceiver.release(e.getX(), e.getY(), getContentPane().getWidth(), getContentPane().getHeight());
+			padReceiver.release(pressX, pressY, getContentPane().getWidth(),
+					getContentPane().getHeight());
 		}
 
 		@Override
@@ -66,8 +74,9 @@ public class PadFrame extends JFrame {
 
 	public PadFrame() {
 		final Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
-		final int dim = Math.min(800, Math.min(dimension.width, dimension.height));
-		setPreferredSize(new Dimension(dim, dim));
+		final int dimX = Math.min(1100, dimension.width);
+		final int dimY = Math.min(800, dimension.height);
+		setPreferredSize(new Dimension(dimX, dimY));
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setTitle("Pannel Simulation");
 		pack();
@@ -106,16 +115,17 @@ public class PadFrame extends JFrame {
 		draw();
 	}
 
-	private static void innerMain(File file) {
-		Properties props = new Properties();
+	private static void innerMain(final File file) {
+		final Properties props = new Properties();
 		try {
 			try (InputStream stream = new FileInputStream(file)) {
 				props.load(stream);
 			}
-		} catch (IOException e) {
+		} catch (final IOException e) {
 		}
 		runtimeConfig.clear();
-		props.entrySet().stream().forEach(e -> runtimeConfig.put((String)e.getKey(), (String)e.getValue()));
+		props.entrySet().stream()
+				.forEach(e -> runtimeConfig.put((String) e.getKey(), (String) e.getValue()));
 		final PadFrame frame = new PadFrame();
 		frame.innerSetConfig(runtimeConfig);
 		EventQueue.invokeLater(new Runnable() {
@@ -129,7 +139,7 @@ public class PadFrame extends JFrame {
 			}
 		});
 	}
-	
+
 	/**
 	 * Launch the application.
 	 * 
@@ -138,25 +148,25 @@ public class PadFrame extends JFrame {
 	 * 
 	 */
 	public static void main(final String[] args) {
-		Options options = new Options();
+		final Options options = new Options();
 		options.addOption("c", "config", true, "Configuration File");
-		CommandLineParser parser = new DefaultParser();
+		final CommandLineParser parser = new DefaultParser();
 		boolean error = false;
 		File file = null;
 		try {
-			CommandLine cmd = parser.parse(options, args);
-			String configFile = cmd.getOptionValue("c");
+			final CommandLine cmd = parser.parse(options, args);
+			final String configFile = cmd.getOptionValue("c");
 			if (configFile == null) {
 				error = true;
 				file = null;
 			} else {
 				file = new File(configFile);
 			}
-		} catch (ParseException e) {
+		} catch (final ParseException e) {
 			error = true;
 		}
 		if (error || file == null) {
-			HelpFormatter formatter = new HelpFormatter();
+			final HelpFormatter formatter = new HelpFormatter();
 			formatter.printHelp("Pad Simulation", options);
 		} else {
 			innerMain(file);

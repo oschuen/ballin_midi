@@ -36,6 +36,9 @@ public class Layer extends Widget {
 
 	private final List<Widget> widgets = new ArrayList<>();
 	private boolean exclusive = false;
+	private String title = "";
+	private String hint = "";
+	private String extraHint = "";
 
 	public Layer(final boolean exclusive) {
 		super();
@@ -140,5 +143,50 @@ public class Layer extends Widget {
 
 	public Optional<ControlButton> getNumControlButton(final int x) {
 		return Optional.empty();
+	}
+
+	/**
+	 * @return the title
+	 */
+	public String getTitle() {
+		return title;
+	}
+
+	/**
+	 * @param title
+	 *            the title to set
+	 */
+	public void setTitle(final String title) {
+		this.title = title;
+	}
+
+	/**
+	 * @return the hint
+	 */
+	public String getHint() {
+		return hint;
+	}
+
+	/**
+	 * @param hint
+	 *            the hint to set
+	 */
+	public void setHint(final String hint) {
+		this.hint = hint;
+	}
+
+	/**
+	 * @return the extraHint
+	 */
+	public String getExtraHint() {
+		return extraHint;
+	}
+
+	/**
+	 * @param extraHint
+	 *            the extraHint to set
+	 */
+	public void setExtraHint(final String extraHint) {
+		this.extraHint = extraHint;
 	}
 }

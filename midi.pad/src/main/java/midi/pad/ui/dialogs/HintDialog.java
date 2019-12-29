@@ -51,6 +51,7 @@ public class HintDialog extends Layer {
 
 	public HintDialog(final String hint) {
 		super(true);
+		setHint(hint);
 		toggletoWidgets = new ToggleWidgets(widgets, MODE.WIDGET);
 		stopButton = new SinglePixelButton(0, 0, new Color(Color.FULL_RED, true, true),
 				toggletoWidgets);
@@ -72,14 +73,18 @@ public class HintDialog extends Layer {
 	protected void setWidgets(final Widget... widgets) {
 		this.widgets.clear();
 		this.widgets.addAll(Arrays.asList(widgets));
+		addAllWidget(this.widgets);
 	}
 
 	public void start() {
-		getRuntime().schedule(toggletoHint);
+		if (!getRuntime().hasExtraDisplay()) {
+			getRuntime().schedule(toggletoHint);
+		}
 	}
 
 	protected void extraHint(final String extraHint) {
-		if (MODE.WIDGET.equals(currentMode)) {
+		setExtraHint(extraHint);
+		if (MODE.WIDGET.equals(currentMode) && !getRuntime().hasExtraDisplay()) {
 			final SinglePixelButton stopButton = new SinglePixelButton(0, 0,
 					new Color(Color.FULL_RED, true, true), toggletoWidgets);
 			textField = new TextField(0, 0, extraHint, toggletoWidgets);
@@ -112,7 +117,7 @@ public class HintDialog extends Layer {
 
 		@Override
 		public void run() {
-			removeAllWidget(currentWidgets);
+			clearWidgets();
 			currentWidgets.clear();
 			currentWidgets.addAll(widgets);
 			addAllWidget(currentWidgets);
