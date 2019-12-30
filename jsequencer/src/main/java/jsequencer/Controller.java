@@ -23,11 +23,15 @@ import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * @author oliver
  *
  */
 public class Controller implements Receiver {
+	private final Logger logger = LoggerFactory.getLogger(Controller.class);
 
 	private final Orchester orchester;
 
@@ -45,9 +49,12 @@ public class Controller implements Receiver {
 	public void send(final MidiMessage message, final long timeStamp) {
 		if (message instanceof ShortMessage) {
 			final ShortMessage shortMessage = (ShortMessage) message;
-			System.out.println("Command = " + shortMessage.getCommand() + " channel "
-					+ shortMessage.getChannel() + " d1 = " + shortMessage.getData1() + " d2 = "
-					+ shortMessage.getData2());
+			if (logger.isDebugEnabled()) {
+				logger.debug("Command = {} channel = {}  d1 = {}  d2 = {}",
+						shortMessage.getCommand(), shortMessage.getChannel(),
+						shortMessage.getData1(), shortMessage.getData2());
+			}
+
 			if (ShortMessage.CONTROL_CHANGE == shortMessage.getCommand()) {
 				switch (shortMessage.getData1()) {
 				case 73: // Fader 1
@@ -75,28 +82,28 @@ public class Controller implements Receiver {
 					orchester.getSequencerChannelConfig(5).setVolume(shortMessage.getData2());
 					break;
 				case 74: // Poti 1
-					orchester.getPercussionChannelConfig().setReverb(shortMessage.getData2());
+					orchester.getPercussionChannelConfig().setChoir(shortMessage.getData2());
 					break;
 				case 71: // Poti 2
-					orchester.getGuitarChannelConfig().setReverb(shortMessage.getData2());
+					orchester.getGuitarChannelConfig().setChoir(shortMessage.getData2());
 					break;
 				case 76: // Poti 3
-					orchester.getSequencerChannelConfig(0).setReverb(shortMessage.getData2());
+					orchester.getSequencerChannelConfig(0).setChoir(shortMessage.getData2());
 					break;
 				case 77: // Poti 4
-					orchester.getSequencerChannelConfig(1).setReverb(shortMessage.getData2());
+					orchester.getSequencerChannelConfig(1).setChoir(shortMessage.getData2());
 					break;
 				case 93: // Poti 5
-					orchester.getSequencerChannelConfig(2).setReverb(shortMessage.getData2());
+					orchester.getSequencerChannelConfig(2).setChoir(shortMessage.getData2());
 					break;
 				case 18: // Poti 6
-					orchester.getSequencerChannelConfig(3).setReverb(shortMessage.getData2());
+					orchester.getSequencerChannelConfig(3).setChoir(shortMessage.getData2());
 					break;
 				case 19: // Poti 7
-					orchester.getSequencerChannelConfig(4).setReverb(shortMessage.getData2());
+					orchester.getSequencerChannelConfig(4).setChoir(shortMessage.getData2());
 					break;
 				case 16: // Poti 8
-					orchester.getSequencerChannelConfig(5).setReverb(shortMessage.getData2());
+					orchester.getSequencerChannelConfig(5).setChoir(shortMessage.getData2());
 					break;
 				case 85: // Main Fader
 					orchester.getGuitar().setVelocity(shortMessage.getData2());

@@ -79,7 +79,7 @@ public class SequencerLoopLayer extends HintDialog implements BeatListener {
 				looper.setHoldPage(config.getHoldPage());
 				looper.setHoldQuarter(config.getHoldQuarter());
 			}
-		});
+		}, model.getModel());
 		loopRecordWidget = new LoopRecordWidget(3, () -> {
 			Runtime.getRuntime().schedule(modeChangeRunnable);
 		});

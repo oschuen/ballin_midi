@@ -267,12 +267,10 @@ public class ChordRecognizer implements Receiver {
 			lock.lock();
 			try {
 				final String chord = chordMap.get(Integer.valueOf(pressedTones));
-				if (logger.isDebugEnabled()) {
-					if (chord == null) {
-						logger.debug("Recognized : " + pressedTones + " No Chord");
-					} else {
-						logger.debug("Recognized : " + pressedTones + " Chord " + chord);
-					}
+				if (chord == null) {
+					logger.info("Recognized : " + pressedTones + " No Chord");
+				} else {
+					logger.info("Recognized : " + pressedTones + " Chord " + chord);
 				}
 				if (chord == null) {
 					service.submit(new Runnable() {

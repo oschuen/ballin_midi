@@ -73,7 +73,7 @@ public class DrumLoopLayer extends HintDialog implements BeatListener {
 				accent.setHoldPage(config.getHoldPage());
 				accent.setHoldQuarter(config.getHoldQuarter());
 			}
-		});
+		}, model.getAccentModel());
 		selector = new InstrumentSelector(0, 3, 8, 2, PercussionModel.PercussionInstrument.values(),
 				new Runnable() {
 					@Override
@@ -92,7 +92,6 @@ public class DrumLoopLayer extends HintDialog implements BeatListener {
 		setWidgets(config, selector, accent, looper);
 		accentButton = new SimpleControlButton(Color.GREEN, new ConfigureAccentVelocity());
 		instrumentButton = new SimpleControlButton(Color.GREEN, new ConfigureDrumVelocity());
-
 	}
 
 	/*

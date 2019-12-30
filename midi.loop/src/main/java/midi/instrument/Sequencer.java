@@ -108,10 +108,10 @@ public class Sequencer implements BeatListener, Receiver {
 	public void send(final MidiMessage message, final long timeStamp) {
 		if (config.getMode() != PlayMode.OFF && message instanceof ShortMessage) {
 			final ShortMessage shortMessage = (ShortMessage) message;
-			if (recMode != RecordMode.OFF && config.getMode() == PlayMode.LOOP) {
-				recorder.send(shortMessage);
-			}
 			if (shortMessage.getChannel() == inConfig.getChannel()) {
+				if (recMode != RecordMode.OFF && config.getMode() == PlayMode.LOOP) {
+					recorder.send(shortMessage);
+				}
 				final LoopEvent event = LoopEvent.fromShortMessage(shortMessage);
 				try {
 					event.asWeightedEvent(velocity).playEvent(receiver, config.getChannel());

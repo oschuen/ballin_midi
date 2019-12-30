@@ -82,7 +82,7 @@ public class GuitarLoopLayer extends HintDialog implements BeatListener {
 				accent.setHoldPage(config.getHoldPage());
 				accent.setHoldQuarter(config.getHoldQuarter());
 			}
-		});
+		}, model.getAccentModel());
 		accent.setLoopModel(model.getAccentModel());
 		model.getLoopModel(GuitarInstrument.BASS_STRING).ifPresent(m -> bassLooper.setLoopModel(m));
 		model.getLoopModel(GuitarInstrument.G_STRING).ifPresent(m -> gLooper.setLoopModel(m));
