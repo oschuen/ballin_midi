@@ -28,6 +28,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -86,10 +87,10 @@ public class Runtime {
 	private final InputDevice midi3InputDevice = new InputDevice();
 	private final OutputDevice midi4OutputDevice = new OutputDevice();
 	private final InputDevice midi4InputDevice = new InputDevice();
-	private final OutputDevice[] outputChannels = { midi1OutputDevice, midi2OutputDevice,
-			midi3OutputDevice, midi4OutputDevice };
-	private final InputDevice[] inputChannels = { midi1InputDevice, midi2InputDevice,
-			midi3InputDevice, midi4InputDevice };
+	private final OutputDevice[] outputChannels = { midi1OutputDevice, midi2OutputDevice, midi3OutputDevice,
+			midi4OutputDevice };
+	private final InputDevice[] inputChannels = { midi1InputDevice, midi2InputDevice, midi3InputDevice,
+			midi4InputDevice };
 	private static final NullReceiver nullReceiver = new NullReceiver();
 
 	public static String CFG_NUMBER_OF_LAYERS = "NUMBER_OF_LAYERS";
@@ -136,6 +137,8 @@ public class Runtime {
 
 	private final Semaphore redrawSem = new Semaphore(0);
 
+	private final AtomicInteger redrawCounter = new AtomicInteger(0);
+
 	private final Map<Runnable, DrawRunnable> runnerMap = new ConcurrentHashMap<>();
 
 	private final Runnable flasher = new Runnable() {
@@ -177,8 +180,8 @@ public class Runtime {
 		lock.lock();
 		try {
 			Runtime.runtimeConfig.clear();
-			runtimeConfig.entrySet().stream().forEach(
-					e -> Runtime.runtimeConfig.put((String) e.getKey(), (String) e.getValue()));
+			runtimeConfig.entrySet().stream()
+					.forEach(e -> Runtime.runtimeConfig.put((String) e.getKey(), (String) e.getValue()));
 			checkConfiguration = true;
 			getRuntime().innerSetConfig();
 		} finally {
@@ -222,22 +225,16 @@ public class Runtime {
 			screen.setNumberOfLayers(numberOfLayers);
 			padInputDevice.setDeviceName(getStringConfig(CFG_PAD_INPUT_DEVICE, defaultDevice));
 			padOutputDevice.setDeviceName(getStringConfig(CFG_PAD_OUTPUT_DEVICE, defaultDevice));
-			displayOutputDevice
-					.setDeviceName(getStringConfig(CFG_DISPLAY_OUTPUT_DEVICE, defaultDevice));
-			controlInputDevice
-					.setDeviceName(getStringConfig(CFG_CONTROL_INPUT_DEVICE, defaultDevice));
+			displayOutputDevice.setDeviceName(getStringConfig(CFG_DISPLAY_OUTPUT_DEVICE, defaultDevice));
+			controlInputDevice.setDeviceName(getStringConfig(CFG_CONTROL_INPUT_DEVICE, defaultDevice));
 			midi1InputDevice.setDeviceName(getStringConfig(CFG_MIDI_1_INPUT_DEVICE, defaultDevice));
-			midi1OutputDevice
-					.setDeviceName(getStringConfig(CFG_MIDI_1_OUTPUT_DEVICE, defaultDevice));
+			midi1OutputDevice.setDeviceName(getStringConfig(CFG_MIDI_1_OUTPUT_DEVICE, defaultDevice));
 			midi2InputDevice.setDeviceName(getStringConfig(CFG_MIDI_2_INPUT_DEVICE, defaultDevice));
-			midi2OutputDevice
-					.setDeviceName(getStringConfig(CFG_MIDI_2_OUTPUT_DEVICE, defaultDevice));
+			midi2OutputDevice.setDeviceName(getStringConfig(CFG_MIDI_2_OUTPUT_DEVICE, defaultDevice));
 			midi3InputDevice.setDeviceName(getStringConfig(CFG_MIDI_3_INPUT_DEVICE, defaultDevice));
-			midi3OutputDevice
-					.setDeviceName(getStringConfig(CFG_MIDI_3_OUTPUT_DEVICE, defaultDevice));
+			midi3OutputDevice.setDeviceName(getStringConfig(CFG_MIDI_3_OUTPUT_DEVICE, defaultDevice));
 			midi4InputDevice.setDeviceName(getStringConfig(CFG_MIDI_4_INPUT_DEVICE, defaultDevice));
-			midi4OutputDevice
-					.setDeviceName(getStringConfig(CFG_MIDI_4_OUTPUT_DEVICE, defaultDevice));
+			midi4OutputDevice.setDeviceName(getStringConfig(CFG_MIDI_4_OUTPUT_DEVICE, defaultDevice));
 		} finally {
 			checkConfiguration = false;
 			lock.unlock();
@@ -250,29 +247,23 @@ public class Runtime {
 			try {
 				final Receiver receiver = outputChannels[config.getMidiOut()].getOutput();
 				final ShortMessage bsmsb = new ShortMessage();
-				bsmsb.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 0x00,
-						config.getBank() / 128);
+				bsmsb.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 0x00, config.getBank() / 128);
 
 				receiver.send(bsmsb, 0);
 				final ShortMessage bslsb = new ShortMessage();
-				bslsb.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 0x20,
-						(config.getBank() % 128));
+				bslsb.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 0x20, (config.getBank() % 128));
 				receiver.send(bslsb, 0);
 				final ShortMessage pc = new ShortMessage();
-				pc.setMessage(ShortMessage.PROGRAM_CHANGE, config.getChannel(), config.getProgram(),
-						0);
+				pc.setMessage(ShortMessage.PROGRAM_CHANGE, config.getChannel(), config.getProgram(), 0);
 				receiver.send(pc, 0);
 				final ShortMessage chorus = new ShortMessage();
-				chorus.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 93,
-						(config.getChoir() & 0x7f));
+				chorus.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 93, (config.getChoir() & 0x7f));
 				receiver.send(chorus, 0);
 				final ShortMessage reverb = new ShortMessage();
-				reverb.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 91,
-						(config.getReverb() & 0x7f));
+				reverb.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 91, (config.getReverb() & 0x7f));
 				receiver.send(reverb, 0);
 				final ShortMessage volume = new ShortMessage();
-				volume.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 7,
-						(config.getVolume() & 0x7f));
+				volume.setMessage(ShortMessage.CONTROL_CHANGE, config.getChannel(), 7, (config.getVolume() & 0x7f));
 				receiver.send(volume, 0);
 			} catch (final InvalidMidiDataException e) {
 				logger.error("Failed to configure output device");
@@ -291,20 +282,20 @@ public class Runtime {
 	}
 
 	public void invalidate() {
-		lock.lock();
-		try {
-			if (inRuntimeThread) {
-				redrawSem.release();
-			} else {
-				schedule(new Runnable() {
-					@Override
-					public void run() {
-						redrawSem.release();
-					}
-				});
-			}
-		} finally {
-			lock.unlock();
+		if (logger.isDebugEnabled()) {
+			StackTraceElement[] trace = new Exception().getStackTrace();
+			logger.debug("{}::{}::{}", trace[1].getClassName(), trace[1].getMethodName(), trace[1].getLineNumber());
+			
+		}
+		if (inRuntimeThread) {
+			redrawSem.release();
+		} else if (redrawCounter.incrementAndGet() == 1) {
+			schedule(new Runnable() {
+				@Override
+				public void run() {
+					invalidate();
+				}
+			});
 		}
 	}
 
@@ -337,8 +328,8 @@ public class Runtime {
 	 * @see java.util.concurrent.ScheduledExecutorService#scheduleAtFixedRate(java.lang.Runnable,
 	 *      long, long, java.util.concurrent.TimeUnit)
 	 */
-	public void scheduleAtFixedRate(final Runnable command, final long initialDelay,
-			final long period, final TimeUnit unit) {
+	public void scheduleAtFixedRate(final Runnable command, final long initialDelay, final long period,
+			final TimeUnit unit) {
 		final DrawRunnable runner = new DrawRunnable(command);
 		runnerMap.put(command, runner);
 		runner.setFuture(executor.scheduleAtFixedRate(runner, initialDelay, period, unit));
@@ -352,8 +343,8 @@ public class Runtime {
 	 * @see java.util.concurrent.ScheduledExecutorService#scheduleWithFixedDelay(java.lang.Runnable,
 	 *      long, long, java.util.concurrent.TimeUnit)
 	 */
-	public void scheduleWithFixedDelay(final Runnable command, final long initialDelay,
-			final long delay, final TimeUnit unit) {
+	public void scheduleWithFixedDelay(final Runnable command, final long initialDelay, final long delay,
+			final TimeUnit unit) {
 		final DrawRunnable runner = new DrawRunnable(command);
 		runnerMap.put(command, runner);
 		runner.setFuture(executor.scheduleWithFixedDelay(runner, initialDelay, delay, unit));
@@ -395,6 +386,7 @@ public class Runtime {
 				runner.run();
 				inRuntimeThread = false;
 				if (redrawSem.drainPermits() > 0) {
+					redrawCounter.set(0);
 					redraw();
 				}
 			} finally {

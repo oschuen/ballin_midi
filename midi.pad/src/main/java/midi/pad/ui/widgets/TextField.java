@@ -47,7 +47,6 @@ public class TextField extends Widget {
 		bounds.height = 8;
 		bounds.width = 8;
 		this.finishRunner = finishRunner;
-		start();
 	}
 
 	public void start() {

@@ -71,6 +71,7 @@ public class Sequencer {
 			final SongLayer layer = new SongLayer(orchester, model, persistence, beat);
 			screen.putLayer(1, layer);
 			beat.addBarListener(layer);
+			Runtime.getRuntime().invalidate();
 		});
 		java.lang.Runtime.getRuntime().addShutdownHook(new Thread() {
 

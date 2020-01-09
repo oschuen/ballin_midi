@@ -66,6 +66,7 @@ public class TimedIntegerModel<T extends Enum<?>> {
 				if (currentIndex == 0) {
 					if (lastBeforeOff == 0) {
 						currentIndex = (currentIndex + 1) % values.size();
+						lastBeforeOff = currentIndex;
 					} else {
 						currentIndex = lastBeforeOff;
 					}

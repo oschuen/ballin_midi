@@ -44,7 +44,7 @@ import midi.pad.ui.widgets.ControlButton;
 public class Screen {
 	private static final Logger logger = LoggerFactory.getLogger(Screen.class);
 	private Layer[] layers = new Layer[0];
-	private Graphic[] graphics = new Graphic[0];
+	private Graphic graphics = new Graphic();
 	private Runnable[] finishRunnable = new Runnable[0];
 
 	private boolean firstpage = true;
@@ -63,11 +63,10 @@ public class Screen {
 
 	public void draw(final Receiver receiver) {
 		try {
-			for (int i = layers.length - 1; i >= 0; --i) {
-				if (!(layers[i] == null || graphics[i] == null)) {
-					graphics[i].fill(Color.TRANSPARENT);
-					layers[i].paint(graphics[i]);
-				}
+			graphics.fill(Color.TRANSPARENT);
+			final Optional<Layer> topLayer = getTopLayer();
+			if (topLayer.isPresent()) {
+				topLayer.get().paint(graphics);
 			}
 			for (int y = 0; y < 8; ++y) {
 				for (int x = 0; x < 4; x++) {
@@ -78,17 +77,15 @@ public class Screen {
 					receiver.send(msg, 0);
 				}
 			}
-			final Optional<Layer> topLayer = getTopLayer();
+
 			final byte blackMidiValue = Color.BLACK.getMidiValue();
 			if (topLayer.isPresent()) {
 				final Layer tLayer = topLayer.get();
 				for (int i = 0; i < 4; i++) {
 					final int vel1 = tLayer.getAbcControlButton(i * 2)
-							.map(b -> getBlinkColor(b.getColor()).getMidiValue())
-							.orElse(blackMidiValue);
+							.map(b -> getBlinkColor(b.getColor()).getMidiValue()).orElse(blackMidiValue);
 					final int vel2 = tLayer.getAbcControlButton(i * 2 + 1)
-							.map(b -> getBlinkColor(b.getColor()).getMidiValue())
-							.orElse(blackMidiValue);
+							.map(b -> getBlinkColor(b.getColor()).getMidiValue()).orElse(blackMidiValue);
 					final ShortMessage msg = new ShortMessage();
 					msg.setMessage(ShortMessage.NOTE_ON, 2, vel1, vel2);
 					receiver.send(msg, 0);
@@ -128,8 +125,7 @@ public class Screen {
 		firstpage = !firstpage;
 	}
 
-	private void updateText(final Receiver receiver, final char[] text, final int pos,
-			final int length) {
+	private void updateText(final Receiver receiver, final char[] text, final int pos, final int length) {
 		for (int i = 0; i < length; ++i) {
 			final char c = i < text.length ? text[i] : ' ';
 			if (currentText[pos + i] != c) {
@@ -158,14 +154,9 @@ public class Screen {
 	}
 
 	private Color getColor(final int x, final int y) {
-
-		for (int i = graphics.length - 1; i >= 0; --i) {
-			if (graphics[i] != null) {
-				final Color c = graphics[i].getPixel(x, y);
-				if (c != null && c.isOpaque()) {
-					return getBlinkColor(c);
-				}
-			}
+		final Color c = graphics.getPixel(x, y);
+		if (c != null && c.isOpaque()) {
+			return getBlinkColor(c);
 		}
 		return Color.TRANSPARENT;
 	}
@@ -173,11 +164,9 @@ public class Screen {
 	public void setNumberOfLayers(final int numberOfLayers) {
 		if (layers.length != numberOfLayers) {
 			final Layer[] newlayers = new Layer[numberOfLayers];
-			final Graphic[] newGraphics = new Graphic[numberOfLayers];
 			final Runnable[] newRunnables = new Runnable[numberOfLayers];
 			for (int i = 0; i < newlayers.length && i < layers.length; ++i) {
 				newlayers[i] = layers[i];
-				newGraphics[i] = graphics[i];
 				newRunnables[i] = finishRunnable[i];
 			}
 			for (int i = newlayers.length; i < layers.length; ++i) {
@@ -186,7 +175,6 @@ public class Screen {
 				}
 			}
 			layers = newlayers;
-			graphics = newGraphics;
 			finishRunnable = newRunnables;
 		}
 	}
@@ -206,7 +194,6 @@ public class Screen {
 	public void putLayer(final int level, final Layer layer) {
 		if (level >= 0 && level < layers.length) {
 			layers[level] = layer;
-			graphics[level] = new Graphic();
 			finishRunnable[level] = null;
 		}
 	}
@@ -214,7 +201,6 @@ public class Screen {
 	public void putLayer(final int level, final Layer layer, final Runnable runnable) {
 		if (level >= 0 && level < layers.length) {
 			layers[level] = layer;
-			graphics[level] = new Graphic();
 			finishRunnable[level] = runnable;
 			getRuntime().invalidate();
 		}
@@ -227,7 +213,6 @@ public class Screen {
 				layers[level].stopLayer();
 			}
 			layers[level] = null;
-			graphics[level] = null;
 			if (finishRunnable[level] != null) {
 				getRuntime().schedule(finishRunnable[level]);
 				finishRunnable[level] = null;
@@ -282,12 +267,11 @@ public class Screen {
 			}
 		} else if (AbcButtonEvent.isEventOfThisType(event)) {
 			final AbcButtonEvent abcEvent = AbcButtonEvent.getEvent(event);
-			getTopLayer().ifPresent(l -> l.getAbcControlButton(abcEvent.getY())
-					.ifPresent(b -> b.eventOccured(event)));
+			getTopLayer().ifPresent(l -> l.getAbcControlButton(abcEvent.getY()).ifPresent(b -> b.eventOccured(event)));
 		} else if (NumButtonEvent.isEventOfThisType(event)) {
 			final NumButtonEvent numEvent = NumButtonEvent.getEvent(event);
-			getBottomLayer().ifPresent(l -> l.getNumControlButton(numEvent.getX())
-					.ifPresent(b -> b.eventOccured(event)));
+			getBottomLayer()
+					.ifPresent(l -> l.getNumControlButton(numEvent.getX()).ifPresent(b -> b.eventOccured(event)));
 		}
 	}
 }

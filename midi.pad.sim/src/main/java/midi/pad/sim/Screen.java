@@ -16,11 +16,6 @@ public class Screen {
 			buttons[i].setG(3);
 			buttons[i].setR(3);
 		}
-		final char t[] = "01234567890123456789012345678901234567890123456789012345678901234567890123456789"
-				.toCharArray();
-		for (int i = 0; i < t.length; ++i) {
-			setChar(i, t[i]);
-		}
 	}
 
 	public void draw(final Graphics g, final int width, final int height) {
@@ -68,7 +63,7 @@ public class Screen {
 	public int getButton(final int x, final int y, final int width, final int height) {
 		final int padding = 8;
 		final int space = 1;
-		final int xPad = width / (9 * padding + 10 * space);
+		final int xPad = (width - 200) / (9 * padding + 10 * space);
 		final int yPad = height / (9 * padding + 10 * space);
 		final int xoff = space * xPad;
 		final int xstep = xoff + padding * xPad;

@@ -122,9 +122,6 @@ public class HintDialog extends Layer {
 			currentWidgets.addAll(widgets);
 			addAllWidget(currentWidgets);
 			currentMode = finalMode;
-			if (textField != null) {
-				textField.stop();
-			}
 		}
 	};
 }

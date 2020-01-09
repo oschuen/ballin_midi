@@ -227,7 +227,6 @@ public class SongLayer extends HintDialog implements BarListener {
 			if (x == 0) {
 				return Optional.of(new SimpleControlButton(Color.GREEN, () -> {
 					screen.showBottomLayer();
-					getRuntime().invalidate();
 				}));
 			}
 		}

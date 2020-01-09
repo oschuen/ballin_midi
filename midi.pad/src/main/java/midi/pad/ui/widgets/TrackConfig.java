@@ -69,7 +69,7 @@ public class TrackConfig extends Widget {
 			final Runnable changeRunnable, final InputChannelConfig inConfig,
 			final LayerModel layerModel) {
 		this(y, noteEditRunnable, channelInConfigRunnable, channelOutConfigRunnable, changeRunnable,
-				inConfig, layerModel, InputMode.OFF, InputMode.BELOW, InputMode.ABOVE,
+				inConfig, layerModel, InputMode.BELOW, InputMode.ABOVE,
 				InputMode.ALL);
 	}
 
@@ -166,7 +166,6 @@ public class TrackConfig extends Widget {
 				break;
 			case 7:
 				inputModeModel.stopIncrementing();
-				changed = true;
 				break;
 			default:
 				layerModel.increment(padEvent.getX() - 3);
