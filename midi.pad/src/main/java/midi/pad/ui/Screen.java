@@ -44,7 +44,7 @@ import midi.pad.ui.widgets.ControlButton;
 public class Screen {
 	private static final Logger logger = LoggerFactory.getLogger(Screen.class);
 	private Layer[] layers = new Layer[0];
-	private Graphic graphics = new Graphic();
+	private final Graphic graphics = new Graphic();
 	private Runnable[] finishRunnable = new Runnable[0];
 
 	private boolean firstpage = true;
@@ -83,9 +83,11 @@ public class Screen {
 				final Layer tLayer = topLayer.get();
 				for (int i = 0; i < 4; i++) {
 					final int vel1 = tLayer.getAbcControlButton(i * 2)
-							.map(b -> getBlinkColor(b.getColor()).getMidiValue()).orElse(blackMidiValue);
+							.map(b -> getBlinkColor(b.getColor()).getMidiValue())
+							.orElse(blackMidiValue);
 					final int vel2 = tLayer.getAbcControlButton(i * 2 + 1)
-							.map(b -> getBlinkColor(b.getColor()).getMidiValue()).orElse(blackMidiValue);
+							.map(b -> getBlinkColor(b.getColor()).getMidiValue())
+							.orElse(blackMidiValue);
 					final ShortMessage msg = new ShortMessage();
 					msg.setMessage(ShortMessage.NOTE_ON, 2, vel1, vel2);
 					receiver.send(msg, 0);
@@ -125,7 +127,8 @@ public class Screen {
 		firstpage = !firstpage;
 	}
 
-	private void updateText(final Receiver receiver, final char[] text, final int pos, final int length) {
+	private void updateText(final Receiver receiver, final char[] text, final int pos,
+			final int length) {
 		for (int i = 0; i < length; ++i) {
 			final char c = i < text.length ? text[i] : ' ';
 			if (currentText[pos + i] != c) {
@@ -146,6 +149,12 @@ public class Screen {
 			updateText(receiver, it.getHint().toCharArray(), 20, 20);
 			updateText(receiver, it.getExtraHint().toCharArray(), 40, 20);
 			updateText(receiver, "".toCharArray(), 60, 20);
+			try {
+				final ShortMessage msg = new ShortMessage();
+				msg.setMessage(ShortMessage.NOTE_OFF, 4, 0, 0);
+				receiver.send(msg, 0);
+			} catch (final InvalidMidiDataException e) {
+			}
 		});
 	}
 
@@ -267,11 +276,12 @@ public class Screen {
 			}
 		} else if (AbcButtonEvent.isEventOfThisType(event)) {
 			final AbcButtonEvent abcEvent = AbcButtonEvent.getEvent(event);
-			getTopLayer().ifPresent(l -> l.getAbcControlButton(abcEvent.getY()).ifPresent(b -> b.eventOccured(event)));
+			getTopLayer().ifPresent(l -> l.getAbcControlButton(abcEvent.getY())
+					.ifPresent(b -> b.eventOccured(event)));
 		} else if (NumButtonEvent.isEventOfThisType(event)) {
 			final NumButtonEvent numEvent = NumButtonEvent.getEvent(event);
-			getBottomLayer()
-					.ifPresent(l -> l.getNumControlButton(numEvent.getX()).ifPresent(b -> b.eventOccured(event)));
+			getBottomLayer().ifPresent(l -> l.getNumControlButton(numEvent.getX())
+					.ifPresent(b -> b.eventOccured(event)));
 		}
 	}
 }
