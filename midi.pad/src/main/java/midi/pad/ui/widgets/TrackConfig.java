@@ -75,7 +75,7 @@ public class TrackConfig extends Widget {
 
 	public TrackConfig(final int y, final Runnable noteEditRunnable,
 			final Runnable channelInConfigRunnable, final Runnable channelOutConfigRunnable,
-			final Runnable changeRunnable, final InputChannelConfig outConfig,
+			final Runnable changeRunnable, final InputChannelConfig inputConfig,
 			final LayerModel layerModel, final InputMode... modes) {
 		super();
 		bounds.x = 0;
@@ -87,14 +87,14 @@ public class TrackConfig extends Widget {
 		this.channelOutConfigRunnable = channelOutConfigRunnable;
 		this.changeRunnable = changeRunnable;
 		this.layerModel = layerModel;
-		inConfig = outConfig;
+		inConfig = inputConfig;
 		inputModeModel = new TimedIntegerModel<>(InputMode.OFF, modes);
 		inputModeModel.setValue(inConfig.getMode());
 		inputModeModel.addValueObserver(new ValueObserver<InputMode>() {
 			@Override
 			public void valueChanged(final InputMode newValue) {
 				Runtime.getRuntime().schedule(() -> {
-					outConfig.setMode(newValue);
+					inputConfig.setMode(newValue);
 					getRuntime().schedule(changeRunnable);
 				});
 			}

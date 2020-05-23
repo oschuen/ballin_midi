@@ -174,7 +174,8 @@ public class LoopConfig extends Widget implements BeatListener {
 				setNumberOfPages(padEvent.getX() + 1);
 			} else if (padEvent.getY() == 1 && padEvent.getX() < 6) {
 				setQuarterPerPage(padEvent.getX() + 1);
-			} else if (padEvent.getY() == 2 && padEvent.getX() < 6) {
+			} else if (padEvent.getY() == 2 && padEvent.getX() < 8 && padEvent.getX() != 4
+					&& padEvent.getX() != 6) {
 				setQuarterDivision(padEvent.getX() + 1);
 			}
 			getRuntime().schedule(changeRunnable);

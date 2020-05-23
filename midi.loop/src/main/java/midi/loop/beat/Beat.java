@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Beat {
 	private static final Logger logger = LoggerFactory.getLogger(Beat.class);
-	public static final int BEAT_DIVISION = 60;
+	public static final int BEAT_DIVISION = 24;
 	private int beat = 0;
 	private long beatStart = 0;
 	private int currentBpm = 120;
@@ -50,11 +50,11 @@ public class Beat {
 	private final List<BarListener> barListeners = new ArrayList<>();
 	private final Lock lock = new ReentrantLock();
 
-	private final NextStepRunnable[] fractionSteps = { new NextBeat(), new IntermediateBeat(6, 1),
-			new IntermediateBeat(5, 1), new IntermediateBeat(4, 1), new IntermediateBeat(3, 1),
-			new IntermediateBeat(5, 2), new IntermediateBeat(2, 1), new IntermediateBeat(5, 3),
-			new IntermediateBeat(3, 2), new IntermediateBeat(4, 3), new IntermediateBeat(5, 4),
-			new IntermediateBeat(6, 5) };
+	private final NextStepRunnable[] fractionSteps = { new NextBeat(), new IntermediateBeat(8, 1),
+			new IntermediateBeat(6, 1), new IntermediateBeat(8, 2), new IntermediateBeat(6, 2),
+			new IntermediateBeat(8, 3), new IntermediateBeat(8, 4), new IntermediateBeat(8, 5),
+			new IntermediateBeat(6, 4), new IntermediateBeat(8, 6), new IntermediateBeat(6, 5),
+			new IntermediateBeat(8, 7) };
 
 	private void publishBeat(final long beat) {
 		step++;

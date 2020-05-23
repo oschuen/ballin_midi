@@ -46,11 +46,11 @@ public class Display {
 	private final GpioPinDigitalOutput lcd_data6;
 	private final GpioPinDigitalOutput lcd_data7;
 
-	public static final int LCD_WIDTH = 16;
+	public static final int LCD_WIDTH = 20;
 	public static final int LCD_LINE_1 = 0x80;
-	public static final int LCD_LINE_2 = 0x90;
-	public static final int LCD_LINE_3 = 0x88;
-	public static final int LCD_LINE_4 = 0x98;
+	public static final int LCD_LINE_2 = 0xC0;
+	public static final int LCD_LINE_3 = 0x94;
+	public static final int LCD_LINE_4 = 0xD4;
 
 	public static final PinState LCD_CHR = PinState.HIGH;
 	public static final PinState LCD_CMD = PinState.LOW;

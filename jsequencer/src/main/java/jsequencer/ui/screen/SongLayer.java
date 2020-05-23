@@ -33,6 +33,8 @@ import jsequencer.ui.dialog.setting.LooperInputDialog;
 import jsequencer.ui.model.SongModel;
 import midi.loop.beat.Beat;
 import midi.loop.beat.Beat.BarListener;
+import midi.loop.config.InputChannelConfig;
+import midi.loop.config.InputChannelConfig.InputMode;
 import midi.loop.config.OutputChannelConfig;
 import midi.loop.config.OutputChannelConfig.PlayMode;
 import midi.pad.ui.Color;
@@ -74,9 +76,9 @@ public class SongLayer extends HintDialog implements BarListener {
 		this.beat = beat;
 		this.orchester = orchester;
 		this.persistence = persistence;
-		guitarInputModeControlButton = new OutModeControlButton(orchester.getGuitarChannelConfig(),
-				PlayMode.OFF, PlayMode.LOOP);
-		percussionInputModeControlButton = new OutModeControlButton(
+		guitarInputModeControlButton = new OutModeControlButton("Guitar",
+				orchester.getGuitarChannelConfig(), PlayMode.OFF, PlayMode.LOOP);
+		percussionInputModeControlButton = new OutModeControlButton("Drum",
 				orchester.getPercussionChannelConfig(), PlayMode.OFF, PlayMode.LOOP);
 
 		config[0] = new TrackConfig(0, () -> {
@@ -100,10 +102,8 @@ public class SongLayer extends HintDialog implements BarListener {
 				orchester.applyConfigs();
 			});
 			layer.start();
-		}, () -> {
-			getRuntime().invalidate();
-			orchester.applyConfigs();
-		}, model.getPercussionInputConfig(), model.getLayerModel(0));
+		}, new InputModeChangeRunnable("Drum", model.getPercussionInputConfig()),
+				model.getPercussionInputConfig(), model.getLayerModel(0));
 
 		config[1] = new TrackConfig(1, () -> {
 			final GuitarLoopLayer layer = new GuitarLoopLayer(
@@ -135,10 +135,8 @@ public class SongLayer extends HintDialog implements BarListener {
 			});
 			layer.start();
 			getRuntime().invalidate();
-		}, () -> {
-			orchester.applyConfigs();
-			getRuntime().invalidate();
-		}, model.getGuitarInputConfig(), model.getLayerModel(1));
+		}, new InputModeChangeRunnable("Guitar", model.getGuitarInputConfig()),
+				model.getGuitarInputConfig(), model.getLayerModel(1));
 
 		for (int i = 2; i < config.length; i++) {
 			final int seqNum = i - 2;
@@ -176,17 +174,16 @@ public class SongLayer extends HintDialog implements BarListener {
 				});
 				layer.start();
 				getRuntime().invalidate();
-			}, () -> {
-				orchester.applyConfigs();
-				getRuntime().invalidate();
-			}, model.getSequencerInputChannelConfig(seqNum), model.getLayerModel(i));
+			}, new InputModeChangeRunnable("Seq " + (seqNum + 1),
+					model.getSequencerInputChannelConfig(seqNum)),
+					model.getSequencerInputChannelConfig(seqNum), model.getLayerModel(i));
 		}
 		setWidgets(config);
 		for (int i = 1; i < 8; i++) {
 			config[i].setIn(true);
 		}
 		for (int i = 0; i < 6; i++) {
-			sequencerInputModeControlButton[i] = new OutModeControlButton(
+			sequencerInputModeControlButton[i] = new OutModeControlButton("Seq " + (i + 1),
 					orchester.getSequencerChannelConfig(i));
 		}
 		start();
@@ -321,18 +318,58 @@ public class SongLayer extends HintDialog implements BarListener {
 		}
 	}
 
+	private class InputModeChangeRunnable implements Runnable {
+		private final InputChannelConfig inConfig;
+		private final String name;
+		private InputMode currentMode;
+
+		public InputModeChangeRunnable(final String name, final InputChannelConfig inConfig) {
+			super();
+			this.inConfig = inConfig;
+			this.name = name;
+			currentMode = inConfig.getMode();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see java.lang.Runnable#run()
+		 */
+		@Override
+		public void run() {
+			if (currentMode != inConfig.getMode()) {
+				currentMode = inConfig.getMode();
+				if (currentMode == InputMode.ABOVE) {
+					setExtraHint(name + " In  High");
+				} else if (currentMode == InputMode.BELOW) {
+					setExtraHint(name + " In  Low");
+				} else if (currentMode == InputMode.ALL) {
+					setExtraHint(name + " In  All");
+				} else if (currentMode == InputMode.OFF) {
+					setExtraHint(name + " In  Off");
+				}
+			}
+			orchester.applyConfigs();
+			getRuntime().invalidate();
+
+		}
+
+	}
+
 	private class OutModeControlButton implements ControlButton, ValueObserver<PlayMode> {
 
 		private final OutputChannelConfig config;
 		private final TimedIntegerModel<PlayMode> mode;
+		private final String name;
 
-		public OutModeControlButton(final OutputChannelConfig config) {
-			this(config, PlayMode.OFF, PlayMode.LOOP, PlayMode.THROUGH);
+		public OutModeControlButton(final String name, final OutputChannelConfig config) {
+			this(name, config, PlayMode.OFF, PlayMode.LOOP, PlayMode.THROUGH);
 		}
 
-		public OutModeControlButton(final OutputChannelConfig config, final PlayMode stableValue,
-				final PlayMode... modes) {
+		public OutModeControlButton(final String name, final OutputChannelConfig config,
+				final PlayMode stableValue, final PlayMode... modes) {
 			this.config = config;
+			this.name = name;
 			mode = new TimedIntegerModel<>(stableValue, modes);
 			mode.setValue(this.config.getMode());
 			mode.addValueObserver(this);
@@ -385,6 +422,14 @@ public class SongLayer extends HintDialog implements BarListener {
 		 */
 		@Override
 		public void valueChanged(final PlayMode newValue) {
+			if (newValue == PlayMode.LOOP) {
+				extraHint(name + " Out  Loop");
+			} else if (newValue == PlayMode.OFF) {
+				extraHint(name + " Out  Off");
+			} else if (newValue == PlayMode.THROUGH) {
+				extraHint(name + " Out  Through");
+			}
+
 			Runtime.getRuntime().schedule(() -> {
 				config.setMode(newValue);
 				orchester.applyConfigs();

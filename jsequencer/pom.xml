@@ -58,6 +58,7 @@
 						</goals>
 						<configuration>
 							<outputDirectory>${project.build.directory}/lib</outputDirectory>
+							<excludeArtifactIds>junit</excludeArtifactIds>
 						</configuration>
 					</execution>
 				</executions>
@@ -74,6 +75,7 @@
 						<configuration>
 							<licensesOutputDirectory>${project.build.directory}/license/licenses</licensesOutputDirectory>
 							<licensesOutputFile>${project.build.directory}/license/licenses.xml</licensesOutputFile>
+							<excludedArtifacts>junit</excludedArtifacts>
 						</configuration>
 					</execution>
 					<execution>
@@ -84,6 +86,7 @@
 						<configuration>
 							<outputDirectory>${project.build.directory}/license</outputDirectory>
 							<thirdPartyFilename>THIRD-PARTY.txt</thirdPartyFilename>
+							<excludedArtifacts>junit</excludedArtifacts>
 						</configuration>
 					</execution>
 				</executions>

@@ -129,21 +129,27 @@ public class SequencerLoopLayer extends HintDialog implements BeatListener {
 				delete();
 				break;
 			case FILL:
+				extraHint("RecordMode: Fill");
 				sequencer.setRecMode(RecordMode.FILL);
 				break;
 			case FILL_RANDOM:
+				extraHint("RecordMode: Random");
 				sequencer.setRecMode(RecordMode.FILL_RANDOM);
 				break;
 			case NOTE_HOLD:
+				extraHint("RecordMode: Hold");
 				sequencer.setRecMode(RecordMode.NOTE_HOLD);
 				break;
 			case NOTE_OFF:
+				extraHint("RecordMode: Note Off");
 				sequencer.setRecMode(RecordMode.NOTE_OFF);
 				break;
 			case NOTE_ON:
+				extraHint("RecordMode: Note On");
 				sequencer.setRecMode(RecordMode.NOTE_ON);
 				break;
 			case OFF:
+				extraHint("RecordMode: Off");
 				sequencer.setRecMode(RecordMode.OFF);
 				break;
 			default:

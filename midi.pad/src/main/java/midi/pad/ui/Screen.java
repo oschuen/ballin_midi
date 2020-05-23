@@ -61,64 +61,66 @@ public class Screen {
 		}
 	}
 
+	private final int pages[][] = new int[2][80];
+
 	public void draw(final Receiver receiver) {
 		try {
+			final int currentPage = firstpage ? 0 : 1;
 			graphics.fill(Color.TRANSPARENT);
 			final Optional<Layer> topLayer = getTopLayer();
 			if (topLayer.isPresent()) {
 				topLayer.get().paint(graphics);
 			}
 			for (int y = 0; y < 8; ++y) {
-				for (int x = 0; x < 4; x++) {
-					final int vel1 = getColor(x * 2, y).getMidiValue();
-					final int vel2 = getColor(x * 2 + 1, y).getMidiValue();
-					final ShortMessage msg = new ShortMessage();
-					msg.setMessage(ShortMessage.NOTE_ON, 2, vel1, vel2);
-					receiver.send(msg, 0);
+				for (int x = 0; x < 8; x++) {
+					pages[currentPage][y * 8 + x] = getColor(x, y).getMidiValue();
 				}
 			}
 
 			final byte blackMidiValue = Color.BLACK.getMidiValue();
 			if (topLayer.isPresent()) {
 				final Layer tLayer = topLayer.get();
-				for (int i = 0; i < 4; i++) {
-					final int vel1 = tLayer.getAbcControlButton(i * 2)
+				for (int i = 0; i < 8; i++) {
+					pages[currentPage][64 + i] = tLayer.getAbcControlButton(i)
 							.map(b -> getBlinkColor(b.getColor()).getMidiValue())
 							.orElse(blackMidiValue);
-					final int vel2 = tLayer.getAbcControlButton(i * 2 + 1)
-							.map(b -> getBlinkColor(b.getColor()).getMidiValue())
-							.orElse(blackMidiValue);
-					final ShortMessage msg = new ShortMessage();
-					msg.setMessage(ShortMessage.NOTE_ON, 2, vel1, vel2);
-					receiver.send(msg, 0);
 				}
 			} else {
-				for (int i = 0; i < 4; i++) {
-					final int vel1 = blackMidiValue;
-					final int vel2 = blackMidiValue;
-					final ShortMessage msg = new ShortMessage();
-					msg.setMessage(ShortMessage.NOTE_ON, 2, vel1, vel2);
-					receiver.send(msg, 0);
+				for (int i = 0; i < 8; i++) {
+					pages[currentPage][64 + i] = blackMidiValue;
 				}
 			}
 			final Optional<Layer> layer = getBottomLayer();
-			for (int i = 0; i < 4; i++) {
+			for (int i = 0; i < 8; i++) {
 				final int loop = i;
 				final Color c1 = layer.map(l -> {
-					return l.getNumControlButton(loop * 2).orElse(null);
+					return l.getNumControlButton(loop).orElse(null);
 				}).map(ControlButton::getColor).orElse(Color.BLACK);
-				final Color c2 = layer.map(l -> {
-					return l.getNumControlButton(loop * 2 + 1).orElse(null);
-				}).map(ControlButton::getColor).orElse(Color.BLACK);
-				final int vel1 = getBlinkColor(c1).getMidiValue();
-				final int vel2 = getBlinkColor(c2).getMidiValue();
-				final ShortMessage msg = new ShortMessage();
-				msg.setMessage(ShortMessage.NOTE_ON, 2, vel1, vel2);
-				receiver.send(msg, 0);
+				pages[currentPage][72 + i] = getBlinkColor(c1).getMidiValue();
+			}
+			final int otherPage = (currentPage + 1) % 2;
+			for (int y = 0; y < 8; ++y) {
+				for (int x = 0; x < 8; ++x) {
+					if (pages[currentPage][y * 8 + x] != pages[otherPage][y * 8 + x]) {
+						receiver.send(new ShortMessage(ShortMessage.NOTE_ON, y * 16 + x,
+								pages[currentPage][y * 8 + x] + 4), 0);
+					}
+				}
+			}
+			for (int y = 0; y < 8; ++y) {
+				if (pages[currentPage][64 + y] != pages[otherPage][64 + y]) {
+					receiver.send(new ShortMessage(ShortMessage.NOTE_ON, y * 16 + 8,
+							pages[currentPage][64 + y] + 4), 0);
+				}
+			}
+			for (int y = 0; y < 8; ++y) {
+				if (pages[currentPage][72 + y] != pages[otherPage][72 + y]) {
+					receiver.send(new ShortMessage(ShortMessage.CONTROL_CHANGE, 104 + y,
+							pages[currentPage][72 + y] + 4), 0);
+				}
 			}
 
 			final ShortMessage toggleMsg = new ShortMessage();
-
 			toggleMsg.setMessage(ShortMessage.CONTROL_CHANGE, 0, 0, 32 + (firstpage ? 1 : 4));
 			receiver.send(toggleMsg, 0);
 		} catch (final InvalidMidiDataException e) {
