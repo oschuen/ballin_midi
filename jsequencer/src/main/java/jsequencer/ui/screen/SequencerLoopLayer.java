@@ -27,6 +27,7 @@ import jmidi.gui.model.IntegerModel;
 import midi.instrument.Sequencer;
 import midi.instrument.Sequencer.RecordMode;
 import midi.instrument.model.SequencerModel;
+import midi.loop.LoopEvent;
 import midi.loop.beat.Beat.BeatListener;
 import midi.pad.ui.Color;
 import midi.pad.ui.Screen;
@@ -57,7 +58,8 @@ public class SequencerLoopLayer extends HintDialog implements BeatListener {
 	private ConfirmDialog dialog;
 
 	public SequencerLoopLayer(final String name, final Sequencer sequencer) {
-		super(name);
+		super("");
+		setTitle(name);
 		this.sequencer = sequencer;
 		model = sequencer.getModel();
 		recStepModel.setMaxValue(
@@ -89,6 +91,10 @@ public class SequencerLoopLayer extends HintDialog implements BeatListener {
 		velocityButton = new SimpleControlButton(Color.GREEN, new ConfigureInstrumentVelocity());
 		sequencer.setRecStepModel(recStepModel);
 		looper.setRecStepModel(recStepModel);
+		recStepModel.addValueObserver(new RecStepListener());
+		final Optional<LoopEvent> event = model.getModel().getStepEvent(0);
+		event.ifPresent(ev -> eventHint(ev));
+		modeChangeRunnable.run();
 	}
 
 	/*
@@ -129,27 +135,27 @@ public class SequencerLoopLayer extends HintDialog implements BeatListener {
 				delete();
 				break;
 			case FILL:
-				extraHint("RecordMode: Fill");
+				setHint("RecordMode: Fill");
 				sequencer.setRecMode(RecordMode.FILL);
 				break;
 			case FILL_RANDOM:
-				extraHint("RecordMode: Random");
+				setHint("RecordMode: Random");
 				sequencer.setRecMode(RecordMode.FILL_RANDOM);
 				break;
 			case NOTE_HOLD:
-				extraHint("RecordMode: Hold");
+				setHint("RecordMode: Hold");
 				sequencer.setRecMode(RecordMode.NOTE_HOLD);
 				break;
 			case NOTE_OFF:
-				extraHint("RecordMode: Note Off");
+				setHint("RecordMode: Note Off");
 				sequencer.setRecMode(RecordMode.NOTE_OFF);
 				break;
 			case NOTE_ON:
-				extraHint("RecordMode: Note On");
+				setHint("RecordMode: Note On");
 				sequencer.setRecMode(RecordMode.NOTE_ON);
 				break;
 			case OFF:
-				extraHint("RecordMode: Off");
+				setHint("RecordMode: Off");
 				sequencer.setRecMode(RecordMode.OFF);
 				break;
 			default:
@@ -204,5 +210,44 @@ public class SequencerLoopLayer extends HintDialog implements BeatListener {
 		sequencer.setRecStepModel(null);
 		looper.setRecStepModel(null);
 		sequencer.setRecMode(RecordMode.OFF);
+	}
+
+	private void eventHint(final LoopEvent event) {
+		final StringBuilder builder = new StringBuilder();
+		final String[] noteNames = { "C_", "C#", "D_", "D#", "E_", "F_", "F#", "G_", "G#", "A_",
+				"A#", "B_" };
+		switch (event.getCommand()) {
+		case IGNORE:
+			builder.append("Hold ");
+			break;
+		case NOTE_OFF:
+			builder.append("Off  ");
+			break;
+		case NOTE_ON:
+			builder.append("On  ");
+			for (final Integer note : event.getNotes()) {
+				builder.append(noteNames[note % 12]);
+				builder.append(Integer.toString(note / 12 - 2));
+				builder.append(" ");
+			}
+			break;
+		default:
+			break;
+		}
+		extraHint(builder.toString());
+	}
+
+	private class RecStepListener implements IntegerModel.ValueObserver {
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see jmidi.gui.model.IntegerModel.ValueObserver#valueChanged(int)
+		 */
+		@Override
+		public void valueChanged(final int newValue) {
+			final Optional<LoopEvent> event = model.getModel().getStepEvent(newValue);
+			event.ifPresent(ev -> eventHint(ev));
+		}
 	}
 }

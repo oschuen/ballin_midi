@@ -150,7 +150,11 @@ public class Screen {
 			updateText(receiver, it.getTitle().toCharArray(), 0, 20);
 			updateText(receiver, it.getHint().toCharArray(), 20, 20);
 			updateText(receiver, it.getExtraHint().toCharArray(), 40, 20);
-			updateText(receiver, "".toCharArray(), 60, 20);
+			if (it.getExtraHint().length() > 20) {
+				updateText(receiver, it.getExtraHint().substring(20).toCharArray(), 60, 20);
+			} else {
+				updateText(receiver, "".toCharArray(), 60, 20);
+			}
 			try {
 				final ShortMessage msg = new ShortMessage();
 				msg.setMessage(ShortMessage.NOTE_OFF, 4, 0, 0);
